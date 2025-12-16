@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  # Frontend service (Production)
+  frontend:
+    build:
+      context: ./frontend_mvp
+      target: production
+    container_name: ats-frontend-prod
+    ports:
+      - "3010:3010"
+    environment:
+      - NODE_ENV=production
+    restart: always
+    networks:
+      - ats-network
+
+networks:
+  ats-network:
+    driver: bridge

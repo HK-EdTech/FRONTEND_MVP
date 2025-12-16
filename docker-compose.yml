@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend_mvp
+      target: development
+    container_name: ats-frontend
+    ports:
+      - "3010:3010"
+    volumes:
+      # Mount source code for hot reload
+      - ./frontend_mvp:/app
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+    restart: unless-stopped
+    networks:
+      - ats-network
+
+networks:
+  ats-network:
+    driver: bridge
