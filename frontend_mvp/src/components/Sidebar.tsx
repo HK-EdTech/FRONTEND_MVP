@@ -43,8 +43,8 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             <BrainCircuit className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg text-gray-800">ATS Analyzer</h1>
-            <p className="text-xs text-gray-600">AI-Powered Recruitment</p>
+            <h1 className="text-lg text-gray-800">Company Name</h1>
+            <p className="text-xs text-gray-600">AI-Powered Homework Marking</p>
           </div>
         </div>
       </div>
