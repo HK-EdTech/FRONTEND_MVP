@@ -1,14 +1,18 @@
+'use client';
+
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  FileSearch, 
-  Users, 
-  Briefcase, 
-  BarChart3, 
+import { useRouter } from 'next/navigation';
+import {
+  LayoutDashboard,
+  FileSearch,
+  Users,
+  Briefcase,
+  BarChart3,
   Settings,
   BrainCircuit,
   Info,
-  Zap
+  Zap,
+  LogOut
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -17,6 +21,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+  const router = useRouter();
+
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'analyzer', label: 'Resume Analyzer', icon: FileSearch },
@@ -25,6 +31,11 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    router.push('/signin');
+  };
 
   // Glassmorphism styles using inline styles
   const glassStyle = {
@@ -72,12 +83,19 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         })}
       </nav>
       
-      {/* Backend Status */}
-      <div className="p-4 mt-auto">
+      {/* Backend Status & Logout */}
+      <div className="p-4 mt-auto space-y-3">
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-blue-100 text-blue-700 border border-blue-200">
           <Info className="w-4 h-4" />
           <span>Demo Mode</span>
         </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-300 text-red-600 hover:bg-red-50 hover:translate-x-1"
+        >
+          <LogOut className="w-5 h-5" />
+          <span>Logout</span>
+        </button>
       </div>
     </aside>
   );
