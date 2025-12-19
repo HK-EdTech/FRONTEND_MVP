@@ -4,10 +4,18 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Separator } from './ui/separator';
-import { Chrome, Linkedin, FileText, BarChart3, Users } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Chrome, Apple, FileText, BarChart3, Users } from 'lucide-react';
+
+interface SignUpData {
+  firstName: string;
+  surname: string;
+  username: string;
+  classLevel: string;
+}
 
 interface LoginScreenProps {
-  onLogin: () => void;
+  onLogin: (email: string, password: string, isSignUp: boolean, signUpData?: SignUpData) => Promise<void>;
 }
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
@@ -15,11 +23,42 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [username, setUsername] = useState('');
+  const [classLevel, setClassLevel] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock authentication - in real app would validate credentials
-    onLogin();
+    setError('');
+
+    if (isSignUp && password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (isSignUp && (!firstName || !surname || !username || !classLevel)) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const signUpData = isSignUp ? {
+        firstName,
+        surname,
+        username,
+        classLevel
+      } : undefined;
+
+      await onLogin(email, password, isSignUp, signUpData);
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -83,18 +122,83 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
         <div className="w-full max-w-md mx-auto">
           <Card className="shadow-2xl border-0">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">
+              <CardTitle className="text-2xl text-center transition-all duration-300">
                 {isSignUp ? 'Create Account' : 'Welcome Back'}
               </CardTitle>
-              <CardDescription className="text-center">
-                {isSignUp 
-                  ? 'Sign up to start analyzing resumes' 
+              <CardDescription className="text-center transition-all duration-300">
+                {isSignUp
+                  ? 'Sign up to start analyzing resumes'
                   : 'Sign in to your ATS dashboard'
                 }
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div
+                  className={`space-y-4 transition-all duration-500 ease-in-out overflow-hidden ${
+                    isSignUp
+                      ? 'max-h-[500px] opacity-100 translate-y-0'
+                      : 'max-h-0 opacity-0 -translate-y-4'
+                  }`}
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        type="text"
+                        placeholder="Enter first name"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required={isSignUp}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="surname">Surname</Label>
+                      <Input
+                        id="surname"
+                        type="text"
+                        placeholder="Enter surname"
+                        value={surname}
+                        onChange={(e) => setSurname(e.target.value)}
+                        required={isSignUp}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      type="text"
+                      placeholder="Choose a username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required={isSignUp}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="classLevel">Class Level</Label>
+                    <Select value={classLevel} onValueChange={setClassLevel} required={isSignUp}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your class level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Primary 1">Primary 1</SelectItem>
+                        <SelectItem value="Primary 2">Primary 2</SelectItem>
+                        <SelectItem value="Primary 3">Primary 3</SelectItem>
+                        <SelectItem value="Primary 4">Primary 4</SelectItem>
+                        <SelectItem value="Primary 5">Primary 5</SelectItem>
+                        <SelectItem value="Primary 6">Primary 6</SelectItem>
+                        <SelectItem value="Secondary 1">Secondary 1</SelectItem>
+                        <SelectItem value="Secondary 2">Secondary 2</SelectItem>
+                        <SelectItem value="Secondary 3">Secondary 3</SelectItem>
+                        <SelectItem value="Secondary 4">Secondary 4</SelectItem>
+                        <SelectItem value="Secondary 5">Secondary 5</SelectItem>
+                        <SelectItem value="Secondary 6">Secondary 6</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -117,7 +221,13 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                     required
                   />
                 </div>
-                {isSignUp && (
+                <div
+                  className={`transition-all duration-500 ease-in-out overflow-hidden ${
+                    isSignUp
+                      ? 'max-h-32 opacity-100 translate-y-0'
+                      : 'max-h-0 opacity-0 -translate-y-4'
+                  }`}
+                >
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirm Password</Label>
                     <Input
@@ -126,34 +236,47 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                       placeholder="Confirm your password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
+                      required={isSignUp}
                     />
                   </div>
+                </div>
+                {error && (
+                  <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-600 text-sm">
+                    {error}
+                  </div>
                 )}
-                <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  {isSignUp ? 'Create Account' : 'Sign In'}
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
                 </Button>
               </form>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-                </div>
-              </div>
+              {process.env.NEXT_PUBLIC_IS_MVP !== 'false' && (
+                <>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <Separator className="w-full" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" className="w-full">
-                  <Chrome className="w-4 h-4 mr-2" />
-                  Google
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <Linkedin className="w-4 h-4 mr-2" />
-                  LinkedIn
-                </Button>
-              </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button variant="outline" className="w-full border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700">
+                      <Chrome className="w-4 h-4 mr-2" />
+                      Google
+                    </Button>
+                    <Button variant="outline" className="w-full border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700">
+                      <Apple className="w-4 h-4 mr-2" />
+                      Apple
+                    </Button>
+                  </div>
+                </>
+              )}
 
               <div className="text-center text-sm">
                 {isSignUp ? (

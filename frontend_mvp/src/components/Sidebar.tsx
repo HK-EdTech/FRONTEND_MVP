@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import {
   LayoutDashboard,
   FileSearch,
@@ -32,8 +33,8 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     router.push('/signin');
   };
 

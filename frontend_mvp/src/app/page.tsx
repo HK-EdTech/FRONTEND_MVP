@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { Sidebar } from "@/components/Sidebar";
 import { Dashboard } from "@/components/Dashboard";
 import { ResumeAnalyzer } from "@/components/ResumeAnalyzer";
@@ -16,15 +17,30 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication status
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
+    // Check Supabase authentication status
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
 
-    if (!isAuthenticated) {
-      // Redirect to signin if not authenticated
-      router.push("/signin");
-    } else {
-      setIsLoading(false);
-    }
+      if (!session) {
+        // Redirect to signin if not authenticated
+        router.push("/signin");
+      } else {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.push("/signin");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [router]);
 
   // Show loading state while checking auth
