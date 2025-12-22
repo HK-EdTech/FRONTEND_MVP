@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Sidebar } from "@/components/Sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Dashboard } from "@/components/Dashboard";
 import { ResumeAnalyzer } from "@/components/ResumeAnalyzer";
 import { CandidateManagement } from "@/components/CandidateManagement";
@@ -75,18 +76,26 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-teal-50">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-30">
-        <div className="absolute top-0 left-0 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-        <div className="absolute top-0 right-0 w-72 h-72 bg-teal-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
-      </div>
+    <SidebarProvider>
+      <AppSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <main className="flex-1 min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-teal-50 relative">
+        {/* Background Pattern */}
+        <div className="fixed inset-0 opacity-30 pointer-events-none">
+          <div className="absolute top-0 left-0 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+          <div className="absolute top-0 right-0 w-72 h-72 bg-teal-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+        </div>
 
-      <div className="relative z-10 flex">
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <main className="flex-1 p-6">{renderContent()}</main>
-      </div>
-    </div>
+        {/* Mobile menu trigger */}
+        <div className="lg:hidden p-4 relative z-10">
+          <SidebarTrigger />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 p-6">
+          {renderContent()}
+        </div>
+      </main>
+    </SidebarProvider>
   );
 }
