@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Dashboard } from "@/components/Dashboard";
 import { ResumeAnalyzer } from "@/components/ResumeAnalyzer";
 import { CandidateManagement } from "@/components/CandidateManagement";
@@ -84,11 +84,6 @@ export default function Home() {
           <div className="absolute top-0 left-0 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
           <div className="absolute top-0 right-0 w-72 h-72 bg-teal-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
-        </div>
-
-        {/* Mobile menu trigger */}
-        <div className="lg:hidden p-4 relative z-10">
-          <SidebarTrigger />
         </div>
 
         {/* Content */}
