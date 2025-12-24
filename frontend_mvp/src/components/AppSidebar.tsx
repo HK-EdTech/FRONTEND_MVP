@@ -64,7 +64,7 @@ export function AppSidebar({ activeTab, setActiveTab }: AppSidebarProps) {
           <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-teal-500 rounded-xl flex items-center justify-center shrink-0 group-data-[collapsible=icon]:hidden">
             <BrainCircuit className="w-6 h-6 text-white" />
           </div>
-          <div className="flex-1 transition-opacity duration-200 delay-200 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden">
+          <div className="flex-1 transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">
             <h1 className="text-lg text-gray-800 whitespace-nowrap">NAME</h1>
           </div>
           <SidebarTrigger className="ml-auto h-10 w-10 hover:bg-white/30 rounded-lg transition-colors group-data-[collapsible=icon]:ml-0" />
@@ -91,7 +91,7 @@ export function AppSidebar({ activeTab, setActiveTab }: AppSidebarProps) {
                 title={item.label}
               >
                 <Icon className="w-5 h-5 shrink-0" />
-                <span className="transition-opacity duration-200 delay-200 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden">{item.label}</span>
+                <span className="whitespace-nowrap transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">{item.label}</span>
               </button>
             );
           })}
@@ -102,7 +102,7 @@ export function AppSidebar({ activeTab, setActiveTab }: AppSidebarProps) {
       <SidebarFooter className="p-4 mt-auto space-y-3 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-blue-100 text-blue-700 border border-blue-200 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:gap-0">
           <Info className="w-4 h-4 shrink-0" />
-          <span className="transition-opacity duration-200 delay-200 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden">Demo Mode</span>
+          <span className="whitespace-nowrap transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">Demo Mode</span>
         </div>
         <button
           onClick={handleLogout}
@@ -110,7 +110,7 @@ export function AppSidebar({ activeTab, setActiveTab }: AppSidebarProps) {
           title="Logout"
         >
           <LogOut className="w-5 h-5 shrink-0" />
-          <span className="transition-opacity duration-200 delay-200 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden">Logout</span>
+          <span className="whitespace-nowrap transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">Logout</span>
         </button>
       </SidebarFooter>
     </Sidebar>
