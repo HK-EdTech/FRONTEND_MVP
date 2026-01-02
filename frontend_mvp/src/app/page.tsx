@@ -20,21 +20,38 @@ export default function Home() {
   useEffect(() => {
     // Check Supabase authentication status
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-      if (!session) {
-        // Redirect to signin if not authenticated
+        if (error) {
+          // Clear invalid session and redirect
+          await supabase.auth.signOut();
+          router.push("/signin");
+          return;
+        }
+
+        if (!session) {
+          // Redirect to signin if not authenticated
+          router.push("/signin");
+        } else {
+          setIsLoading(false);
+        }
+      } catch (err) {
+        // Clear invalid session and redirect
+        await supabase.auth.signOut();
         router.push("/signin");
-      } else {
-        setIsLoading(false);
       }
     };
 
     checkAuth();
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Handle token refresh errors
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        await supabase.auth.signOut();
+        router.push("/signin");
+      } else if (event === 'SIGNED_OUT' || !session) {
         router.push("/signin");
       }
     });

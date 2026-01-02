@@ -5,6 +5,7 @@ import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Switch } from './ui/switch';
 import { Chrome, Apple, FileText, BarChart3, Users } from 'lucide-react';
 
 interface SignUpData {
@@ -12,6 +13,7 @@ interface SignUpData {
   surname: string;
   username: string;
   classLevel: string;
+  role: 'student' | 'teacher' | 'private_tutor';
 }
 
 interface LoginScreenProps {
@@ -20,6 +22,8 @@ interface LoginScreenProps {
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [role, setRole] = useState<'student' | 'teacher'>('student');
+  const [teacherType, setTeacherType] = useState<'teacher' | 'private_tutor'>('teacher');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -39,18 +43,27 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       return;
     }
 
-    if (isSignUp && (!firstName || !surname || !username || !classLevel)) {
+    if (isSignUp && (!firstName || !surname || !username)) {
       setError('Please fill in all fields');
+      return;
+    }
+
+    if (isSignUp && role === 'student' && !classLevel) {
+      setError('Please select your class level');
       return;
     }
 
     setIsLoading(true);
     try {
+      // Determine final role based on teacher type
+      const finalRole = role === 'teacher' ? teacherType : role;
+
       const signUpData = isSignUp ? {
         firstName,
         surname,
         username,
-        classLevel
+        classLevel: role === 'student' ? classLevel : '',
+        role: finalRole as 'student' | 'teacher' | 'private_tutor'
       } : undefined;
 
       await onLogin(email, password, isSignUp, signUpData);
@@ -134,11 +147,58 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* User Type Toggle - Only shown in Sign Up mode */}
+              <div
+                className={`transition-all duration-500 ease-in-out ${
+                  isSignUp
+                    ? 'max-h-24 opacity-100 translate-y-0'
+                    : 'max-h-0 opacity-0 -translate-y-4'
+                }`}
+              >
+                {/* Rounded container */}
+                <div className="relative rounded-xl overflow-hidden">
+                  {/* Content */}
+                  <div className="relative flex gap-2 p-1.5">
+                    {/* Sliding pill */}
+                    <div
+                      className="absolute top-1.5 bottom-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg transition-all duration-300 ease-out"
+                      style={{
+                        width: 'calc(50% - 0.25rem)',
+                        left: role === 'student'
+                          ? '0.375rem'
+                          : 'calc(50% + 0.125rem)',
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setRole('student')}
+                      className={`relative z-10 flex-1 py-2.5 px-4 rounded-lg font-medium transition-colors duration-300 ${
+                        role === 'student' ? 'text-white' : 'text-gray-700'
+                      }`}
+                    >
+                      Student
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setRole('teacher')}
+                      className={`relative z-10 flex-1 py-2.5 px-4 rounded-lg font-medium transition-colors duration-300 ${
+                        role === 'teacher' ? 'text-white' : 'text-gray-700'
+                      }`}
+                    >
+                      Teacher
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+                {/* Common Fields */}
                 <div
                   className={`space-y-4 transition-all duration-500 ease-in-out overflow-hidden ${
                     isSignUp
-                      ? 'max-h-[500px] opacity-100 translate-y-0'
-                      : 'max-h-0 opacity-0 -translate-y-4'
+                      ? 'max-h-[600px] opacity-100'
+                      : 'max-h-0 opacity-0'
                   }`}
                 >
                   <div className="grid grid-cols-2 gap-4">
@@ -176,27 +236,57 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                       required={isSignUp}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="classLevel">Class Level</Label>
-                    <Select value={classLevel} onValueChange={setClassLevel} required={isSignUp}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your class level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Primary 1">Primary 1</SelectItem>
-                        <SelectItem value="Primary 2">Primary 2</SelectItem>
-                        <SelectItem value="Primary 3">Primary 3</SelectItem>
-                        <SelectItem value="Primary 4">Primary 4</SelectItem>
-                        <SelectItem value="Primary 5">Primary 5</SelectItem>
-                        <SelectItem value="Primary 6">Primary 6</SelectItem>
-                        <SelectItem value="Secondary 1">Secondary 1</SelectItem>
-                        <SelectItem value="Secondary 2">Secondary 2</SelectItem>
-                        <SelectItem value="Secondary 3">Secondary 3</SelectItem>
-                        <SelectItem value="Secondary 4">Secondary 4</SelectItem>
-                        <SelectItem value="Secondary 5">Secondary 5</SelectItem>
-                        <SelectItem value="Secondary 6">Secondary 6</SelectItem>
-                      </SelectContent>
-                    </Select>
+
+                  {/* Sliding Role-Specific Field */}
+                  <div className="overflow-hidden">
+                    <div
+                      className="flex transition-transform duration-500 ease-in-out"
+                      style={{
+                        transform: role === 'student' ? 'translateX(0%)' : 'translateX(-100%)',
+                      }}
+                    >
+                      {/* Class Level - Student Only */}
+                      <div className="w-full flex-shrink-0">
+                        <div className="space-y-2">
+                          <Label htmlFor="classLevel">Class Level</Label>
+                          <Select value={classLevel} onValueChange={setClassLevel} required={isSignUp && role === 'student'}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your class level" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Primary 1">Primary 1</SelectItem>
+                              <SelectItem value="Primary 2">Primary 2</SelectItem>
+                              <SelectItem value="Primary 3">Primary 3</SelectItem>
+                              <SelectItem value="Primary 4">Primary 4</SelectItem>
+                              <SelectItem value="Primary 5">Primary 5</SelectItem>
+                              <SelectItem value="Primary 6">Primary 6</SelectItem>
+                              <SelectItem value="Secondary 1">Secondary 1</SelectItem>
+                              <SelectItem value="Secondary 2">Secondary 2</SelectItem>
+                              <SelectItem value="Secondary 3">Secondary 3</SelectItem>
+                              <SelectItem value="Secondary 4">Secondary 4</SelectItem>
+                              <SelectItem value="Secondary 5">Secondary 5</SelectItem>
+                              <SelectItem value="Secondary 6">Secondary 6</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Teacher Type - Teacher Only */}
+                      <div className="w-full flex-shrink-0">
+                        <div className="space-y-2">
+                          <Label htmlFor="teacherType">Teacher Type</Label>
+                          <Select value={teacherType} onValueChange={setTeacherType} required={isSignUp && role === 'teacher'}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select teacher type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="teacher">School Teacher</SelectItem>
+                              <SelectItem value="private_tutor">Private Tutor</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">

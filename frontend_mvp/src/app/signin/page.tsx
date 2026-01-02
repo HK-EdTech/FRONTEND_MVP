@@ -9,6 +9,7 @@ interface SignUpData {
   surname: string;
   username: string;
   classLevel: string;
+  role: 'student' | 'teacher' | 'private_tutor';
 }
 
 export default function SignInPage() {
@@ -31,6 +32,7 @@ export default function SignInPage() {
             surname: signUpData.surname,
             username: signUpData.username,
             class_level_when_sign_up: signUpData.classLevel, // Historical snapshot
+            role: signUpData.role, // student, teacher, or private_tutor
           }
         }
       });
