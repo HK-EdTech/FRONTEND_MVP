@@ -22,7 +22,7 @@ export default function SignInPage() {
     signUpData?: SignUpData
   ) => {
     if (isSignUp && signUpData) {
-      // Sign up new user with metadata
+      // Sign up new user - database trigger will create profile automatically
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -31,18 +31,34 @@ export default function SignInPage() {
             first_name: signUpData.firstName,
             surname: signUpData.surname,
             username: signUpData.username,
-            class_level_when_sign_up: signUpData.classLevel, // Historical snapshot
-            role: signUpData.role, // student, teacher, or private_tutor
+            role: signUpData.role, // 'student', 'teacher', or 'private_tutor'
+            class_level: signUpData.role === 'student' ? signUpData.classLevel : null,
           }
         }
       });
 
-      if (error) throw error;
-
-      // Supabase may require email confirmation
-      if (data.user && !data.user.confirmed_at) {
-        throw new Error('Please check your email to confirm your account');
+      if (error) {
+        throw new Error(`Signup failed: ${error.message}`);
       }
+
+      if (!data.user) {
+        throw new Error('Signup failed: No user data returned');
+      }
+
+      // Check if user already exists (Supabase returns existing user for email enumeration protection)
+      // If identities array is empty, user already existed
+      if (data.user.identities && data.user.identities.length === 0) {
+        throw new Error('An account with this email already exists. Please sign in instead.');
+      }
+
+      // Email confirmation required - show success message
+      if (!data.user.confirmed_at) {
+        throw new Error('SUCCESS: Please check your email to confirm your account before signing in');
+      }
+
+      // If auto-confirmed (unlikely), show success
+      throw new Error('SUCCESS: Account created! You can now sign in.');
+
     } else {
       // Sign in existing user
       const { error } = await supabase.auth.signInWithPassword({
@@ -50,12 +66,14 @@ export default function SignInPage() {
         password,
       });
 
-      if (error) throw error;
-    }
+      if (error) {
+        throw new Error(`Sign in failed: ${error.message}`);
+      }
 
-    // Redirect to dashboard
-    router.push("/");
-    router.refresh();
+      // Successfully signed in - redirect to dashboard
+      router.push("/");
+      router.refresh();
+    }
   };
 
   return <LoginScreen onLogin={handleLogin} />;

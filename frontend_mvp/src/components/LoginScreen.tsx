@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
-import { Chrome, Apple, FileText, BarChart3, Users } from 'lucide-react';
+import { Alert, AlertDescription } from './ui/alert';
+import { Chrome, Apple, FileText, BarChart3, Users, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface SignUpData {
   firstName: string;
@@ -33,10 +34,12 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [classLevel, setClassLevel] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     if (isSignUp && password !== confirmPassword) {
       setError('Passwords do not match');
@@ -68,7 +71,22 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
       await onLogin(email, password, isSignUp, signUpData);
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      const message = err.message || 'Authentication failed';
+      // Check if it's a success message
+      if (message.startsWith('SUCCESS:')) {
+        setSuccess(message.replace('SUCCESS:', '').trim());
+        // Switch to signin form after successful signup
+        setIsSignUp(false);
+        // Clear signup form fields
+        setFirstName('');
+        setSurname('');
+        setUsername('');
+        setClassLevel('');
+        setPassword('');
+        setConfirmPassword('');
+      } else {
+        setError(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -146,6 +164,22 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Success Alert - shown at top */}
+              {success && (
+                <Alert className="bg-green-50 border-green-200 text-green-700">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertDescription>{success}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Error Alert */}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* User Type Toggle - Only shown in Sign Up mode */}
               <div
@@ -330,11 +364,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                     />
                   </div>
                 </div>
-                {error && (
-                  <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-600 text-sm">
-                    {error}
-                  </div>
-                )}
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"

@@ -8,16 +8,6 @@ if (!API_BASE_URL) {
 }
 
 // Types matching backend Pydantic models
-export interface SignupRequest {
-  user_id: string;
-  first_name: string;
-  surname: string;
-  username: string;
-  role_name: 'student' | 'teacher' | 'private_tutor';
-  class_level?: string | null;
-  organization_id?: string | null;
-}
-
 export interface ProfileResponse {
   id: string;
   first_name: string;
@@ -94,16 +84,6 @@ async function apiRequest<T>(
 
 // API Methods
 export const api = {
-  /**
-   * Create user profile after Supabase signup
-   */
-  async signup(data: SignupRequest): Promise<ProfileResponse> {
-    return apiRequest<ProfileResponse>('/auth/signup', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
   /**
    * Get current user's profile
    */
