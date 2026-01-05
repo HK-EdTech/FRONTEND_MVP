@@ -1,7 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { ModuleWithPermissions, ProfileResponse } from '@/lib/api';
 import {
   LayoutDashboard,
   FileSearch,
@@ -11,7 +13,11 @@ import {
   Settings,
   BrainCircuit,
   Info,
-  LogOut
+  LogOut,
+  Camera,
+  FilePlus,
+  Calendar as CalendarIcon,
+  FileText
 } from 'lucide-react';
 import {
   Sidebar,
@@ -21,35 +27,61 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 
+// Icon mapping for dynamic modules
+const MODULE_ICONS: Record<string, any> = {
+  'scan_homework': Camera,
+  'assign_homework': FilePlus,
+  'calendar': CalendarIcon,
+};
+
 interface AppSidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  modules: ModuleWithPermissions[];
+  profile: ProfileResponse | null;
 }
 
-export function AppSidebar({ activeTab, setActiveTab }: AppSidebarProps) {
+export function AppSidebar({ modules, profile }: AppSidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'analyzer', label: 'Resume Analyzer', icon: FileSearch },
-    { id: 'candidates', label: 'Candidates', icon: Users },
-    { id: 'jobs', label: 'Job Postings', icon: Briefcase },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ];
+  const menuItems = useMemo(() => {
+    const items = [];
+
+    // FIRST: Dynamic modules from API (sorted by seq_no)
+    if (modules && modules.length > 0) {
+      items.push(...modules.map(m => ({
+        id: m.module_code,
+        label: m.module_eng_name,
+        icon: MODULE_ICONS[m.module_code] || FileText,
+        route: m.route,
+        permissions: m.permissions,
+        isDynamic: true
+      })));
+    }
+
+    // SECOND: Hardcoded items
+    items.push(
+      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, route: '/' },
+      { id: 'analyzer', label: 'Resume Analyzer', icon: FileSearch, route: '/analyzer' },
+      { id: 'candidates', label: 'Candidates', icon: Users, route: '/candidates' },
+      { id: 'jobs', label: 'Job Postings', icon: Briefcase, route: '/jobs' },
+      { id: 'analytics', label: 'Analytics', icon: BarChart3, route: '/analytics' },
+      { id: 'settings', label: 'Settings', icon: Settings, route: '/settings' }
+    );
+
+    return items;
+  }, [modules]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/signin');
   };
 
-  // Glassmorphism styles (your current design!)
   const glassStyle = {
     backdropFilter: 'blur(20px)',
     background: 'rgba(255, 255, 255, 0.15)',
     border: '1px solid rgba(255, 255, 255, 0.3)',
     boxShadow: '0 12px 40px rgba(31, 38, 135, 0.2)',
-    '--sidebar-width-icon': '3.75rem', // 60px instead of default 48px
+    '--sidebar-width-icon': '3.75rem',
   } as React.CSSProperties;
 
   return (
@@ -65,23 +97,26 @@ export function AppSidebar({ activeTab, setActiveTab }: AppSidebarProps) {
             <BrainCircuit className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1 transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">
-            <h1 className="text-lg text-gray-800 whitespace-nowrap">NAME</h1>
+            <h1 className="text-lg text-gray-800 whitespace-nowrap">ATS Analyzer</h1>
+            {profile && (
+              <p className="text-xs text-gray-600 whitespace-nowrap">{profile.full_name}</p>
+            )}
           </div>
           <SidebarTrigger className="ml-auto h-10 w-10 hover:bg-white/30 rounded-lg transition-colors group-data-[collapsible=icon]:ml-0" />
         </div>
       </SidebarHeader>
 
-      {/* Navigation - Plain buttons with icon collapse support */}
+      {/* Navigation */}
       <SidebarContent>
         <nav className="p-4 space-y-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id;
+            const isActive = pathname === item.route;
 
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => router.push(item.route)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-[width,background-color,transform] duration-300
                   group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:gap-0
                   ${isActive
@@ -91,19 +126,30 @@ export function AppSidebar({ activeTab, setActiveTab }: AppSidebarProps) {
                 title={item.label}
               >
                 <Icon className="w-5 h-5 shrink-0" />
-                <span className="whitespace-nowrap transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">{item.label}</span>
+                <span className="whitespace-nowrap transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">
+                  {item.label}
+                </span>
+                {item.isDynamic && (
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-white/20 group-data-[collapsible=icon]:hidden">
+                    Dynamic
+                  </span>
+                )}
               </button>
             );
           })}
         </nav>
       </SidebarContent>
 
-      {/* Footer - Demo Mode + Logout */}
+      {/* Footer */}
       <SidebarFooter className="p-4 mt-auto space-y-3 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-blue-100 text-blue-700 border border-blue-200 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:gap-0">
-          <Info className="w-4 h-4 shrink-0" />
-          <span className="whitespace-nowrap transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">Demo Mode</span>
-        </div>
+        {modules.length > 0 && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-green-100 text-green-700 border border-green-200 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:gap-0">
+            <Info className="w-4 h-4 shrink-0" />
+            <span className="whitespace-nowrap transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">
+              {modules.length} module(s)
+            </span>
+          </div>
+        )}
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-[width,background-color,transform] duration-300 text-red-600 hover:bg-red-50 hover:translate-x-1 group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:hover:translate-x-0 group-data-[collapsible=icon]:gap-0"

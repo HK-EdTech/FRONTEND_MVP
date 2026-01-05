@@ -30,6 +30,26 @@ export interface ProfileUpdateRequest {
   avatar_url?: string;
 }
 
+// Module permission system types
+export interface ModuleWithPermissions {
+  module_code: string;
+  module_eng_name: string;
+  module_chi_name: string;
+  seq_no: number;
+  route: string;
+  description: string | null;
+  descriptive_message: string | null;
+  parent_module_code: string | null;
+  permissions: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProfileWithModulesResponse {
+  profile: ProfileResponse;
+  modules: ModuleWithPermissions[];
+}
+
 // API Error Class
 export class ApiError extends Error {
   constructor(
@@ -86,9 +106,11 @@ async function apiRequest<T>(
 export const api = {
   /**
    * Get current user's profile
+   * @param includeModules - If true, returns profile + accessible modules in single response
    */
-  async getMyProfile(): Promise<ProfileResponse> {
-    return apiRequest<ProfileResponse>('/profile/me', {
+  async getMyProfile(includeModules = false): Promise<ProfileResponse | ProfileWithModulesResponse> {
+    const endpoint = includeModules ? '/profile/me?include=modules' : '/profile/me';
+    return apiRequest<ProfileResponse | ProfileWithModulesResponse>(endpoint, {
       method: 'GET',
     });
   },
