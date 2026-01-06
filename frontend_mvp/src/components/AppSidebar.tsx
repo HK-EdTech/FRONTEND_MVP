@@ -12,7 +12,6 @@ import {
   BarChart3,
   Settings,
   BrainCircuit,
-  Info,
   LogOut,
   Camera,
   FilePlus,
@@ -43,10 +42,14 @@ export function AppSidebar({ modules, profile }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
+  console.log('[AppSidebar] Received modules:', modules);
+  console.log('[AppSidebar] Profile:', profile);
+
   const menuItems = useMemo(() => {
     const items = [];
 
     // FIRST: Dynamic modules from API (sorted by seq_no)
+    console.log('[AppSidebar] Building menu items, modules count:', modules?.length || 0);
     if (modules && modules.length > 0) {
       items.push(...modules.map(m => ({
         id: m.module_code,
@@ -73,7 +76,8 @@ export function AppSidebar({ modules, profile }: AppSidebarProps) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/signin');
+    // Force full page reload to clear all state
+    window.location.href = '/signin';
   };
 
   const glassStyle = {
@@ -117,7 +121,7 @@ export function AppSidebar({ modules, profile }: AppSidebarProps) {
               <button
                 key={item.id}
                 onClick={() => router.push(item.route)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-[width,background-color,transform] duration-300
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-300
                   group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:gap-0
                   ${isActive
                     ? 'bg-gradient-to-r from-purple-500 to-teal-500 text-white transform translate-x-1 group-data-[collapsible=icon]:translate-x-0'
@@ -129,11 +133,6 @@ export function AppSidebar({ modules, profile }: AppSidebarProps) {
                 <span className="whitespace-nowrap transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">
                   {item.label}
                 </span>
-                {item.isDynamic && (
-                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-white/20 group-data-[collapsible=icon]:hidden">
-                    Dynamic
-                  </span>
-                )}
               </button>
             );
           })}
@@ -142,17 +141,9 @@ export function AppSidebar({ modules, profile }: AppSidebarProps) {
 
       {/* Footer */}
       <SidebarFooter className="p-4 mt-auto space-y-3 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
-        {modules.length > 0 && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-green-100 text-green-700 border border-green-200 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:gap-0">
-            <Info className="w-4 h-4 shrink-0" />
-            <span className="whitespace-nowrap transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">
-              {modules.length} module(s)
-            </span>
-          </div>
-        )}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-[width,background-color,transform] duration-300 text-red-600 hover:bg-red-50 hover:translate-x-1 group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:hover:translate-x-0 group-data-[collapsible=icon]:gap-0"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-300 text-red-600 hover:bg-red-50 hover:translate-x-1 group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:hover:translate-x-0 group-data-[collapsible=icon]:gap-0"
           title="Logout"
         >
           <LogOut className="w-5 h-5 shrink-0" />

@@ -30,13 +30,16 @@ export default function RootLayout({
   const pathname = usePathname();
   const router = useRouter();
 
-  // Fetch profile + modules on mount
+  // Fetch profile + modules ONCE on mount (not on every route change)
   useEffect(() => {
     const fetchData = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error || !session) {
+          // Clear state when no session
+          setProfile(null);
+          setModules([]);
           if (pathname !== '/signin') {
             router.push("/signin");
           }
@@ -46,11 +49,16 @@ export default function RootLayout({
 
         // SINGLE API CALL for profile + modules
         const response = await api.getMyProfile(true) as ProfileWithModulesResponse;
+        console.log('[Layout] Profile response:', response);
+        console.log('[Layout] Modules:', response.modules);
         setProfile(response.profile);
         setModules(response.modules || []);
         setIsLoading(false);
       } catch (err) {
         console.error('Failed to fetch profile:', err);
+        // Clear state on error
+        setProfile(null);
+        setModules([]);
         if (pathname !== '/signin') {
           router.push("/signin");
         }
@@ -61,9 +69,13 @@ export default function RootLayout({
     if (pathname !== '/signin') {
       fetchData();
     } else {
+      // Clear state when on signin page
+      setProfile(null);
+      setModules([]);
       setIsLoading(false);
     }
-  }, [pathname, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty array = run only once on mount
 
   // Don't show sidebar on signin page
   if (pathname === '/signin') {
