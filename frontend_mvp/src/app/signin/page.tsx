@@ -70,9 +70,9 @@ export default function SignInPage() {
         throw new Error(`Sign in failed: ${error.message}`);
       }
 
-      // Successfully signed in - redirect to dashboard
-      router.push("/");
-      router.refresh();
+      // Successfully signed in - redirect to dashboard with full page reload
+      // This ensures the layout remounts and fetches user data
+      window.location.href = "/";
     }
   };
 
