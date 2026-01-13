@@ -49,8 +49,8 @@ export default function RootLayout({
 
         // SINGLE API CALL for profile + modules
         const response = await api.getMyProfile(true) as ProfileWithModulesResponse;
-        console.log('[Layout] Profile response:', response);
-        console.log('[Layout] Modules:', response.modules);
+        // console.log('[Layout] Profile response:', response);
+        // console.log('[Layout] Modules:', response.modules);
         setProfile(response.profile);
         setModules(response.modules || []);
         setIsLoading(false);

@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { AssignHomework } from '@/components/modules/AssignHomework';
-import { ScanHomework } from '@/components/modules/ScanHomework';
+import { ScanHomework } from '@/components/modules/ScanHomework/ScanHomework';
 import { CalendarModule } from '@/components/modules/Calendar';
 
 const MODULE_COMPONENTS: Record<string, React.ComponentType<any>> = {

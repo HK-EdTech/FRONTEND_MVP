@@ -1,0 +1,517 @@
+import React, { useState, useEffect } from 'react';
+import { Camera, Upload, X, Plus, AlertCircle } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+// TypeScript Interfaces
+export interface HomeworkSheet {
+  id: string;
+  file: File;
+  thumbnail: string; // Data URL
+}
+
+export interface StudentHomework {
+  id: string;
+  sheets: HomeworkSheet[];
+  createdAt: Date;
+}
+
+// Constants
+export const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp', 'image/jpg'];
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+// Glassmorphism Style
+export const glassStyle = {
+  backdropFilter: 'blur(16px)',
+  background: 'rgba(255, 255, 255, 0.1)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
+};
+
+// Mobile Detection Hook
+export const useIsMobile = (breakpoint = 768) => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // 1. Define the media query
+    const mediaQuery = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+
+    // 2. Check User Agent (Optional: keep if you specifically need device detection)
+    const uaCheck = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    const handleUpdate = () => {
+      setIsMobile(mediaQuery.matches || uaCheck);
+    };
+
+    // 3. Set initial value and listen for changes
+    handleUpdate();
+
+    // Modern browsers use addEventListener; older ones use addListener
+    mediaQuery.addEventListener('change', handleUpdate);
+    return () => mediaQuery.removeEventListener('change', handleUpdate);
+  }, [breakpoint]);
+
+  return isMobile;
+};
+
+// File Validation
+export const validateFile = (file: File, setError: (error: string) => void): boolean => {
+  if (!ACCEPTED_TYPES.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|heic|heif|webp)$/i)) {
+    setError(`${file.name} is not a supported image format. Please use JPG, PNG, HEIC, or WebP.`);
+    return false;
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    setError(`${file.name} exceeds 10MB limit.`);
+    return false;
+  }
+  return true;
+};
+
+// Thumbnail Generation
+export const generateThumbnail = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const maxWidth = 400;
+        const scaleFactor = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * scaleFactor;
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+// Process Files
+export const processFiles = async (
+  files: File[],
+  setError: (error: string) => void,
+  setIsProcessing: (isProcessing: boolean) => void
+): Promise<HomeworkSheet[]> => {
+  setIsProcessing(true);
+  const sheets: HomeworkSheet[] = [];
+
+  try {
+    for (const file of files) {
+      if (validateFile(file, setError)) {
+        const thumbnail = await generateThumbnail(file);
+        sheets.push({
+          id: `sheet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          file,
+          thumbnail
+        });
+      }
+    }
+  } catch (error) {
+    setError('Failed to process images. Please try again.');
+  } finally {
+    setIsProcessing(false);
+  }
+
+  return sheets;
+};
+
+// Drag and Drop Handlers
+export const handleDrag = (
+  e: React.DragEvent,
+  setDragActive: (active: boolean) => void
+) => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.type === 'dragenter' || e.type === 'dragover') {
+    setDragActive(true);
+  } else if (e.type === 'dragleave') {
+    setDragActive(false);
+  }
+};
+
+export const handleDrop = (
+  e: React.DragEvent,
+  setDragActive: (active: boolean) => void,
+  onFilesDropped: (files: File[]) => void
+) => {
+  e.preventDefault();
+  e.stopPropagation();
+  setDragActive(false);
+
+  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    onFilesDropped(Array.from(e.dataTransfer.files));
+  }
+};
+
+// Poker Card Stacking Preview Component
+export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) => {
+  if (sheets.length === 1) {
+    return (
+      <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-white/20">
+        <img
+          src={sheets[0].thumbnail}
+          alt="Homework Sheet"
+          className="w-full h-full object-cover"
+        />
+        {/* Sheet count badge */}
+        <div className="absolute top-1 right-1 bg-purple-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold z-10">
+          {sheets.length}
+        </div>
+      </div>
+    );
+  }
+
+  // 2+ sheets: document stack effect (no rotation, full images)
+  return (
+    <div className="relative w-full h-full">
+      {/* Third sheet (if exists) - most offset */}
+      {sheets.length > 2 && (
+        <div
+          className="absolute rounded-lg overflow-hidden border-2 border-white/20 shadow"
+          style={{
+            width: 'calc(100% - 8px)',
+            height: 'calc(100% - 8px)',
+            top: '-8px',
+            left: '-8px',
+            zIndex: 0,
+          }}
+        >
+          <img
+            src={sheets[2].thumbnail}
+            alt="Homework Sheet"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      {/* Second sheet - middle layer */}
+      <div
+        className="absolute rounded-lg overflow-hidden border-2 border-white/20 shadow"
+        style={{
+          width: 'calc(100% - 4px)',
+          height: 'calc(100% - 4px)',
+          top: '-4px',
+          left: '-4px',
+          zIndex: 1,
+        }}
+      >
+        <img
+          src={sheets[1].thumbnail}
+          alt="Homework Sheet"
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Front card (first sheet) */}
+      <div
+        className="absolute inset-0 rounded-lg overflow-hidden border-2 border-white/30 shadow-lg"
+        style={{ zIndex: 2 }}
+      >
+        <img
+          src={sheets[0].thumbnail}
+          alt="Homework Sheet"
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Sheet count badge - always show */}
+      <div className="absolute top-1 right-1 bg-purple-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold z-10">
+        {sheets.length}
+      </div>
+    </div>
+  );
+};
+
+// Error Alert Component
+interface ErrorAlertProps {
+  error: string;
+  onDismiss: () => void;
+}
+
+export const ErrorAlert = ({ error, onDismiss }: ErrorAlertProps) => {
+  if (!error) return null;
+
+  return (
+    <Alert variant="destructive" className="mb-4">
+      <AlertCircle className="w-4 h-4" />
+      <AlertDescription>{error}</AlertDescription>
+      <button onClick={onDismiss} className="ml-auto">
+        <X className="w-4 h-4" />
+      </button>
+    </Alert>
+  );
+};
+
+// Loading Overlay Component
+interface LoadingOverlayProps {
+  isProcessing: boolean;
+}
+
+export const LoadingOverlay = ({ isProcessing }: LoadingOverlayProps) => {
+  if (!isProcessing) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+      <div className="rounded-xl p-6" style={glassStyle}>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+        <p className="mt-4 text-gray-700">Processing images...</p>
+      </div>
+    </div>
+  );
+};
+
+// Initial Upload Area Component
+interface InitialUploadAreaProps {
+  dragActive: boolean;
+  onDragEnter: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onUploadClick: () => void;
+  onCameraClick: () => void;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  cameraInputRef: React.RefObject<HTMLInputElement>;
+  onFileChange: (files: File[]) => void;
+  isMobile: boolean;
+}
+
+export const InitialUploadArea = ({
+  dragActive,
+  onDragEnter,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onUploadClick,
+  onCameraClick,
+  fileInputRef,
+  cameraInputRef,
+  onFileChange,
+  isMobile,
+}: InitialUploadAreaProps) => {
+  return (
+    <div
+      onDragEnter={!isMobile ? onDragEnter : undefined}
+      onDragOver={!isMobile ? onDragOver : undefined}
+      onDragLeave={!isMobile ? onDragLeave : undefined}
+      onDrop={!isMobile ? onDrop : undefined}
+      className="rounded-2xl p-8 text-center transition-all duration-300"
+      style={{
+        background: dragActive && !isMobile
+          ? 'linear-gradient(145deg, rgba(139, 92, 246, 0.15), rgba(20, 184, 166, 0.15))'
+          : 'linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(20, 184, 166, 0.1))',
+        border: `2px dashed ${dragActive && !isMobile ? 'rgba(139, 92, 246, 0.6)' : 'rgba(139, 92, 246, 0.3)'}`,
+        transform: dragActive && !isMobile ? 'scale(1.02)' : 'scale(1)',
+      }}
+    >
+      <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <Upload className="w-8 h-8 text-white" />
+      </div>
+      <h3 className="text-lg text-gray-800 mb-2">Scan or upload photos for one or more students&apos; homework</h3>
+      <div className="mb-6">
+        {!isMobile && (
+          <p className="text-sm text-gray-600">Drag and drop or click to browse</p>
+        )}
+      </div>
+
+      <div className="flex gap-3 justify-center">
+        <Button
+          onClick={onUploadClick}
+          variant="outline"
+          // className="bg-gradient-to-r from-purple-500 to-teal-500 hover:shadow-lg"
+        >
+          <Camera className="w-4 h-4 mr-2" />
+          Take Picture
+
+        </Button>
+        <Button
+          onClick={onCameraClick}
+          variant="outline"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Upload Files
+        </Button>
+      </div>
+
+      {/* Hidden inputs */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => e.target.files && onFileChange(Array.from(e.target.files))}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        multiple
+        className="hidden"
+        onChange={(e) => e.target.files && onFileChange(Array.from(e.target.files))}
+      />
+    </div>
+  );
+};
+
+// Homework List Display Component
+interface HomeworkListDisplayProps {
+  homeworkList: StudentHomework[];
+  onHomeworkClick: (homeworkId: string) => void;
+  onUploadClick: () => void;
+  onCameraClick: () => void;
+}
+
+export const HomeworkListDisplay = ({
+  homeworkList,
+  onHomeworkClick,
+  onUploadClick,
+  onCameraClick,
+}: HomeworkListDisplayProps) => {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      {homeworkList.map((homework) => (
+        <button
+          key={homework.id}
+          onClick={() => onHomeworkClick(homework.id)}
+          className="rounded-xl p-3 text-left transition-all duration-300 hover:scale-105 hover:shadow-xl border-2 border-purple-200 w-full aspect-[3/4]"
+          style={glassStyle}
+        >
+          <StackedSheetsPreview sheets={homework.sheets} />
+        </button>
+      ))}
+
+      {/* Add New Student Homework Box */}
+      <div
+        className="rounded-xl p-2 border-2 border-dashed border-purple-300 flex flex-col items-center justify-center hover:border-purple-500 transition-colors w-full aspect-[3/4]"
+        style={{
+          background: 'rgba(139, 92, 246, 0.05)',
+        }}
+      >
+        <Plus className="w-6 h-6 text-purple-500 mb-2" />
+        <p className="text-xs text-gray-700 text-center mb-2 px-1">Add homework</p>
+        <div className="flex flex-col gap-1 w-full px-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onUploadClick}
+            className="text-xs h-6 px-2"
+          >
+            <Upload className="w-3 h-3 mr-1" />
+            Upload
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onCameraClick}
+            className="text-xs h-6 px-2"
+          >
+            <Camera className="w-3 h-3 mr-1" />
+            Camera
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Homework Dialog Component
+interface HomeworkDialogProps {
+  isOpen: boolean;
+  homework: StudentHomework | undefined;
+  onClose: () => void;
+  onAddSheets: (files: File[]) => void;
+}
+
+export const HomeworkDialog = ({
+  isOpen,
+  homework,
+  onClose,
+  onAddSheets,
+}: HomeworkDialogProps) => {
+  if (!isOpen || !homework) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent
+        className="max-w-4xl max-h-[85vh] overflow-y-auto"
+        style={glassStyle}
+      >
+        <DialogHeader>
+          <DialogTitle className="text-2xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
+            Uploaded Homework
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Sheets Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          {homework.sheets.map((sheet) => (
+            <div
+              key={sheet.id}
+              className="aspect-square rounded-lg overflow-hidden border-2 border-white/20 hover:border-purple-400 transition-colors cursor-pointer"
+            >
+              <img
+                src={sheet.thumbnail}
+                alt="Homework Sheet"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Add More Sheets Section */}
+        <div className="rounded-xl p-6 border-2 border-dashed border-purple-300 bg-white/5">
+          <p className="text-gray-700 mb-4 text-center font-medium">Add more homework sheets</p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              variant="outline"
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.multiple = true;
+                input.onchange = (e) => {
+                  const files = (e.target as HTMLInputElement).files;
+                  if (files) onAddSheets(Array.from(files));
+                };
+                input.click();
+              }}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Images
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.capture = 'environment';
+                input.multiple = true;
+                input.onchange = (e) => {
+                  const files = (e.target as HTMLInputElement).files;
+                  if (files) onAddSheets(Array.from(files));
+                };
+                input.click();
+              }}
+            >
+              <Camera className="w-4 h-4 mr-2" />
+              Take Photos
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};

@@ -42,14 +42,14 @@ export function AppSidebar({ modules, profile }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  console.log('[AppSidebar] Received modules:', modules);
-  console.log('[AppSidebar] Profile:', profile);
+  // console.log('[AppSidebar] Received modules:', modules);
+  // console.log('[AppSidebar] Profile:', profile);
 
   const menuItems = useMemo(() => {
     const items = [];
 
     // FIRST: Dynamic modules from API (sorted by seq_no)
-    console.log('[AppSidebar] Building menu items, modules count:', modules?.length || 0);
+    // console.log('[AppSidebar] Building menu items, modules count:', modules?.length || 0);
     if (modules && modules.length > 0) {
       items.push(...modules.map(m => ({
         id: m.module_code,
