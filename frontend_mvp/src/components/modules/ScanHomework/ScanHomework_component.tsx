@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Upload, X, Plus, AlertCircle } from 'lucide-react';
+import { Camera, Upload, X, Plus, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
@@ -459,7 +460,25 @@ export const HomeworkDialog = ({
   onAddSheets,
   isMobile,
 }: HomeworkDialogProps) => {
+  const [sheets, setSheets] = useState<HomeworkSheet[]>([]);
+
+  // Update sheets when homework changes
+  useEffect(() => {
+    if (homework?.sheets) {
+      setSheets(homework.sheets);
+    }
+  }, [homework]);
+
   if (!isOpen || !homework) return null;
+
+  const moveSheet = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= sheets.length) return;
+
+    const newSheets = [...sheets];
+    const [movedSheet] = newSheets.splice(fromIndex, 1);
+    newSheets.splice(toIndex, 0, movedSheet);
+    setSheets(newSheets);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -474,21 +493,56 @@ export const HomeworkDialog = ({
 
         {/* Sheets Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-          {homework.sheets.map((sheet, index) => (
-            <div
+          {sheets.map((sheet, index) => (
+            <motion.div
               key={sheet.id}
-              className="relative aspect-[3/4] rounded-lg overflow-hidden border-2 border-gray-300 hover:border-purple-400 transition-colors"
+              layoutId={sheet.id}
+              layout
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{
+                layout: { type: "spring", stiffness: 350, damping: 30 },
+                opacity: { duration: 0.2 },
+                scale: { duration: 0.2 }
+              }}
+              className="relative aspect-[3/4] rounded-lg overflow-hidden border-2 border-gray-300 hover:border-purple-400 transition-colors group"
             >
               <img
                 src={sheet.thumbnail}
                 alt="Homework Sheet"
                 className="w-full h-full object-cover"
               />
+
               {/* Sheet number badge */}
               <div className="absolute top-1 left-1 bg-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold text-gray-700 shadow-md z-10">
                 {index + 1}
               </div>
-            </div>
+
+              {/* Left Arrow - Only show if not first sheet */}
+              {index > 0 && (
+                <button
+                  onClick={() => moveSheet(index, index - 1)}
+                  className={`absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/70 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all z-20
+                    ${isMobile ? 'opacity-50' : 'opacity-0 group-hover:opacity-50 hover:!opacity-100'}`}
+                  aria-label="Move left"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-700" />
+                </button>
+              )}
+
+              {/* Right Arrow - Only show if not last sheet */}
+              {index < sheets.length - 1 && (
+                <button
+                  onClick={() => moveSheet(index, index + 1)}
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/70 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all z-20
+                    ${isMobile ? 'opacity-50' : 'opacity-0 group-hover:opacity-50 hover:!opacity-100'}`}
+                  aria-label="Move right"
+                >
+                  <ChevronRight className="w-5 h-5 text-gray-700" />
+                </button>
+              )}
+            </motion.div>
           ))}
 
           {/* Add More Sheets Box */}
