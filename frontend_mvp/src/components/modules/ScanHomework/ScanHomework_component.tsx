@@ -158,14 +158,14 @@ export const handleDrop = (
 export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) => {
   if (sheets.length === 1) {
     return (
-      <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-white/20">
+      <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-300">
         <img
           src={sheets[0].thumbnail}
           alt="Homework Sheet"
           className="w-full h-full object-cover"
         />
         {/* Sheet count badge */}
-        <div className="absolute top-1 right-1 bg-purple-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold z-10">
+        <div className="absolute bottom-1 right-1 bg-purple-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
           {sheets.length}
         </div>
       </div>
@@ -178,7 +178,7 @@ export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) =>
       {/* Third sheet (if exists) - most offset */}
       {sheets.length > 2 && (
         <div
-          className="absolute rounded-lg overflow-hidden border-2 border-white/20 shadow"
+          className="absolute rounded-lg overflow-hidden border-2 border-gray-300 shadow"
           style={{
             width: 'calc(100% - 8px)',
             height: 'calc(100% - 8px)',
@@ -197,7 +197,7 @@ export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) =>
 
       {/* Second sheet - middle layer */}
       <div
-        className="absolute rounded-lg overflow-hidden border-2 border-white/20 shadow"
+        className="absolute rounded-lg overflow-hidden border-2 border-gray-300 shadow"
         style={{
           width: 'calc(100% - 4px)',
           height: 'calc(100% - 4px)',
@@ -215,7 +215,7 @@ export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) =>
 
       {/* Front card (first sheet) */}
       <div
-        className="absolute inset-0 rounded-lg overflow-hidden border-2 border-white/30 shadow-lg"
+        className="absolute inset-0 rounded-lg overflow-hidden border-2 border-gray-400 shadow-lg"
         style={{ zIndex: 2 }}
       >
         <img
@@ -226,7 +226,7 @@ export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) =>
       </div>
 
       {/* Sheet count badge - always show */}
-      <div className="absolute top-1 right-1 bg-purple-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold z-10">
+      <div className="absolute bottom-1 right-1 bg-purple-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
         {sheets.length}
       </div>
     </div>
@@ -371,6 +371,7 @@ interface HomeworkListDisplayProps {
   onHomeworkClick: (homeworkId: string) => void;
   onUploadClick: () => void;
   onCameraClick: () => void;
+  isMobile: boolean;
 }
 
 export const HomeworkListDisplay = ({
@@ -378,15 +379,19 @@ export const HomeworkListDisplay = ({
   onHomeworkClick,
   onUploadClick,
   onCameraClick,
+  isMobile,
 }: HomeworkListDisplayProps) => {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div>
+      {/* Title */}
+      <h2 className="text-2xl text-gray-800 mb-4">Uploaded Students&apos; Homework</h2>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
       {homeworkList.map((homework) => (
         <button
           key={homework.id}
           onClick={() => onHomeworkClick(homework.id)}
-          className="rounded-xl p-3 text-left transition-all duration-300 hover:scale-105 hover:shadow-xl border-2 border-purple-200 w-full aspect-[3/4]"
-          style={glassStyle}
+          className="rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl  border-purple-200 w-full aspect-[3/4]"
         >
           <StackedSheetsPreview sheets={homework.sheets} />
         </button>
@@ -394,33 +399,45 @@ export const HomeworkListDisplay = ({
 
       {/* Add New Student Homework Box */}
       <div
-        className="rounded-xl p-2 border-2 border-dashed border-purple-300 flex flex-col items-center justify-center hover:border-purple-500 transition-colors w-full aspect-[3/4]"
+        className="rounded-xl p-2 border-2 border-dashed border-purple-300 hover:border-purple-500 transition-colors w-full aspect-[3/4]"
         style={{
           background: 'rgba(139, 92, 246, 0.05)',
         }}
       >
-        <Plus className="w-6 h-6 text-purple-500 mb-2" />
-        <p className="text-xs text-gray-700 text-center mb-2 px-1">Add homework</p>
-        <div className="flex flex-col gap-1 w-full px-2">
-          <Button
-            size="sm"
-            variant="outline"
+        {isMobile ? (
+          // Mobile: Two boxes stacked vertically
+          <div className="flex flex-col gap-2 h-full">
+            {/* Upload Box */}
+            <button
+              onClick={onUploadClick}
+              className="flex-1 flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
+            >
+              <Upload className="w-8 h-8 text-purple-500 mb-1" />
+              <p className="text-xs text-gray-700 font-medium">Tap to upload homework for </p>
+              <p className="text-xs text-gray-700 font-medium">one more student</p>
+            </button>
+
+            {/* Scan Box */}
+            <button
+              onClick={onCameraClick}
+              className="flex-1 flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
+            >
+              <Camera className="w-8 h-8 text-purple-500 mb-1" />
+              <p className="text-xs text-gray-700 font-medium">Tap to scan homework for</p>
+              <p className="text-xs text-gray-700 font-medium">one more student</p>
+            </button>
+          </div>
+        ) : (
+          // Desktop: Single upload box
+          <button
             onClick={onUploadClick}
-            className="text-xs h-6 px-2"
+            className="w-full h-full flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
           >
-            <Upload className="w-3 h-3 mr-1" />
-            Upload
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onCameraClick}
-            className="text-xs h-6 px-2"
-          >
-            <Camera className="w-3 h-3 mr-1" />
-            Camera
-          </Button>
-        </div>
+            <Upload className="w-12 h-12 text-purple-500 mb-2" />
+            <p className="text-sm text-gray-700 font-medium">Click to upload</p>
+          </button>
+        )}
+      </div>
       </div>
     </div>
   );
@@ -432,6 +449,7 @@ interface HomeworkDialogProps {
   homework: StudentHomework | undefined;
   onClose: () => void;
   onAddSheets: (files: File[]) => void;
+  isMobile: boolean;
 }
 
 export const HomeworkDialog = ({
@@ -439,14 +457,14 @@ export const HomeworkDialog = ({
   homework,
   onClose,
   onAddSheets,
+  isMobile,
 }: HomeworkDialogProps) => {
   if (!isOpen || !homework) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-4xl max-h-[85vh] overflow-y-auto"
-        style={glassStyle}
+        className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[85vh] overflow-y-auto dialog-glass-white"
       >
         <DialogHeader>
           <DialogTitle className="text-2xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
@@ -455,60 +473,93 @@ export const HomeworkDialog = ({
         </DialogHeader>
 
         {/* Sheets Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          {homework.sheets.map((sheet) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+          {homework.sheets.map((sheet, index) => (
             <div
               key={sheet.id}
-              className="aspect-square rounded-lg overflow-hidden border-2 border-white/20 hover:border-purple-400 transition-colors cursor-pointer"
+              className="relative aspect-[3/4] rounded-lg overflow-hidden border-2 border-gray-300 hover:border-purple-400 transition-colors"
             >
               <img
                 src={sheet.thumbnail}
                 alt="Homework Sheet"
                 className="w-full h-full object-cover"
               />
+              {/* Sheet number badge */}
+              <div className="absolute top-1 left-1 bg-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold text-gray-700 shadow-md z-10">
+                {index + 1}
+              </div>
             </div>
           ))}
-        </div>
 
-        {/* Add More Sheets Section */}
-        <div className="rounded-xl p-6 border-2 border-dashed border-purple-300 bg-white/5">
-          <p className="text-gray-700 mb-4 text-center font-medium">Add more homework sheets</p>
-          <div className="flex gap-3 justify-center">
-            <Button
-              variant="outline"
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.multiple = true;
-                input.onchange = (e) => {
-                  const files = (e.target as HTMLInputElement).files;
-                  if (files) onAddSheets(Array.from(files));
-                };
-                input.click();
-              }}
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Images
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.capture = 'environment';
-                input.multiple = true;
-                input.onchange = (e) => {
-                  const files = (e.target as HTMLInputElement).files;
-                  if (files) onAddSheets(Array.from(files));
-                };
-                input.click();
-              }}
-            >
-              <Camera className="w-4 h-4 mr-2" />
-              Take Photos
-            </Button>
+          {/* Add More Sheets Box */}
+          <div
+            className="rounded-xl p-2 border-2 border-dashed border-purple-300 hover:border-purple-500 transition-colors aspect-[3/4]"
+            style={{ background: 'rgba(139, 92, 246, 0.05)' }}
+          >
+            {isMobile ? (
+              // Mobile: Two boxes stacked vertically
+              <div className="flex flex-col gap-2 h-full">
+                {/* Upload Box */}
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.multiple = true;
+                    input.onchange = (e) => {
+                      const files = (e.target as HTMLInputElement).files;
+                      if (files) onAddSheets(Array.from(files));
+                    };
+                    input.click();
+                  }}
+                  className="flex-1 flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
+                >
+                  <Upload className="w-8 h-8 text-purple-500 mb-1" />
+                  <p className="text-xs text-gray-700 font-medium">Tap to upload</p>
+                  <p className="text-xs text-gray-700 font-medium">more homework sheets</p>
+                </button>
+
+                {/* Scan Box */}
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.capture = 'environment';
+                    input.multiple = true;
+                    input.onchange = (e) => {
+                      const files = (e.target as HTMLInputElement).files;
+                      if (files) onAddSheets(Array.from(files));
+                    };
+                    input.click();
+                  }}
+                  className="flex-1 flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
+                >
+                  <Camera className="w-8 h-8 text-purple-500 mb-1" />
+                  <p className="text-xs text-gray-700 font-medium">Tap to scan</p>
+                </button>
+              </div>
+            ) : (
+              // Desktop: Single upload box
+              <button
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.multiple = true;
+                  input.onchange = (e) => {
+                    const files = (e.target as HTMLInputElement).files;
+                    if (files) onAddSheets(Array.from(files));
+                  };
+                  input.click();
+                }}
+                className="w-full h-full flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
+              >
+                <Upload className="w-12 h-12 text-purple-500 mb-2" />
+                <p className="text-sm text-gray-700 font-medium">Click to upload</p>
+                <p className="text-xs text-gray-700 font-medium">more homework sheets</p>
+              </button>
+            )}
           </div>
         </div>
       </DialogContent>

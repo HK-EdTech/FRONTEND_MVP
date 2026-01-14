@@ -101,6 +101,7 @@ export function ScanHomework() {
             onHomeworkClick={(id) => setSelectedHomeworkId(id)}
             onUploadClick={() => fileInputRef.current?.click()}
             onCameraClick={() => cameraInputRef.current?.click()}
+            isMobile={isMobile}
           />
         )}
       </div>
@@ -111,6 +112,7 @@ export function ScanHomework() {
         homework={selectedHomework}
         onClose={() => setSelectedHomeworkId(null)}
         onAddSheets={(files) => handleFiles(files, selectedHomeworkId)}
+        isMobile={isMobile}
       />
     </div>
   );
