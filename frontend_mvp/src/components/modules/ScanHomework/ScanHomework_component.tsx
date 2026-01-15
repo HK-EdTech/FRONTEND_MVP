@@ -159,7 +159,7 @@ export const handleDrop = (
 export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) => {
   if (sheets.length === 1) {
     return (
-      <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-300">
+      <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-300 group-hover:border-purple-400 transition-colors">
         <img
           src={sheets[0].thumbnail}
           alt="Homework Sheet"
@@ -179,7 +179,7 @@ export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) =>
       {/* Third sheet (if exists) - most offset */}
       {sheets.length > 2 && (
         <div
-          className="absolute rounded-lg overflow-hidden border-2 border-gray-300 shadow"
+          className="absolute rounded-lg overflow-hidden border-2 border-gray-300 group-hover:border-purple-400 shadow transition-colors"
           style={{
             width: 'calc(100% - 8px)',
             height: 'calc(100% - 8px)',
@@ -198,7 +198,7 @@ export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) =>
 
       {/* Second sheet - middle layer */}
       <div
-        className="absolute rounded-lg overflow-hidden border-2 border-gray-300 shadow"
+        className="absolute rounded-lg overflow-hidden border-2 border-gray-300 group-hover:border-purple-400 shadow transition-colors"
         style={{
           width: 'calc(100% - 4px)',
           height: 'calc(100% - 4px)',
@@ -216,7 +216,7 @@ export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) =>
 
       {/* Front card (first sheet) */}
       <div
-        className="absolute inset-0 rounded-lg overflow-hidden border-2 border-gray-400 shadow-lg"
+        className="absolute inset-0 rounded-lg overflow-hidden border-2 border-gray-400 group-hover:border-purple-500 shadow-lg transition-colors"
         style={{ zIndex: 2 }}
       >
         <img
@@ -406,7 +406,7 @@ export const HomeworkListDisplay = ({
         <button
           key={homework.id}
           onClick={() => onHomeworkClick(homework.id)}
-          className="rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl  border-purple-200 w-full aspect-[3/4]"
+          className="group rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl  border-purple-200 w-full aspect-[3/4]"
         >
           <StackedSheetsPreview sheets={homework.sheets} />
         </button>
