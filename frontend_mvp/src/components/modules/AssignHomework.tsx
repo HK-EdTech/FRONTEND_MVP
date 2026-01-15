@@ -13,14 +13,6 @@ export function AssignHomework() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
-          Assign Homework
-        </h1>
-        <p className="text-gray-600 mt-1">Create and assign homework to students</p>
-      </div>
-
       {/* Content */}
       <div className="rounded-2xl p-6 shadow-xl" style={glassStyle}>
         <div className="flex items-center gap-3 mb-6">

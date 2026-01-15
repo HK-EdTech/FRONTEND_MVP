@@ -53,6 +53,8 @@ export function ScanHomework() {
         createdAt: new Date()
       };
       setHomeworkList(prev => [...prev, newHomework]);
+      // Auto-open dialog for newly created homework
+      setSelectedHomeworkId(newHomework.id);
     }
   };
 
@@ -61,14 +63,6 @@ export function ScanHomework() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
-          Scan & Mark Homework
-        </h1>
-        <p className="text-gray-600 mt-1">Upload and scan student homework for AI-powered marking</p>
-      </div>
-
       {/* Error Alert */}
       <ErrorAlert error={error} onDismiss={() => setError('')} />
 

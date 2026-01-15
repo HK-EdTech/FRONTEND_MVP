@@ -326,22 +326,36 @@ export const InitialUploadArea = ({
       </div>
 
       <div className="flex gap-3 justify-center">
-        <Button
-          onClick={onUploadClick}
-          variant="outline"
-          // className="bg-gradient-to-r from-purple-500 to-teal-500 hover:shadow-lg"
-        >
-          <Camera className="w-4 h-4 mr-2" />
-          Take Picture
-
-        </Button>
-        <Button
-          onClick={onCameraClick}
-          variant="outline"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          Upload Files
-        </Button>
+        {isMobile && (
+          <Button
+            onClick={onCameraClick}
+            variant="outline"
+            size="lg"
+            className="px-8 py-6 text-lg rounded-xl"
+          >
+            <Camera className="w-7 h-7 mr-3" />
+            Take Picture
+          </Button>
+        )}
+        {!isMobile ? (
+          <button
+            onClick={onUploadClick}
+            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:-translate-y-1 flex items-center gap-2"
+          >
+            <Upload className="w-5 h-5" />
+            Upload Picture
+          </button>
+        ) : (
+          <Button
+            onClick={onUploadClick}
+            variant="outline"
+            size="lg"
+            className="px-8 py-6 text-lg rounded-xl"
+          >
+            <Upload className="w-7 h-7 mr-3" />
+            Upload Picture
+          </Button>
+        )}
       </div>
 
       {/* Hidden inputs */}

@@ -6,7 +6,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { supabase } from '@/lib/supabase';
 import { api, ProfileResponse, ModuleWithPermissions, ProfileWithModulesResponse } from '@/lib/api';
 import { AppSidebar } from '@/components/AppSidebar';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,6 +29,9 @@ export default function RootLayout({
   const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
+
+  // Find current module based on pathname
+  const currentModule = modules.find(m => m.route === pathname);
 
   // Fetch profile + modules ONCE on mount (not on every route change)
   useEffect(() => {
@@ -118,9 +121,33 @@ export default function RootLayout({
             {/* SIDEBAR STAYS MOUNTED - preserves animations */}
             <AppSidebar modules={modules} profile={profile} />
 
-            <main className="flex-1 p-6">
-              {/* Children changes on route change */}
-              {children}
+            <main className="flex-1">
+              {/* Header Bar - Glass style on mobile, transparent on desktop */}
+              <div className="sticky top-0 z-40 px-6 py-3 flex items-center gap-3 backdrop-blur-md bg-white/70 border-b border-white/30 shadow-lg md:bg-transparent md:border-none md:backdrop-blur-none md:shadow-none">
+                {/* Trigger button - Only visible on mobile */}
+                <div className="md:hidden">
+                  <SidebarTrigger className="hover:bg-white/50 h-10 w-10 rounded-lg transition-colors" />
+                </div>
+
+                {/* Module Title and Description */}
+                {currentModule && (
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-xl md:text-3xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent truncate">
+                      {currentModule.module_eng_name}
+                    </h1>
+                    {currentModule.description && (
+                      <p className="hidden md:block text-base text-gray-600 mt-1 truncate">
+                        {currentModule.description}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Main content area */}
+              <div className="px-6 pb-6">
+                {children}
+              </div>
             </main>
           </SidebarProvider>
         </div>
