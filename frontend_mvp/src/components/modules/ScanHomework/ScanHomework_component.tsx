@@ -399,7 +399,7 @@ export const HomeworkListDisplay = ({
   return (
     <div>
       {/* Title */}
-      <h2 className="text-2xl text-gray-800 mb-4">Uploaded Students&apos; Homework</h2>
+      <h2 className="text-lg text-gray-800 mb-4">Uploaded Students&apos; Homework</h2>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
       {homeworkList.map((homework) => (
