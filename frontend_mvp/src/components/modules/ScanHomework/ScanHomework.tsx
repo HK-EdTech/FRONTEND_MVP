@@ -58,6 +58,33 @@ export function ScanHomework() {
     }
   };
 
+  // Handle sheet reordering
+  const handleSheetsReorder = (homeworkId: string, newSheets: HomeworkSheet[]) => {
+    setHomeworkList(prev => prev.map(hw =>
+      hw.id === homeworkId
+        ? { ...hw, sheets: newSheets }
+        : hw
+    ));
+  };
+
+  // Handle deleting entire homework
+  const handleHomeworkDelete = (homeworkId: string) => {
+    setHomeworkList(prev => prev.filter(hw => hw.id !== homeworkId));
+    // Close dialog if the deleted homework was open
+    if (selectedHomeworkId === homeworkId) {
+      setSelectedHomeworkId(null);
+    }
+  };
+
+  // Handle deleting individual sheet
+  const handleSheetDelete = (homeworkId: string, sheetId: string) => {
+    setHomeworkList(prev => prev.map(hw =>
+      hw.id === homeworkId
+        ? { ...hw, sheets: hw.sheets.filter(sheet => sheet.id !== sheetId) }
+        : hw
+    ));
+  };
+
   // Selected homework for dialog
   const selectedHomework = homeworkList.find(hw => hw.id === selectedHomeworkId);
 
@@ -68,6 +95,25 @@ export function ScanHomework() {
 
       {/* Loading State */}
       <LoadingOverlay isProcessing={isProcessing} />
+
+      {/* Hidden file inputs - always rendered so they work for both upload areas */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files), null)}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        multiple
+        className="hidden"
+        onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files), null)}
+      />
 
       {/* Main Content */}
       <div className="rounded-2xl p-6 shadow-xl" style={glassStyle}>
@@ -81,9 +127,6 @@ export function ScanHomework() {
             onDrop={(e) => handleDrop(e, setDragActive, (files) => handleFiles(files, null))}
             onUploadClick={() => fileInputRef.current?.click()}
             onCameraClick={() => cameraInputRef.current?.click()}
-            fileInputRef={fileInputRef}
-            cameraInputRef={cameraInputRef}
-            onFileChange={(files) => handleFiles(files, null)}
             isMobile={isMobile}
           />
         )}
@@ -93,6 +136,7 @@ export function ScanHomework() {
           <HomeworkListDisplay
             homeworkList={homeworkList}
             onHomeworkClick={(id) => setSelectedHomeworkId(id)}
+            onHomeworkDelete={handleHomeworkDelete}
             onUploadClick={() => fileInputRef.current?.click()}
             onCameraClick={() => cameraInputRef.current?.click()}
             isMobile={isMobile}
@@ -106,6 +150,8 @@ export function ScanHomework() {
         homework={selectedHomework}
         onClose={() => setSelectedHomeworkId(null)}
         onAddSheets={(files) => handleFiles(files, selectedHomeworkId)}
+        onSheetsReorder={handleSheetsReorder}
+        onSheetDelete={handleSheetDelete}
         isMobile={isMobile}
       />
     </div>

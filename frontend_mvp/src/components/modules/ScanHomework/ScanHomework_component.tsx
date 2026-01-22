@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Upload, X, Plus, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, Upload, X, Plus, AlertCircle, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
@@ -156,7 +156,7 @@ export const handleDrop = (
 };
 
 // Poker Card Stacking Preview Component
-export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) => {
+export const StackedSheetsPreview = ({ sheets, studentNumber }: { sheets: HomeworkSheet[], studentNumber?: number }) => {
   if (sheets.length === 1) {
     return (
       <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-300 group-hover:border-purple-400 transition-colors">
@@ -165,6 +165,14 @@ export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) =>
           alt="Homework Sheet"
           className="w-full h-full object-cover"
         />
+        {/* Student number watermark */}
+        {studentNumber !== undefined && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-white text-8xl font-bold opacity-60" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>
+              {studentNumber}
+            </div>
+          </div>
+        )}
         {/* Sheet count badge */}
         <div className="absolute bottom-1 right-1 bg-purple-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
           {sheets.length}
@@ -226,6 +234,15 @@ export const StackedSheetsPreview = ({ sheets }: { sheets: HomeworkSheet[] }) =>
         />
       </div>
 
+      {/* Student number watermark */}
+      {studentNumber !== undefined && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 3 }}>
+          <div className="text-white text-8xl font-bold opacity-60" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>
+            {studentNumber}
+          </div>
+        </div>
+      )}
+
       {/* Sheet count badge - always show */}
       <div className="absolute bottom-1 right-1 bg-purple-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
         {sheets.length}
@@ -281,9 +298,6 @@ interface InitialUploadAreaProps {
   onDrop: (e: React.DragEvent) => void;
   onUploadClick: () => void;
   onCameraClick: () => void;
-  fileInputRef: React.RefObject<HTMLInputElement>;
-  cameraInputRef: React.RefObject<HTMLInputElement>;
-  onFileChange: (files: File[]) => void;
   isMobile: boolean;
 }
 
@@ -295,9 +309,6 @@ export const InitialUploadArea = ({
   onDrop,
   onUploadClick,
   onCameraClick,
-  fileInputRef,
-  cameraInputRef,
-  onFileChange,
   isMobile,
 }: InitialUploadAreaProps) => {
   return (
@@ -357,25 +368,6 @@ export const InitialUploadArea = ({
           </Button>
         )}
       </div>
-
-      {/* Hidden inputs */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={(e) => e.target.files && onFileChange(Array.from(e.target.files))}
-      />
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        multiple
-        className="hidden"
-        onChange={(e) => e.target.files && onFileChange(Array.from(e.target.files))}
-      />
     </div>
   );
 };
@@ -384,6 +376,7 @@ export const InitialUploadArea = ({
 interface HomeworkListDisplayProps {
   homeworkList: StudentHomework[];
   onHomeworkClick: (homeworkId: string) => void;
+  onHomeworkDelete: (homeworkId: string) => void;
   onUploadClick: () => void;
   onCameraClick: () => void;
   isMobile: boolean;
@@ -392,6 +385,7 @@ interface HomeworkListDisplayProps {
 export const HomeworkListDisplay = ({
   homeworkList,
   onHomeworkClick,
+  onHomeworkDelete,
   onUploadClick,
   onCameraClick,
   isMobile,
@@ -402,14 +396,33 @@ export const HomeworkListDisplay = ({
       <h2 className="text-lg text-gray-800 mb-4">Uploaded Students&apos; Homework</h2>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-      {homeworkList.map((homework) => (
-        <button
+      {homeworkList.map((homework, index) => (
+        <div
           key={homework.id}
-          onClick={() => onHomeworkClick(homework.id)}
-          className="group rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl  border-purple-200 w-full aspect-[3/4]"
+          className="group relative rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-xl w-full aspect-[3/4]"
         >
-          <StackedSheetsPreview sheets={homework.sheets} />
-        </button>
+          <button
+            onClick={() => onHomeworkClick(homework.id)}
+            className="w-full h-full"
+          >
+            <StackedSheetsPreview sheets={homework.sheets} studentNumber={index + 1} />
+          </button>
+
+          {/* Delete button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm(`Delete Student ${index + 1}'s homework?`)) {
+                onHomeworkDelete(homework.id);
+              }
+            }}
+            className={`absolute top-2 right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20
+              ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
+            aria-label="Delete homework"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       ))}
 
       {/* Add New Student Homework Box */}
@@ -464,6 +477,8 @@ interface HomeworkDialogProps {
   homework: StudentHomework | undefined;
   onClose: () => void;
   onAddSheets: (files: File[]) => void;
+  onSheetsReorder: (homeworkId: string, newSheets: HomeworkSheet[]) => void;
+  onSheetDelete: (homeworkId: string, sheetId: string) => void;
   isMobile: boolean;
 }
 
@@ -472,26 +487,29 @@ export const HomeworkDialog = ({
   homework,
   onClose,
   onAddSheets,
+  onSheetsReorder,
+  onSheetDelete,
   isMobile,
 }: HomeworkDialogProps) => {
-  const [sheets, setSheets] = useState<HomeworkSheet[]>([]);
-
-  // Update sheets when homework changes
-  useEffect(() => {
-    if (homework?.sheets) {
-      setSheets(homework.sheets);
-    }
-  }, [homework]);
-
   if (!isOpen || !homework) return null;
 
   const moveSheet = (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= sheets.length) return;
+    if (toIndex < 0 || toIndex >= homework.sheets.length) return;
 
-    const newSheets = [...sheets];
+    const newSheets = [...homework.sheets];
     const [movedSheet] = newSheets.splice(fromIndex, 1);
     newSheets.splice(toIndex, 0, movedSheet);
-    setSheets(newSheets);
+    onSheetsReorder(homework.id, newSheets);
+  };
+
+  const handleDeleteSheet = (sheetId: string) => {
+    if (homework.sheets.length === 1) {
+      alert("Cannot delete the last sheet. Delete the entire homework instead.");
+      return;
+    }
+    if (window.confirm("Delete this homework sheet?")) {
+      onSheetDelete(homework.id, sheetId);
+    }
   };
 
   return (
@@ -507,7 +525,7 @@ export const HomeworkDialog = ({
 
         {/* Sheets Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-          {sheets.map((sheet, index) => (
+          {homework.sheets.map((sheet, index) => (
             <motion.div
               key={sheet.id}
               layoutId={sheet.id}
@@ -533,6 +551,19 @@ export const HomeworkDialog = ({
                 {index + 1}
               </div>
 
+              {/* Delete button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteSheet(sheet.id);
+                }}
+                className={`absolute top-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20
+                  ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
+                aria-label="Delete sheet"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+
               {/* Left Arrow - Only show if not first sheet */}
               {index > 0 && (
                 <button
@@ -546,7 +577,7 @@ export const HomeworkDialog = ({
               )}
 
               {/* Right Arrow - Only show if not last sheet */}
-              {index < sheets.length - 1 && (
+              {index < homework.sheets.length - 1 && (
                 <button
                   onClick={() => moveSheet(index, index + 1)}
                   className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/70 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all z-20
