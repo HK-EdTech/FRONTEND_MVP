@@ -168,13 +168,13 @@ export const StackedSheetsPreview = ({ sheets, studentNumber }: { sheets: Homewo
         {/* Student number watermark */}
         {studentNumber !== undefined && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-white text-8xl font-bold opacity-60" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>
+            <div className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-8xl font-bold opacity-60" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>
               {studentNumber}
             </div>
           </div>
         )}
         {/* Sheet count badge */}
-        <div className="absolute bottom-1 right-1 bg-purple-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
+        <div className="absolute top-1 right-1 bg-purple-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
           {sheets.length}
         </div>
       </div>
@@ -237,14 +237,14 @@ export const StackedSheetsPreview = ({ sheets, studentNumber }: { sheets: Homewo
       {/* Student number watermark */}
       {studentNumber !== undefined && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 3 }}>
-          <div className="text-white text-8xl font-bold opacity-60" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>
+          <div className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-8xl font-bold opacity-60" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>
             {studentNumber}
           </div>
         </div>
       )}
 
       {/* Sheet count badge - always show */}
-      <div className="absolute bottom-1 right-1 bg-purple-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
+      <div className="absolute top-1 right-1 bg-purple-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
         {sheets.length}
       </div>
     </div>
@@ -416,7 +416,7 @@ export const HomeworkListDisplay = ({
                 onHomeworkDelete(homework.id);
               }
             }}
-            className={`absolute top-2 right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20
+            className={`absolute bottom-2 right-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20
               ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
             aria-label="Delete homework"
           >
@@ -546,9 +546,11 @@ export const HomeworkDialog = ({
                 className="w-full h-full object-cover"
               />
 
-              {/* Sheet number badge */}
-              <div className="absolute top-1 left-1 bg-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold text-gray-700 shadow-md z-10">
-                {index + 1}
+              {/* Sheet number watermark */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold opacity-60" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>
+                  {index + 1}
+                </div>
               </div>
 
               {/* Delete button */}
@@ -557,7 +559,7 @@ export const HomeworkDialog = ({
                   e.stopPropagation();
                   handleDeleteSheet(sheet.id);
                 }}
-                className={`absolute top-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20
+                className={`absolute bottom-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20
                   ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
                 aria-label="Delete sheet"
               >
