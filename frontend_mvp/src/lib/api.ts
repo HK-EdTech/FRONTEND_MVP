@@ -30,6 +30,23 @@ export interface ProfileUpdateRequest {
   avatar_url?: string;
 }
 
+export interface ClassResponse {
+  id: string;
+  name: string;
+  subject: string;
+  target_level: string | null;
+  organization_id: string | null;
+  created_at: string;
+}
+
+export interface TeacherProfileResponse {
+  id: string;
+  bio: string | null;
+  classes: ClassResponse[];
+  created_at: string;
+  updated_at: string;
+}
+
 // Module permission system types
 export interface ModuleWithPermissions {
   module_code: string;
@@ -122,6 +139,15 @@ export const api = {
     return apiRequest<ProfileResponse>('/profile/me', {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Get current teacher's profile with classes
+   */
+  async getMyTeacherProfile(): Promise<TeacherProfileResponse> {
+    return apiRequest<TeacherProfileResponse>('/profile/me/teacher', {
+      method: 'GET',
     });
   },
 };

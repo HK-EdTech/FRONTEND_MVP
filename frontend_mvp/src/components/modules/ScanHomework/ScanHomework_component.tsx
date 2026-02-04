@@ -156,7 +156,7 @@ export const handleDrop = (
 };
 
 // Poker Card Stacking Preview Component
-export const StackedSheetsPreview = ({ sheets, studentNumber }: { sheets: HomeworkSheet[], studentNumber?: number }) => {
+export const StackedSheetsPreview = ({ sheets, studentNumber, onDelete, isMobile }: { sheets: HomeworkSheet[], studentNumber?: number, onDelete?: () => void, isMobile?: boolean }) => {
   if (sheets.length === 1) {
     return (
       <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-300 group-hover:border-purple-400 transition-colors">
@@ -174,9 +174,24 @@ export const StackedSheetsPreview = ({ sheets, studentNumber }: { sheets: Homewo
           </div>
         )}
         {/* Sheet count badge */}
-        <div className="absolute top-1 right-1 bg-purple-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
+        <div className="absolute top-1 right-1 bg-purple-400 text-white rounded-lg w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
           {sheets.length}
         </div>
+
+        {/* Delete button */}
+        {onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className={`absolute bottom-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg transition-all z-20
+              ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
+            aria-label="Delete homework"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
     );
   }
@@ -244,9 +259,24 @@ export const StackedSheetsPreview = ({ sheets, studentNumber }: { sheets: Homewo
       )}
 
       {/* Sheet count badge - always show */}
-      <div className="absolute top-1 right-1 bg-purple-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
+      <div className="absolute top-1 right-1 bg-purple-400 text-white rounded-lg w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
         {sheets.length}
       </div>
+
+      {/* Delete button */}
+      {onDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className={`absolute bottom-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg transition-all z-20
+            ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
+          aria-label="Delete homework"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
     </div>
   );
 };
@@ -397,32 +427,22 @@ export const HomeworkListDisplay = ({
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
       {homeworkList.map((homework, index) => (
-        <div
+        <button
           key={homework.id}
-          className="group relative rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-xl w-full aspect-[3/4]"
+          onClick={() => onHomeworkClick(homework.id)}
+          className="group rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl w-full aspect-[3/4]"
         >
-          <button
-            onClick={() => onHomeworkClick(homework.id)}
-            className="w-full h-full"
-          >
-            <StackedSheetsPreview sheets={homework.sheets} studentNumber={index + 1} />
-          </button>
-
-          {/* Delete button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
+          <StackedSheetsPreview
+            sheets={homework.sheets}
+            studentNumber={index + 1}
+            onDelete={() => {
               if (window.confirm(`Delete Student ${index + 1}'s homework?`)) {
                 onHomeworkDelete(homework.id);
               }
             }}
-            className={`absolute bottom-2 right-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20
-              ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
-            aria-label="Delete homework"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+            isMobile={isMobile}
+          />
+        </button>
       ))}
 
       {/* Add New Student Homework Box */}
@@ -559,7 +579,7 @@ export const HomeworkDialog = ({
                   e.stopPropagation();
                   handleDeleteSheet(sheet.id);
                 }}
-                className={`absolute bottom-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20
+                className={`absolute bottom-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg transition-all z-20
                   ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
                 aria-label="Delete sheet"
               >

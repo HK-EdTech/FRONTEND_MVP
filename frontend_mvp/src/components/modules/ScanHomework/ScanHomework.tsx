@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { api, ClassResponse } from '@/lib/api';
 
 // Import from component file
 import {
@@ -28,8 +29,50 @@ export function ScanHomework() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  // Class and Subject Selection State
+  const [classes, setClasses] = useState<ClassResponse[]>([]);
+  const [selectedClassName, setSelectedClassName] = useState<string>('');
+  const [selectedSubject, setSelectedSubject] = useState<string>('');
+  const [isLoadingClasses, setIsLoadingClasses] = useState(true);
+
   // Mobile Detection
   const isMobile = useIsMobile();
+
+  // Fetch teacher's classes on mount
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const teacherProfile = await api.getMyTeacherProfile();
+        setClasses(teacherProfile.classes || []);
+      } catch (err) {
+        console.error('Failed to fetch teacher classes:', err);
+        setClasses([]);
+      } finally {
+        setIsLoadingClasses(false);
+      }
+    };
+    fetchClasses();
+  }, []);
+
+  // Get unique class names
+  const classNames = useMemo(() => {
+    const names = [...new Set(classes.map(c => c.name))];
+    return names.sort();
+  }, [classes]);
+
+  // Get subjects for selected class name
+  const availableSubjects = useMemo(() => {
+    if (!selectedClassName) return [];
+    const subjects = classes
+      .filter(c => c.name === selectedClassName)
+      .map(c => c.subject);
+    return [...new Set(subjects)].sort();
+  }, [classes, selectedClassName]);
+
+  // Reset subject when class name changes
+  useEffect(() => {
+    setSelectedSubject('');
+  }, [selectedClassName]);
 
   // Main File Handler
   const handleFiles = async (files: File[], homeworkId: string | null) => {
@@ -117,6 +160,39 @@ export function ScanHomework() {
 
       {/* Main Content */}
       <div className="rounded-2xl p-6 shadow-xl" style={glassStyle}>
+        {/* Class and Subject Selection */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* Class Name Select */}
+          <select
+            value={selectedClassName}
+            onChange={(e) => setSelectedClassName(e.target.value)}
+            disabled={isLoadingClasses}
+            className="w-full px-4 py-2 rounded-xl border border-white/30 bg-white/10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
+            style={{ boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}
+          >
+            <option value="">Select a class...</option>
+            {classNames.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+
+          {/* Subject Select */}
+          <select
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+            disabled={!selectedClassName || availableSubjects.length === 0}
+            className="w-full px-4 py-2 rounded-xl border border-white/30 bg-white/10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
+            style={{ boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}
+          >
+            <option value="">
+              {!selectedClassName ? 'Subject(Select a class first...)' : 'Select a subject...'}
+            </option>
+            {availableSubjects.map((subject) => (
+              <option key={subject} value={subject}>{subject}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Initial Upload Area (when no homework exists) */}
         {homeworkList.length === 0 && (
           <InitialUploadArea
