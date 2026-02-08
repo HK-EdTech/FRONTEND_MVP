@@ -15,6 +15,7 @@ export interface ProfileResponse {
   full_name: string | null;
   username: string;
   role_name: string | null;
+  default_route: string | null;
   class_level: string | null;
   organization_id: string | null;
   avatar_url: string | null;
