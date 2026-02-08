@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { AssignHomework } from '@/components/modules/AssignHomework';
-import { ScanHomework } from '@/components/modules/ScanHomework/ScanHomework';
+import { ScanHomework } from '@/components/modules/Scan_and_mark/Scan_and_upload/ScanHomework';
 import { CalendarModule } from '@/components/modules/Calendar';
 import { HomeworkList } from '@/components/modules/HomeworkList';
 
