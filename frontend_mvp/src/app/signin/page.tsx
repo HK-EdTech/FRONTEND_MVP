@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { LoginScreen } from "@/components/LoginScreen";
 import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 
 interface SignUpData {
   firstName: string;
@@ -70,9 +71,22 @@ export default function SignInPage() {
         throw new Error(`Sign in failed: ${error.message}`);
       }
 
-      // Successfully signed in - redirect to dashboard with full page reload
-      // This ensures the layout remounts and fetches user data
-      window.location.href = "/";
+      // Successfully signed in - fetch profile and redirect based on default_route
+      try {
+        // Fetch profile with modules (single API call)
+        const response = await api.getMyProfile(true);
+
+        // Cache profile data for layout to use (avoids duplicate API call)
+        sessionStorage.setItem('cached_profile', JSON.stringify(response));
+
+        // Redirect to user's default_route (or "/" as fallback)
+        const redirectTo = response.profile.default_route || "/";
+        window.location.href = redirectTo;
+      } catch (err) {
+        console.error('Failed to fetch profile after login:', err);
+        // Fallback to "/" if profile fetch fails
+        window.location.href = "/";
+      }
     }
   };
 

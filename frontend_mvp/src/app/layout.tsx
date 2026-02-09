@@ -37,6 +37,22 @@ export default function RootLayout({
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Check if we have cached profile from login (performance optimization)
+        const cached = sessionStorage.getItem('cached_profile');
+
+        if (cached) {
+          const cachedData = JSON.parse(cached) as ProfileWithModulesResponse;
+          setProfile(cachedData.profile);
+          setModules(cachedData.modules || []);
+
+          if (pathname === "/" && cachedData.profile.default_route && cachedData.profile.default_route !== "/") {
+            router.push(cachedData.profile.default_route);
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        // No cache - check authentication and fetch profile
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error || !session) {
@@ -50,12 +66,20 @@ export default function RootLayout({
           return;
         }
 
-        // SINGLE API CALL for profile + modules
+        // Fetch profile + modules from API
         const response = await api.getMyProfile(true) as ProfileWithModulesResponse;
         // console.log('[Layout] Profile response:', response);
         // console.log('[Layout] Modules:', response.modules);
         setProfile(response.profile);
         setModules(response.modules || []);
+
+        // Smart router: Redirect from "/" to role-specific default_route
+        if (pathname === "/" && response.profile.default_route && response.profile.default_route !== "/") {
+          router.push(response.profile.default_route);
+          setIsLoading(false);
+          return;
+        }
+
         setIsLoading(false);
       } catch (err) {
         console.error('Failed to fetch profile:', err);
