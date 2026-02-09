@@ -36,26 +36,38 @@ export default function RootLayout({
   // Fetch profile + modules ONCE on mount (not on every route change)
   useEffect(() => {
     const fetchData = async () => {
+      const t0 = performance.now();
+      console.log(`[⏱ Layout] fetchData START at ${new Date().toISOString()}`);
+
       try {
         // Check if we have cached profile from login (performance optimization)
         const cached = sessionStorage.getItem('cached_profile');
 
         if (cached) {
+          console.log(`[⏱ Layout] Cache HIT — +${(performance.now() - t0).toFixed(0)}ms`);
           const cachedData = JSON.parse(cached) as ProfileWithModulesResponse;
           setProfile(cachedData.profile);
           setModules(cachedData.modules || []);
 
           if (pathname === "/" && cachedData.profile.default_route && cachedData.profile.default_route !== "/") {
+            console.log(`[⏱ Layout] Redirecting to ${cachedData.profile.default_route} (cached) — +${(performance.now() - t0).toFixed(0)}ms`);
             router.push(cachedData.profile.default_route);
           }
           setIsLoading(false);
+          console.log(`[⏱ Layout] DONE (cached path) — total ${(performance.now() - t0).toFixed(0)}ms`);
           return;
         }
+
+        console.log(`[⏱ Layout] Cache MISS — calling supabase.auth.getSession()...`);
+        const t1 = performance.now();
 
         // No cache - check authentication and fetch profile
         const { data: { session }, error } = await supabase.auth.getSession();
 
+        console.log(`[⏱ Layout] supabase.auth.getSession() done — ${(performance.now() - t1).toFixed(0)}ms (total +${(performance.now() - t0).toFixed(0)}ms)`);
+
         if (error || !session) {
+          console.log(`[⏱ Layout] No session — redirecting to /signin — +${(performance.now() - t0).toFixed(0)}ms`);
           // Clear state when no session
           setProfile(null);
           setModules([]);
@@ -67,22 +79,29 @@ export default function RootLayout({
         }
 
         // Fetch profile + modules from API
+        console.log(`[⏱ Layout] Calling api.getMyProfile(true)...`);
+        const t2 = performance.now();
+
         const response = await api.getMyProfile(true) as ProfileWithModulesResponse;
-        // console.log('[Layout] Profile response:', response);
-        // console.log('[Layout] Modules:', response.modules);
+
+        console.log(`[⏱ Layout] api.getMyProfile() done — ${(performance.now() - t2).toFixed(0)}ms (total +${(performance.now() - t0).toFixed(0)}ms)`);
+
         setProfile(response.profile);
         setModules(response.modules || []);
 
         // Smart router: Redirect from "/" to role-specific default_route
         if (pathname === "/" && response.profile.default_route && response.profile.default_route !== "/") {
+          console.log(`[⏱ Layout] Redirecting to ${response.profile.default_route} — +${(performance.now() - t0).toFixed(0)}ms`);
           router.push(response.profile.default_route);
           setIsLoading(false);
+          console.log(`[⏱ Layout] DONE — total ${(performance.now() - t0).toFixed(0)}ms`);
           return;
         }
 
         setIsLoading(false);
+        console.log(`[⏱ Layout] DONE — total ${(performance.now() - t0).toFixed(0)}ms`);
       } catch (err) {
-        console.error('Failed to fetch profile:', err);
+        console.error(`[⏱ Layout] ERROR after ${(performance.now() - t0).toFixed(0)}ms:`, err);
         // Clear state on error
         setProfile(null);
         setModules([]);

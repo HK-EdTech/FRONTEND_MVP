@@ -2,13 +2,13 @@
 
 import { useParams } from 'next/navigation';
 import { AssignHomework } from '@/components/modules/AssignHomework';
-import { ScanHomework } from '@/components/modules/Scan_and_mark/Scan_and_upload/ScanHomework';
+import { ScanAndMarkWrapper } from '@/components/modules/Scan_and_mark/ScanAndMarkWrapper';
 import { CalendarModule } from '@/components/modules/Calendar';
 import { HomeworkList } from '@/components/modules/HomeworkList';
 
 const MODULE_COMPONENTS: Record<string, React.ComponentType<any>> = {
   'assign-homework': AssignHomework,
-  'scan-homework': ScanHomework,
+  'scan-homework': ScanAndMarkWrapper,
   'calendar': CalendarModule,
   'homework-list': HomeworkList,
 };
