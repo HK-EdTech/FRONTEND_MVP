@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Geist, Geist_Mono } from "next/font/google";
-import { supabase } from '@/lib/supabase';
+import { supabase, setCachedToken } from '@/lib/supabase';
 import { api, ProfileResponse, ModuleWithPermissions, ProfileWithModulesResponse } from '@/lib/api';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -65,6 +65,9 @@ export default function RootLayout({
         const { data: { session }, error } = await supabase.auth.getSession();
 
         console.log(`[⏱ Layout] supabase.auth.getSession() done — ${(performance.now() - t1).toFixed(0)}ms (total +${(performance.now() - t0).toFixed(0)}ms)`);
+
+        // Seed token cache so apiRequest() won't call getSession() again
+        setCachedToken(session?.access_token ?? null);
 
         if (error || !session) {
           console.log(`[⏱ Layout] No session — redirecting to /signin — +${(performance.now() - t0).toFixed(0)}ms`);

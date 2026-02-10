@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, getCachedToken } from './supabase';
 
 // Backend API URL from environment variable
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -80,8 +80,12 @@ export class ApiError extends Error {
   }
 }
 
-// Get JWT token from Supabase session
+// Get JWT token — uses cached token from onAuthStateChange listener,
+// falls back to getSession() only on first load before listener fires
 async function getAuthToken(): Promise<string | null> {
+  const cached = getCachedToken();
+  if (cached) return cached;
+
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token || null;
 }
