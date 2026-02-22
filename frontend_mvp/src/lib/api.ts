@@ -38,6 +38,7 @@ export interface HomeworkResponse {
   class_id: string | null;
   due_date: string | null;
   full_score: number | null;
+  marking_scheme_id: string | null;
   created_at: string;
 }
 
