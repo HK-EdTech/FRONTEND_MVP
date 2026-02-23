@@ -1,3 +1,4 @@
+
 import { supabase, getCachedToken } from './supabase';
 
 // Backend API URL from environment variable
@@ -46,12 +47,20 @@ export interface ClassResponse {
   name: string;
   subject: string;
   target_level: string | null;
+  teacher_id: string;
   organization_id: string | null;
   created_at: string;
 }
 
 export interface ClassWithHomeworkResponse extends ClassResponse {
   homework: HomeworkResponse[];
+}
+
+export interface CreateClassRequest {
+  name: string;
+  subject: string;
+  target_level?: string;
+  organization_id?: string;
 }
 
 export interface TeacherProfileResponse {
@@ -176,6 +185,25 @@ export const api = {
   async getClassesSubjectHomework(): Promise<ClassWithHomeworkResponse[]> {
     return apiRequest<ClassWithHomeworkResponse[]>('/scan-and-mark/classes_subject_homework', {
       method: 'GET',
+    });
+  },
+
+  /**
+   * Get all classes
+   */
+  async getAllClasses(): Promise<ClassResponse[]> {
+    return apiRequest<ClassResponse[]>('/class', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Create class record
+   */
+  async createClass(data: CreateClassRequest): Promise<ClassResponse> {
+    return apiRequest<ClassResponse>('/class', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   },
 };
