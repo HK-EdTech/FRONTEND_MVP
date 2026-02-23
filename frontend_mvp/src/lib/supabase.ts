@@ -8,3 +8,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// --- Token cache: avoids repeated getSession() calls ---
+let cachedToken: string | null = null;
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedToken = session?.access_token ?? null;
+});
+
+export function getCachedToken(): string | null {
+  return cachedToken;
+}
+
+export function setCachedToken(token: string | null) {
+  cachedToken = token;
+}
