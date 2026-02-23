@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { FilePlus, Users, Calendar, Send, Search, Plus } from 'lucide-react';
-import { api, ClassResponse } from '@/lib/api';
+import { api, ClassResponse, TeacherHomeworkResponse } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,44 +23,6 @@ interface RecentHomeworkItem {
   dueDate: string;
 }
 
-const recentHomeworkItems: RecentHomeworkItem[] = [
-  {
-    id: 'math-exercise-2',
-    title: 'Math Exercise 2',
-    assignedClasses: 3,
-    assignedStudents: 28,
-    dueDate: 'Due: 28 Feb 2026',
-  },
-  {
-    id: 'english-essay-1',
-    title: 'English Essay 1',
-    assignedClasses: 2,
-    assignedStudents: 24,
-    dueDate: 'Due: 02 Mar 2026',
-  },
-  {
-    id: 'chem-lab-worksheet',
-    title: 'Chem Lab Worksheet',
-    assignedClasses: 4,
-    assignedStudents: 35,
-    dueDate: 'Due: 05 Mar 2026',
-  },
-  {
-    id: 'history-source-analysis',
-    title: 'History Source Analysis',
-    assignedClasses: 3,
-    assignedStudents: 27,
-    dueDate: 'Due: 06 Mar 2026',
-  },
-  {
-    id: 'sec4-science-quiz',
-    title: 'Sec 4 Science Quiz',
-    assignedClasses: 5,
-    assignedStudents: 42,
-    dueDate: 'Due: 10 Mar 2026',
-  },
-];
-
 interface CreateClassFormState {
   name: string;
   subject: string;
@@ -71,6 +33,9 @@ export function AssignHomework() {
   const [classes, setClasses] = useState<ClassResponse[]>([]);
   const [isLoadingClasses, setIsLoadingClasses] = useState(true);
   const [classError, setClassError] = useState('');
+  const [recentHomeworkItems, setRecentHomeworkItems] = useState<RecentHomeworkItem[]>([]);
+  const [isLoadingHomework, setIsLoadingHomework] = useState(true);
+  const [homeworkError, setHomeworkError] = useState('');
   const [classSearch, setClassSearch] = useState('');
   const [isCreateClassDialogOpen, setIsCreateClassDialogOpen] = useState(false);
   const [isCreatingClass, setIsCreatingClass] = useState(false);
@@ -87,21 +52,55 @@ export function AssignHomework() {
     boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
   };
 
-  const loadClasses = async () => {
+  const fetchClasses = async () => {
     try {
       setIsLoadingClasses(true);
       setClassError('');
-      const data = await api.getAllClasses();
-      setClasses(data);
+      const teacherClasses = await api.getMyTeacherClasses();
+      setClasses(teacherClasses || []);
     } catch (error: any) {
+      setClasses([]);
       setClassError(error?.message || 'Failed to load classes');
     } finally {
       setIsLoadingClasses(false);
     }
   };
 
+  const toRecentHomeworkItem = (item: TeacherHomeworkResponse): RecentHomeworkItem => {
+    const dueDateLabel = item.due_date
+      ? `Due: ${new Date(item.due_date).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })}`
+      : 'Due: Not set';
+
+    return {
+      id: item.id,
+      title: item.title || item.subject || 'Untitled Homework',
+      assignedClasses: item.assigned_classes,
+      assignedStudents: item.assigned_students,
+      dueDate: dueDateLabel,
+    };
+  };
+
+  const fetchRecentHomework = async () => {
+    try {
+      setIsLoadingHomework(true);
+      setHomeworkError('');
+      const homework = await api.getMyTeacherHomework();
+      setRecentHomeworkItems((homework || []).map(toRecentHomeworkItem));
+    } catch (error: any) {
+      setRecentHomeworkItems([]);
+      setHomeworkError(error?.message || 'Failed to load homework');
+    } finally {
+      setIsLoadingHomework(false);
+    }
+  };
+
   useEffect(() => {
-    loadClasses();
+    fetchClasses();
+    fetchRecentHomework();
   }, []);
 
   const filteredClasses = useMemo(() => {
@@ -221,7 +220,15 @@ export function AssignHomework() {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap gap-4 pb-1 w-full">
-          {recentHomeworkItems.map((item) => (
+          {isLoadingHomework && (
+            <p className="text-sm text-gray-600">Loading recent homework...</p>
+          )}
+
+          {!isLoadingHomework && recentHomeworkItems.length === 0 && !homeworkError && (
+            <p className="text-sm text-gray-600">No homework found.</p>
+          )}
+
+          {!isLoadingHomework && recentHomeworkItems.map((item) => (
             <div
               key={item.id}
               className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.666rem)] lg:w-[calc(20%-0.8rem)] bg-white border border-white/10 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
@@ -239,6 +246,10 @@ export function AssignHomework() {
             </div>
           ))}
         </div>
+
+        {homeworkError && (
+          <p className="text-sm text-red-600 mt-4">{homeworkError}</p>
+        )}
       </div>
 
       <div className="rounded-2xl p-6 shadow-xl w-full" style={glassStyle}>

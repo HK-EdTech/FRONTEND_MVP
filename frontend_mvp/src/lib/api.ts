@@ -42,6 +42,18 @@ export interface HomeworkResponse {
   created_at: string;
 }
 
+export interface TeacherHomeworkResponse {
+  id: string;
+  title: string | null;
+  subject: string | null;
+  class_id: string | null;
+  class_name: string | null;
+  due_date: string | null;
+  assigned_classes: number;
+  assigned_students: number;
+  created_at: string;
+}
+
 export interface ClassResponse {
   id: string;
   name: string;
@@ -189,10 +201,37 @@ export const api = {
   },
 
   /**
+   * Get homework created by authenticated teacher
+   */
+  async getMyTeacherHomework(): Promise<TeacherHomeworkResponse[]> {
+    return apiRequest<TeacherHomeworkResponse[]>('/homework/me/teacher', {
+      method: 'GET',
+    });
+  },
+
+  /**
    * Get all classes
    */
   async getAllClasses(): Promise<ClassResponse[]> {
     return apiRequest<ClassResponse[]>('/class', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Get classes taught by authenticated teacher
+   */
+  async getMyTeacherClasses(): Promise<ClassResponse[]> {
+    return apiRequest<ClassResponse[]>('/class/me/teacher', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Get classes enrolled by authenticated student
+   */
+  async getMyStudentClasses(): Promise<ClassResponse[]> {
+    return apiRequest<ClassResponse[]>('/class/me/student', {
       method: 'GET',
     });
   },
