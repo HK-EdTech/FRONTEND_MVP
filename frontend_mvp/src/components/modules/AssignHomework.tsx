@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { FilePlus, Users, Calendar, Send, Search, Plus } from 'lucide-react';
+import { FilePlus, Users, Calendar, Send, Search, Plus, Check, ChevronsUpDown, EllipsisVertical } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { api, ClassResponse, TeacherHomeworkResponse } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,13 +15,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 
 interface RecentHomeworkItem {
   id: string;
   title: string;
+  subject: string;
+  classIds: string[];
+  dueDateRaw: string | null;
+  fullScore: number | null;
   assignedClasses: number;
   assignedStudents: number;
   dueDate: string;
+}
+
+type HomeworkDialogMode = 'create' | 'assign';
+
+interface HomeworkFormState {
+  title: string;
+  subject: string;
+  dueDate: string;
+  fullScore: string;
+  classIds: string[];
 }
 
 interface CreateClassFormState {
@@ -30,6 +53,7 @@ interface CreateClassFormState {
 }
 
 export function AssignHomework() {
+  const router = useRouter();
   const [classes, setClasses] = useState<ClassResponse[]>([]);
   const [isLoadingClasses, setIsLoadingClasses] = useState(true);
   const [classError, setClassError] = useState('');
@@ -39,6 +63,19 @@ export function AssignHomework() {
   const [classSearch, setClassSearch] = useState('');
   const [isCreateClassDialogOpen, setIsCreateClassDialogOpen] = useState(false);
   const [isCreatingClass, setIsCreatingClass] = useState(false);
+  const [isHomeworkDialogOpen, setIsHomeworkDialogOpen] = useState(false);
+  const [isHomeworkClassPopoverOpen, setIsHomeworkClassPopoverOpen] = useState(false);
+  const [isSubmittingHomework, setIsSubmittingHomework] = useState(false);
+  const [homeworkDialogMode, setHomeworkDialogMode] = useState<HomeworkDialogMode>('create');
+  const [activeHomeworkId, setActiveHomeworkId] = useState<string | null>(null);
+  const [homeworkActionError, setHomeworkActionError] = useState('');
+  const [homeworkForm, setHomeworkForm] = useState<HomeworkFormState>({
+    title: '',
+    subject: '',
+    dueDate: '',
+    fullScore: '',
+    classIds: [],
+  });
   const [createClassForm, setCreateClassForm] = useState<CreateClassFormState>({
     name: '',
     subject: '',
@@ -78,6 +115,12 @@ export function AssignHomework() {
     return {
       id: item.id,
       title: item.title || item.subject || 'Untitled Homework',
+      subject: item.subject || '',
+      classIds: item.assigned_class_ids?.length
+        ? item.assigned_class_ids
+        : (item.class_id ? [item.class_id] : []),
+      dueDateRaw: item.due_date,
+      fullScore: item.full_score,
       assignedClasses: item.assigned_classes,
       assignedStudents: item.assigned_students,
       dueDate: dueDateLabel,
@@ -112,6 +155,72 @@ export function AssignHomework() {
       (item.target_level || '').toLowerCase().includes(query)
     );
   }, [classes, classSearch]);
+
+  const getClassNameById = (classId: string) => {
+    const matched = classes.find((item) => item.id === classId);
+    return matched?.name || 'Selected class';
+  };
+
+  const getClassSelectionLabel = (classIds: string[]) => {
+    if (!classIds.length) {
+      return 'Select classes';
+    }
+
+    if (classIds.length > 3) {
+      return `${classIds.length} classes selected`;
+    }
+
+    return classIds.map((id) => getClassNameById(id)).join(', ');
+  };
+
+  const toggleHomeworkClassSelection = (classId: string) => {
+    setHomeworkForm((prev) => ({
+      ...prev,
+      classIds: prev.classIds.includes(classId)
+        ? prev.classIds.filter((id) => id !== classId)
+        : [...prev.classIds, classId],
+    }));
+  };
+
+  const resetHomeworkForm = () => {
+    setHomeworkForm({
+      title: '',
+      subject: '',
+      dueDate: '',
+      fullScore: '',
+      classIds: [],
+    });
+    setActiveHomeworkId(null);
+    setHomeworkActionError('');
+  };
+
+  const openCreateHomeworkDialog = () => {
+    setHomeworkDialogMode('create');
+    resetHomeworkForm();
+    setIsHomeworkDialogOpen(true);
+  };
+
+  const openAssignHomeworkDialog = (item: RecentHomeworkItem) => {
+    setHomeworkDialogMode('assign');
+    setActiveHomeworkId(item.id);
+    setHomeworkActionError('');
+    setHomeworkForm({
+      title: item.title,
+      subject: item.subject,
+      dueDate: item.dueDateRaw ? new Date(item.dueDateRaw).toISOString().slice(0, 10) : '',
+      fullScore: item.fullScore !== null ? String(item.fullScore) : '',
+      classIds: item.classIds || [],
+    });
+    setIsHomeworkDialogOpen(true);
+  };
+
+  const handleHomeworkDialogOpenChange = (open: boolean) => {
+    setIsHomeworkDialogOpen(open);
+    if (!open) {
+      setIsHomeworkClassPopoverOpen(false);
+      resetHomeworkForm();
+    }
+  };
 
   const resetCreateClassForm = () => {
     setCreateClassForm({
@@ -156,6 +265,49 @@ export function AssignHomework() {
       setClassError(error?.message || 'Failed to create class');
     } finally {
       setIsCreatingClass(false);
+    }
+  };
+
+  const handleSubmitHomework = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    const title = homeworkForm.title.trim();
+    const subject = homeworkForm.subject.trim();
+
+    if (!homeworkForm.classIds.length) {
+      setHomeworkActionError('Please select at least one class');
+      return;
+    }
+
+    if (homeworkDialogMode === 'create' && !title) {
+      setHomeworkActionError('Homework title is required');
+      return;
+    }
+
+    try {
+      setIsSubmittingHomework(true);
+      setHomeworkActionError('');
+
+      if (homeworkDialogMode === 'create') {
+        await api.createTeacherHomework({
+          title,
+          subject: subject || undefined,
+          due_date: homeworkForm.dueDate ? new Date(homeworkForm.dueDate).toISOString() : undefined,
+          full_score: homeworkForm.fullScore !== '' ? Number(homeworkForm.fullScore) : undefined,
+          class_ids: homeworkForm.classIds,
+        });
+      } else if (activeHomeworkId) {
+        await api.assignHomeworkToClasses(activeHomeworkId, {
+          class_ids: homeworkForm.classIds,
+        });
+      }
+
+      handleHomeworkDialogOpenChange(false);
+      fetchRecentHomework();
+    } catch (error: any) {
+      setHomeworkActionError(error?.message || 'Failed to save homework assignment');
+    } finally {
+      setIsSubmittingHomework(false);
     }
   };
 
@@ -212,9 +364,12 @@ export function AssignHomework() {
             <Button variant="outline" size="sm">
               Show more
             </Button>
-            <Button size="sm" className="bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer">
-              <Plus className="w-4 h-4 mr-1" />
-              New Homework
+            <Button
+              size="sm"
+              className="w-9 h-9 p-0 rounded-lg bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
+              onClick={openCreateHomeworkDialog}
+            >
+              <Plus className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -234,6 +389,25 @@ export function AssignHomework() {
               className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.666rem)] lg:w-[calc(20%-0.8rem)] bg-white border border-white/10 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
             >
               <div className="w-full h-28 rounded-lg bg-gray-200/60 mb-3" />
+              <div className="flex justify-end mb-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700"
+                    >
+                      <EllipsisVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openAssignHomeworkDialog(item)}>
+                      Assign to Classes
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               <h3 className="text-gray-800 font-bold">{item.title}</h3>
               <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
                 <Users className="w-4 h-4 text-purple-500" />
@@ -288,12 +462,14 @@ export function AssignHomework() {
           )}
 
           {!isLoadingClasses && filteredClasses.map((classroom) => (
-            <div
+            <button
               key={classroom.id}
+              type="button"
               className="w-[calc(50%-0.375rem)] sm:w-[calc(33.333%-0.5rem)] md:w-[calc(25%-0.5625rem)] lg:w-[calc(20%-0.6rem)] xl:w-[calc(10%-0.675rem)] min-h-12 min-w-[110px] bg-white border border-white/10 rounded-xl px-3 py-3 flex items-center justify-center text-sm font-bold text-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+              onClick={() => router.push(`/class/${classroom.id}/homework`)}
             >
               {classroom.name}
-            </div>
+            </button>
           ))}
         </div>
 
@@ -359,6 +535,135 @@ export function AssignHomework() {
                 disabled={isCreatingClass}
               >
                 {isCreatingClass ? 'Creating...' : 'Create Class'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isHomeworkDialogOpen} onOpenChange={handleHomeworkDialogOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{homeworkDialogMode === 'create' ? 'Create Homework' : 'Assign Homework to Classes'}</DialogTitle>
+            <DialogDescription>
+              {homeworkDialogMode === 'create'
+                ? 'Enter homework details and assign it to one or more classes.'
+                : 'Select one or more classes for this homework assignment.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmitHomework} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="homework-title">Title</Label>
+              <Input
+                id="homework-title"
+                value={homeworkForm.title}
+                onChange={(event) => setHomeworkForm((prev) => ({ ...prev, title: event.target.value }))}
+                placeholder="e.g. Math Exercise 2"
+                disabled={homeworkDialogMode === 'assign'}
+                required={homeworkDialogMode === 'create'}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="homework-subject">Subject (Optional)</Label>
+              <Input
+                id="homework-subject"
+                value={homeworkForm.subject}
+                onChange={(event) => setHomeworkForm((prev) => ({ ...prev, subject: event.target.value }))}
+                placeholder="e.g. Mathematics"
+                disabled={homeworkDialogMode === 'assign'}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="homework-due-date">Due Date (Optional)</Label>
+              <Input
+                id="homework-due-date"
+                type="date"
+                value={homeworkForm.dueDate}
+                onChange={(event) => setHomeworkForm((prev) => ({ ...prev, dueDate: event.target.value }))}
+                disabled={homeworkDialogMode === 'assign'}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="homework-full-score">Full Score / Total Points (Optional)</Label>
+              <Input
+                id="homework-full-score"
+                type="number"
+                min="0"
+                step="1"
+                value={homeworkForm.fullScore}
+                onChange={(event) => setHomeworkForm((prev) => ({ ...prev, fullScore: event.target.value }))}
+                placeholder="e.g. 100"
+                disabled={homeworkDialogMode === 'assign'}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Classes to Assign</Label>
+              <Popover open={isHomeworkClassPopoverOpen} onOpenChange={setIsHomeworkClassPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between"
+                  >
+                    {getClassSelectionLabel(homeworkForm.classIds)}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <Command>
+                    <CommandInput placeholder="Search classes..." />
+                    <CommandList>
+                      <CommandEmpty>No class found.</CommandEmpty>
+                      <CommandGroup>
+                        {classes.map((classroom) => (
+                          <CommandItem
+                            key={classroom.id}
+                            value={`${classroom.name} ${classroom.subject}`}
+                            onSelect={() => {
+                              toggleHomeworkClassSelection(classroom.id);
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${homeworkForm.classIds.includes(classroom.id) ? 'opacity-100' : 'opacity-0'}`}
+                            />
+                            <span>{classroom.name}</span>
+                            <span className="ml-auto text-xs text-gray-500">{classroom.subject}</span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {homeworkActionError && (
+              <p className="text-sm text-red-600">{homeworkActionError}</p>
+            )}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleHomeworkDialogOpenChange(false)}
+                disabled={isSubmittingHomework}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-linear-to-r from-purple-500 to-teal-500 text-white"
+                disabled={isSubmittingHomework}
+              >
+                {isSubmittingHomework
+                  ? (homeworkDialogMode === 'create' ? 'Creating...' : 'Saving...')
+                  : (homeworkDialogMode === 'create' ? 'Create Homework' : 'Save Assignment')}
               </Button>
             </DialogFooter>
           </form>
