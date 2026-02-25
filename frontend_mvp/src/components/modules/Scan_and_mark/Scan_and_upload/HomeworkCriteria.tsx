@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ClassWithHomeworkResponse } from '@/lib/api';
 import { glassStyle } from './ScanHomework_component';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface HomeworkCriteriaProps {
   classes: ClassWithHomeworkResponse[];
@@ -16,8 +17,15 @@ interface HomeworkCriteriaProps {
   onSelectSubject: (subject: string) => void;
   selectedDbHomeworkId: string | null;
   onSelectDbHomeworkId: (id: string | null) => void;
+  selectedLevel: string;
+  onSelectLevel: (level: string) => void;
+  selectedOneTimeSubject: string;
+  onSelectOneTimeSubject: (subject: string) => void;
   isMobile: boolean;
 }
+
+const LEVELS = ['Secondary 1', 'Secondary 2', 'Secondary 3', 'Secondary 4', 'Secondary 5', 'Secondary 6'];
+const ONE_TIME_SUBJECTS = ['Mathematics', 'English'];
 
 const fadeSlide = {
   initial: { opacity: 0, y: -10 },
@@ -37,6 +45,10 @@ export function HomeworkCriteria({
   onSelectSubject,
   selectedDbHomeworkId,
   onSelectDbHomeworkId,
+  selectedLevel,
+  onSelectLevel,
+  selectedOneTimeSubject,
+  onSelectOneTimeSubject,
   isMobile,
 }: HomeworkCriteriaProps) {
   // Derive unique class names
@@ -87,6 +99,55 @@ export function HomeworkCriteria({
           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
         </label>
       </div>
+
+      {/* One-Time Upload Criteria (visible when toggle ON) */}
+      <AnimatePresence>
+        {isOneTimeUpload && (
+          <motion.div {...fadeSlide}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              {/* Level Selection */}
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Level</p>
+                <Select value={selectedLevel} onValueChange={onSelectLevel}>
+                  <SelectTrigger className="w-full rounded-xl border-white/30 bg-white/10 shadow-[0_8px_32px_rgba(31,38,135,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-500 focus-visible:ring-purple-500 focus-visible:border-purple-500">
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LEVELS.map(level => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Subject Selection */}
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Subject</p>
+                <div className="flex flex-wrap gap-2">
+                  {ONE_TIME_SUBJECTS.map(subject => (
+                    <button
+                      key={subject}
+                      onClick={() =>
+                        onSelectOneTimeSubject(subject === selectedOneTimeSubject ? '' : subject)
+                      }
+                      className={`px-4 py-2 text-sm font-semibold rounded-xl transition-colors ${
+                        subject === selectedOneTimeSubject
+                          ? 'text-white bg-gradient-to-r from-purple-500 to-teal-500'
+                          : 'text-gray-600 hover:text-gray-800'
+                      }`}
+                      style={subject === selectedOneTimeSubject ? undefined : glassStyle}
+                    >
+                      {subject}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Criteria Selection (visible when toggle OFF) */}
       <AnimatePresence>

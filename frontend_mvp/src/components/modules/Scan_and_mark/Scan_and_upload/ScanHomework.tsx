@@ -40,12 +40,16 @@ export function ScanHomework() {
   // Homework Criteria State
   const [isOneTimeUpload, setIsOneTimeUpload] = useState(true);
   const [selectedDbHomeworkId, setSelectedDbHomeworkId] = useState<string | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<string>('');
+  const [selectedOneTimeSubject, setSelectedOneTimeSubject] = useState<string>('');
 
   // Mobile Detection
   const isMobile = useIsMobile();
 
-  // Upload disabled when assigned-homework mode but no homework selected
-  const isUploadDisabled = !isOneTimeUpload && !selectedDbHomeworkId;
+  // Upload disabled until criteria are filled for the active mode
+  const isUploadDisabled = isOneTimeUpload
+    ? !selectedLevel || !selectedOneTimeSubject
+    : !selectedDbHomeworkId;
 
   // Fetch teacher's classes with homework on mount
   useEffect(() => {
@@ -163,6 +167,10 @@ export function ScanHomework() {
           onSelectSubject={setSelectedSubject}
           selectedDbHomeworkId={selectedDbHomeworkId}
           onSelectDbHomeworkId={setSelectedDbHomeworkId}
+          selectedLevel={selectedLevel}
+          onSelectLevel={setSelectedLevel}
+          selectedOneTimeSubject={selectedOneTimeSubject}
+          onSelectOneTimeSubject={setSelectedOneTimeSubject}
           isMobile={isMobile}
         />
 
@@ -182,7 +190,7 @@ export function ScanHomework() {
                 style={{ transition: 'background-color 0.3s ease' }}
               >
                 <span className="text-gray-300 group-hover/upload-area:text-white text-sm font-medium" style={{ transition: 'color 0.3s ease' }}>
-                  Please select the homework above.
+                  Please select the homework conditions above.
                 </span>
               </motion.div>
             )}
