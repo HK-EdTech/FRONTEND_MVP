@@ -77,7 +77,6 @@ export default function RootLayout({
           if (pathname !== '/signin') {
             router.push("/signin");
           }
-          setIsLoading(false);
           return;
         }
 
@@ -111,7 +110,6 @@ export default function RootLayout({
         if (pathname !== '/signin') {
           router.push("/signin");
         }
-        setIsLoading(false);
       }
     };
 
