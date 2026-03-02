@@ -4,19 +4,12 @@ import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { api, ClassroomTeacherResponse } from '@/lib/api';
+import { PersonInfoCard } from '@/components/common/PersonInfoCard';
+import { SectionHeaderBar } from '@/components/common/SectionHeaderBar';
+import { StatusMessage } from '@/components/common/StatusMessage';
 import { mockTeachers } from '@/components/classroom/mockData';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AddTeacherDialog, AddTeacherDialogFormState } from '@/components/dialogs/AddTeacherDialog';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 const initialsFromName = (name: string) =>
   name
@@ -34,7 +27,7 @@ export default function ClassroomTeachersPage() {
   const [isLoadingTeachers, setIsLoadingTeachers] = useState(true);
   const [teacherError, setTeacherError] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [teacherForm, setTeacherForm] = useState({ fullName: '', username: '' });
+  const [teacherForm, setTeacherForm] = useState<AddTeacherDialogFormState>({ fullName: '', username: '' });
 
   useEffect(() => {
     const fetchTeachers = async () => {
@@ -57,89 +50,52 @@ export default function ClassroomTeachersPage() {
 
   return (
     <div className="rounded-2xl p-6 shadow-xl w-full bg-white/10 border border-white/20 backdrop-blur-lg">
-      <div className="flex items-center justify-between gap-3 mb-6">
-        <h2 className="text-xl text-gray-800 font-bold">Teachers</h2>
-        <Button
-          size="sm"
-          className="w-9 h-9 p-0 rounded-lg bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
-          onClick={() => setIsAddDialogOpen(true)}
-        >
-          <Plus className="w-4 h-4" />
-        </Button>
-      </div>
+      <SectionHeaderBar
+        title="Teachers"
+        titleClassName="font-bold"
+        actions={(
+          <Button
+            size="sm"
+            className="w-9 h-9 p-0 rounded-lg bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
+            onClick={() => setIsAddDialogOpen(true)}
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+        )}
+      />
 
       {isLoadingTeachers && (
-        <p className="text-sm text-gray-600">Loading teachers...</p>
+        <StatusMessage variant="loading" text="Loading teachers..." />
       )}
 
       {!isLoadingTeachers && (
         <div className="flex flex-col gap-3">
           {teachers.map((teacher) => (
-            <div
+            <PersonInfoCard
               key={teacher.id}
-              className="w-full min-w-[220px] bg-white border border-white/10 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar className="size-10">
-                  <AvatarImage src={teacher.avatar_url || ''} alt={teacher.full_name} />
-                  <AvatarFallback>{initialsFromName(teacher.full_name)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-gray-800 font-bold">{teacher.full_name}</p>
-                  <p className="text-sm text-gray-600">@{teacher.username}</p>
-                </div>
-              </div>
-            </div>
+              name={teacher.full_name}
+              subtitle={`@${teacher.username}`}
+              avatarUrl={teacher.avatar_url}
+              fallback={initialsFromName(teacher.full_name)}
+            />
           ))}
         </div>
       )}
 
       {!isLoadingTeachers && teachers.length === 0 && (
-        <p className="text-sm text-gray-600">No teachers found.</p>
+        <StatusMessage variant="empty" text="No teachers found." />
       )}
 
       {teacherError && (
-        <p className="text-sm text-red-600 mt-4">{teacherError}</p>
+        <StatusMessage variant="error" text={teacherError} className="mt-4" />
       )}
 
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Teacher</DialogTitle>
-            <DialogDescription>
-              Teacher management flow will be added in the next iteration.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="teacher-name">Full Name</Label>
-              <Input
-                id="teacher-name"
-                value={teacherForm.fullName}
-                onChange={(event) => setTeacherForm((prev) => ({ ...prev, fullName: event.target.value }))}
-                placeholder="e.g. Ms. Wong"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="teacher-username">Username</Label>
-              <Input
-                id="teacher-username"
-                value={teacherForm.username}
-                onChange={(event) => setTeacherForm((prev) => ({ ...prev, username: event.target.value }))}
-                placeholder="e.g. mswong"
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddTeacherDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        form={teacherForm}
+        onFormChange={setTeacherForm}
+      />
     </div>
   );
 }
