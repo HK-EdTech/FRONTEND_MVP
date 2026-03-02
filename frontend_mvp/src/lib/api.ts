@@ -122,10 +122,22 @@ export interface ClassroomStudentResponse {
   enrolled_at: string;
 }
 
+export interface ClassStudentCandidateResponse {
+  id: string;
+  full_name: string;
+  username: string;
+  avatar_url: string | null;
+  class_level: string | null;
+}
+
 export interface AddClassStudentRequest {
   student_id?: string;
   username?: string;
   full_name?: string;
+}
+
+export interface AddClassStudentsRequest {
+  student_ids: string[];
 }
 
 export interface ClassroomTeacherResponse {
@@ -365,10 +377,29 @@ export const api = {
   },
 
   /**
+   * Get available student candidates in teacher organization for a classroom
+   */
+  async getClassStudentCandidates(classId: string): Promise<ClassStudentCandidateResponse[]> {
+    return apiRequest<ClassStudentCandidateResponse[]>(`/class/${classId}/students/candidates`, {
+      method: 'GET',
+    });
+  },
+
+  /**
    * Enroll a student into a classroom
    */
   async addClassStudent(classId: string, data: AddClassStudentRequest): Promise<ClassroomStudentResponse> {
-    return apiRequest<ClassroomStudentResponse>(`/class/${classId}/students`, {
+    return apiRequest<ClassroomStudentResponse[]>(`/class/${classId}/students`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }).then((items) => items[0]);
+  },
+
+  /**
+   * Enroll multiple students into a classroom
+   */
+  async addClassStudents(classId: string, data: AddClassStudentsRequest): Promise<ClassroomStudentResponse[]> {
+    return apiRequest<ClassroomStudentResponse[]>(`/class/${classId}/students`, {
       method: 'POST',
       body: JSON.stringify(data),
     });

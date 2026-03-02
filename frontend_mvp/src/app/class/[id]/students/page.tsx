@@ -1,16 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
 import { CheckedState } from '@radix-ui/react-checkbox';
 import { ArrowUpDown, Plus, Search } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { api, ClassroomStudentResponse } from '@/lib/api';
+import { api, ClassStudentCandidateResponse, ClassroomStudentResponse } from '@/lib/api';
 import { PersonInfoCard } from '@/components/common/PersonInfoCard';
 import { SectionHeaderBar } from '@/components/common/SectionHeaderBar';
 import { StatusMessage } from '@/components/common/StatusMessage';
 import { mockStudents } from '@/components/classroom/mockData';
-import { AddStudentDialog, AddStudentDialogFormState } from '@/components/dialogs/AddStudentDialog';
+import { AddStudentDialog } from '@/components/dialogs/AddStudentDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -51,11 +50,9 @@ export default function ClassroomStudentsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isAddingStudent, setIsAddingStudent] = useState(false);
-  const [addStudentForm, setAddStudentForm] = useState<AddStudentDialogFormState>({
-    studentId: '',
-    username: '',
-    fullName: '',
-  });
+  const [isLoadingCandidateStudents, setIsLoadingCandidateStudents] = useState(false);
+  const [candidateStudents, setCandidateStudents] = useState<ClassStudentCandidateResponse[]>([]);
+  const [addStudentError, setAddStudentError] = useState('');
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -115,33 +112,52 @@ export default function ClassroomStudentsPage() {
     setSelectedIds(next);
   };
 
-  const handleAddStudent = async (event: FormEvent) => {
-    event.preventDefault();
+  const fetchCandidateStudents = async () => {
+    try {
+      setIsLoadingCandidateStudents(true);
+      setAddStudentError('');
+      const response = await api.getClassStudentCandidates(classId);
+      setCandidateStudents(response);
+    } catch (error: any) {
+      setCandidateStudents([]);
+      setAddStudentError(error?.message || 'Failed to load available students');
+    } finally {
+      setIsLoadingCandidateStudents(false);
+    }
+  };
 
-    const studentId = addStudentForm.studentId.trim();
-    const username = addStudentForm.username.trim();
-    const fullName = addStudentForm.fullName.trim();
+  const handleAddDialogOpenChange = (open: boolean) => {
+    setIsAddDialogOpen(open);
+    if (open) {
+      void fetchCandidateStudents();
+      return;
+    }
+    setAddStudentError('');
+  };
 
-    if (!studentId && !username && !fullName) {
-      setStudentError('Provide at least one of student ID, username, or full name');
+  const handleAddStudents = async (studentIds: string[]) => {
+    if (studentIds.length === 0) {
+      setAddStudentError('Please select at least one student');
       return;
     }
 
     try {
       setIsAddingStudent(true);
-      setStudentError('');
+      setAddStudentError('');
 
-      const created = await api.addClassStudent(classId, {
-        student_id: studentId || undefined,
-        username: username || undefined,
-        full_name: fullName || undefined,
+      const created = await api.addClassStudents(classId, {
+        student_ids: studentIds,
       });
 
-      setStudents((prev) => [created, ...prev]);
-      setIsAddDialogOpen(false);
-      setAddStudentForm({ studentId: '', username: '', fullName: '' });
+      setStudents((prev) => {
+        const existingIds = new Set(prev.map((student) => student.id));
+        const nextItems = created.filter((student) => !existingIds.has(student.id));
+        return [...nextItems, ...prev];
+      });
+
+      handleAddDialogOpenChange(false);
     } catch (error: any) {
-      setStudentError(error?.message || 'Failed to add student');
+      setAddStudentError(error?.message || 'Failed to add students');
     } finally {
       setIsAddingStudent(false);
     }
@@ -167,7 +183,7 @@ export default function ClassroomStudentsPage() {
               <Button
                 size="sm"
                 className="w-9 h-9 p-0 rounded-lg bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
-                onClick={() => setIsAddDialogOpen(true)}
+                onClick={() => handleAddDialogOpenChange(true)}
               >
                 <Plus className="w-4 h-4" />
               </Button>
@@ -177,13 +193,14 @@ export default function ClassroomStudentsPage() {
       </div>
       <div className="flex items-center justify-between gap-3 flex-wrap mb-6">
         <ToggleGroup
+          className='border-2'
           type="single"
           value={viewMode}
           onValueChange={(value) => {
             if (!value) return;
             setViewMode(value as StudentViewMode);
           }}
-          variant="outline"
+          // variant="outline"
           size="sm"
         >
           <ToggleGroupItem value="table">Table</ToggleGroupItem>
@@ -304,11 +321,12 @@ export default function ClassroomStudentsPage() {
 
       <AddStudentDialog
         open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        form={addStudentForm}
-        onFormChange={setAddStudentForm}
-        onSubmit={handleAddStudent}
+        onOpenChange={handleAddDialogOpenChange}
+        students={candidateStudents}
+        isLoading={isLoadingCandidateStudents}
         isSubmitting={isAddingStudent}
+        errorMessage={addStudentError}
+        onSubmit={handleAddStudents}
       />
     </div>
   );

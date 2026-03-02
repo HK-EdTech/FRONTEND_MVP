@@ -1,7 +1,10 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
+import { CheckedState } from '@radix-ui/react-checkbox';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -11,71 +14,164 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-export interface AddStudentDialogFormState {
-  studentId: string;
+export interface AddStudentDialogItem {
+  id: string;
+  full_name: string;
   username: string;
-  fullName: string;
+  avatar_url: string | null;
+  class_level: string | null;
 }
 
 interface AddStudentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  form: AddStudentDialogFormState;
-  onFormChange: (next: AddStudentDialogFormState) => void;
-  onSubmit: (event: FormEvent) => void;
+  students: AddStudentDialogItem[];
+  isLoading: boolean;
   isSubmitting: boolean;
+  errorMessage?: string;
+  onSubmit: (studentIds: string[]) => void;
 }
+
+const initialsFromName = (name: string) =>
+  name
+    .split(' ')
+    .map((part) => part[0] || '')
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
 export function AddStudentDialog({
   open,
   onOpenChange,
-  form,
-  onFormChange,
-  onSubmit,
+  students,
+  isLoading,
   isSubmitting,
+  errorMessage,
+  onSubmit,
 }: AddStudentDialogProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery('');
+      setSelectedIds(new Set());
+    }
+  }, [open]);
+
+  const visibleStudents = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return students;
+
+    return students.filter((student) =>
+      student.full_name.toLowerCase().includes(query) ||
+      student.username.toLowerCase().includes(query) ||
+      (student.class_level || '').toLowerCase().includes(query)
+    );
+  }, [students, searchQuery]);
+
+  const allVisibleSelected = visibleStudents.length > 0 && visibleStudents.every((student) => selectedIds.has(student.id));
+
+  const toggleAllVisible = (checked: CheckedState) => {
+    const next = new Set(selectedIds);
+    if (checked) {
+      visibleStudents.forEach((student) => next.add(student.id));
+    } else {
+      visibleStudents.forEach((student) => next.delete(student.id));
+    }
+    setSelectedIds(next);
+  };
+
+  const toggleSingleSelection = (studentId: string, checked: CheckedState) => {
+    const next = new Set(selectedIds);
+    if (checked) {
+      next.add(studentId);
+    } else {
+      next.delete(studentId);
+    }
+    setSelectedIds(next);
+  };
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    onSubmit(Array.from(selectedIds));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Add Student</DialogTitle>
+          <DialogTitle>Add Students</DialogTitle>
           <DialogDescription>
-            Enroll an existing student by username, or full name.
+            Select one or more students from your organization to enroll in this class.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          {/* <div className="space-y-2">
-            <Label htmlFor="student-id">Student ID (Optional)</Label>
-            <Input
-              id="student-id"
-              value={form.studentId}
-              onChange={(event) => onFormChange({ ...form, studentId: event.target.value })}
-              placeholder="UUID from profile"
-            />
-          </div> */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search by name, username, or level..."
+            className="h-9"
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="student-username">Username (Optional)</Label>
-            <Input
-              id="student-username"
-              value={form.username}
-              onChange={(event) => onFormChange({ ...form, username: event.target.value })}
-              placeholder="e.g. peterchan"
-            />
-          </div>
+          {isLoading && (
+            <p className="text-sm text-gray-600">Loading students...</p>
+          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="student-name">Full Name (Optional)</Label>
-            <Input
-              id="student-name"
-              value={form.fullName}
-              onChange={(event) => onFormChange({ ...form, fullName: event.target.value })}
-              placeholder="e.g. Chan Tai Man"
-            />
-          </div>
+          {!isLoading && visibleStudents.length === 0 && (
+            <p className="text-sm text-gray-600">No available students found.</p>
+          )}
+
+          {!isLoading && visibleStudents.length > 0 && (
+            <div className="max-h-80 overflow-auto rounded-xl border border-white/20 bg-white shadow-lg p-2">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allVisibleSelected}
+                        onCheckedChange={toggleAllVisible}
+                      />
+                    </TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Username</TableHead>
+                    <TableHead>Level</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visibleStudents.map((student) => (
+                    <TableRow key={student.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(student.id)}
+                          onCheckedChange={(checked) => toggleSingleSelection(student.id, checked)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-9">
+                            <AvatarImage src={student.avatar_url || ''} alt={student.full_name} />
+                            <AvatarFallback>{initialsFromName(student.full_name)}</AvatarFallback>
+                          </Avatar>
+                          <p className="text-gray-800 font-bold">{student.full_name}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">@{student.username}</TableCell>
+                      <TableCell>{student.class_level || '-'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {errorMessage && (
+            <p className="text-sm text-red-600">{errorMessage}</p>
+          )}
 
           <DialogFooter>
             <Button
@@ -89,9 +185,9 @@ export function AddStudentDialog({
             <Button
               type="submit"
               className="bg-linear-to-r from-purple-500 to-teal-500 text-white"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoading || selectedIds.size === 0}
             >
-              {isSubmitting ? 'Adding...' : 'Add Student'}
+              {isSubmitting ? 'Adding...' : `Add Selected (${selectedIds.size})`}
             </Button>
           </DialogFooter>
         </form>

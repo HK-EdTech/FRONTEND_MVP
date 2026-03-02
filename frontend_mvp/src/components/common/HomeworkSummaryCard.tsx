@@ -35,7 +35,7 @@ export function HomeworkSummaryCard({
   return (
     <div className={cn(cardClassName, onClick ? 'cursor-pointer' : undefined)} onClick={onClick}>
       <div className="w-full h-28 rounded-lg bg-gray-200/60 mb-3" />
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <h3 className="text-gray-800 font-bold">{title}</h3>
         {menuLabel && onMenuClick && (
           <div>
