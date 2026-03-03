@@ -196,7 +196,11 @@ export function ScanHomework() {
             )}
           </AnimatePresence>
 
-          <div className={isUploadDisabled ? 'pointer-events-none' : ''}>
+          <motion.div
+            layout
+            className={isUploadDisabled ? 'pointer-events-none' : ''}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+          >
             {/* Initial Upload Area (when no homework exists) */}
             {homeworkList.length === 0 && (
               <InitialUploadArea
@@ -222,7 +226,7 @@ export function ScanHomework() {
                 isMobile={isMobile}
               />
             )}
-          </div>
+          </motion.div>
         </div>
       </motion.div>
 
