@@ -7,6 +7,7 @@ import { supabase, setCachedToken } from '@/lib/supabase';
 import { api, ProfileResponse, ModuleWithPermissions, ProfileWithModulesResponse } from '@/lib/api';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { Toaster } from '@/components/ui/sonner';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -197,6 +198,7 @@ export default function RootLayout({
             </main>
           </SidebarProvider>
         </div>
+        <Toaster />
 
         <style jsx global>{`
           @keyframes blob {
