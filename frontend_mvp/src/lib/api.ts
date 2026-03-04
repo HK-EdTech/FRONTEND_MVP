@@ -1,3 +1,4 @@
+
 import { supabase, getCachedToken } from './supabase';
 
 // Backend API URL from environment variable
@@ -42,17 +43,117 @@ export interface HomeworkResponse {
   created_at: string;
 }
 
+export interface TeacherHomeworkResponse {
+  id: string;
+  title: string | null;
+  subject: string | null;
+  class_id: string | null;
+  class_name: string | null;
+  due_date: string | null;
+  full_score: number | null;
+  assigned_classes: number;
+  assigned_class_ids: string[];
+  assigned_students: number;
+  created_at: string;
+}
+
+export interface CreateTeacherHomeworkRequest {
+  title: string;
+  subject?: string;
+  due_date?: string;
+  full_score?: number;
+  class_ids: string[];
+}
+
+export interface AssignHomeworkClassesRequest {
+  class_ids: string[];
+}
+
 export interface ClassResponse {
   id: string;
   name: string;
   subject: string;
   target_level: string | null;
+  teacher_id: string;
   organization_id: string | null;
   created_at: string;
 }
 
 export interface ClassWithHomeworkResponse extends ClassResponse {
   homework: HomeworkResponse[];
+}
+
+export interface ClassroomDetailResponse {
+  id: string;
+  name: string;
+  subject: string;
+  target_level: string | null;
+  organization_id: string | null;
+  organization_name: string | null;
+  teacher_id: string;
+  teacher_name: string;
+  num_students: number;
+  created_at: string;
+}
+
+export interface ClassroomHomeworkResponse {
+  id: string;
+  title: string | null;
+  subject: string | null;
+  class_id: string | null;
+  due_date: string | null;
+  assigned_students: number;
+  created_at: string;
+}
+
+export interface CreateClassHomeworkRequest {
+  title: string;
+  subject?: string;
+  due_date?: string;
+  full_score?: number;
+}
+
+export interface ClassroomStudentResponse {
+  id: string;
+  full_name: string;
+  username: string;
+  avatar_url: string | null;
+  class_level: string | null;
+  status: string;
+  enrolled_at: string;
+}
+
+export interface ClassStudentCandidateResponse {
+  id: string;
+  full_name: string;
+  username: string;
+  avatar_url: string | null;
+  class_level: string | null;
+}
+
+export interface AddClassStudentRequest {
+  student_id?: string;
+  username?: string;
+  full_name?: string;
+}
+
+export interface AddClassStudentsRequest {
+  student_ids: string[];
+}
+
+export interface ClassroomTeacherResponse {
+  id: string;
+  full_name: string;
+  username: string;
+  avatar_url: string | null;
+  bio: string | null;
+}
+
+export interface CreateClassRequest {
+  name: string;
+  subject: string;
+  target_level?: string;
+  organization_id?: string;
 }
 
 export interface TeacherProfileResponse {
@@ -177,6 +278,150 @@ export const api = {
   async getClassesSubjectHomework(): Promise<ClassWithHomeworkResponse[]> {
     return apiRequest<ClassWithHomeworkResponse[]>('/scan-and-mark/classes_subject_homework', {
       method: 'GET',
+    });
+  },
+
+  /**
+   * Get homework created by authenticated teacher
+   */
+  async getMyTeacherHomework(): Promise<TeacherHomeworkResponse[]> {
+    return apiRequest<TeacherHomeworkResponse[]>('/homework/me/teacher', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Create homework for authenticated teacher and assign to classes
+   */
+  async createTeacherHomework(data: CreateTeacherHomeworkRequest): Promise<TeacherHomeworkResponse> {
+    return apiRequest<TeacherHomeworkResponse>('/homework/me/teacher', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Re-assign homework to classes (multi-select)
+   */
+  async assignHomeworkToClasses(
+    homeworkId: string,
+    data: AssignHomeworkClassesRequest
+  ): Promise<TeacherHomeworkResponse> {
+    return apiRequest<TeacherHomeworkResponse>(`/homework/${homeworkId}/classes`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Get all classes
+   */
+  async getAllClasses(): Promise<ClassResponse[]> {
+    return apiRequest<ClassResponse[]>('/class', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Get classes taught by authenticated teacher
+   */
+  async getMyTeacherClasses(): Promise<ClassResponse[]> {
+    return apiRequest<ClassResponse[]>('/class/me/teacher', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Get classes enrolled by authenticated student
+   */
+  async getMyStudentClasses(): Promise<ClassResponse[]> {
+    return apiRequest<ClassResponse[]>('/class/me/student', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Get classroom details by id
+   */
+  async getClassById(classId: string): Promise<ClassroomDetailResponse> {
+    return apiRequest<ClassroomDetailResponse>(`/class/${classId}`, {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Get homework list under a classroom
+   */
+  async getClassHomework(classId: string): Promise<ClassroomHomeworkResponse[]> {
+    return apiRequest<ClassroomHomeworkResponse[]>(`/class/${classId}/homework`, {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Create homework under a classroom
+   */
+  async createClassHomework(classId: string, data: CreateClassHomeworkRequest): Promise<ClassroomHomeworkResponse> {
+    return apiRequest<ClassroomHomeworkResponse>(`/class/${classId}/homework`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Get students under a classroom
+   */
+  async getClassStudents(classId: string): Promise<ClassroomStudentResponse[]> {
+    return apiRequest<ClassroomStudentResponse[]>(`/class/${classId}/students`, {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Get available student candidates in teacher organization for a classroom
+   */
+  async getClassStudentCandidates(classId: string): Promise<ClassStudentCandidateResponse[]> {
+    return apiRequest<ClassStudentCandidateResponse[]>(`/class/${classId}/students/candidates`, {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Enroll a student into a classroom
+   */
+  async addClassStudent(classId: string, data: AddClassStudentRequest): Promise<ClassroomStudentResponse> {
+    return apiRequest<ClassroomStudentResponse[]>(`/class/${classId}/students`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }).then((items) => items[0]);
+  },
+
+  /**
+   * Enroll multiple students into a classroom
+   */
+  async addClassStudents(classId: string, data: AddClassStudentsRequest): Promise<ClassroomStudentResponse[]> {
+    return apiRequest<ClassroomStudentResponse[]>(`/class/${classId}/students`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Get teachers under a classroom
+   */
+  async getClassTeachers(classId: string): Promise<ClassroomTeacherResponse[]> {
+    return apiRequest<ClassroomTeacherResponse[]>(`/class/${classId}/teachers`, {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Create class record
+   */
+  async createClass(data: CreateClassRequest): Promise<ClassResponse> {
+    return apiRequest<ClassResponse>('/class', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   },
 };
