@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Upload, X, Plus, AlertCircle, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { Camera, Upload, Plus, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
@@ -8,7 +8,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // TypeScript Interfaces
 export interface HomeworkSheet {
@@ -22,10 +21,6 @@ export interface StudentHomework {
   sheets: HomeworkSheet[];
   createdAt: Date;
 }
-
-// Constants
-export const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp', 'image/jpg'];
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Glassmorphism Style
 export const glassStyle = {
@@ -59,100 +54,6 @@ export const useIsMobile = (breakpoint = 768) => {
   }, [breakpoint]);
 
   return isMobile;
-};
-
-// File Validation
-export const validateFile = (file: File, setError: (error: string) => void): boolean => {
-  if (!ACCEPTED_TYPES.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|heic|heif|webp)$/i)) {
-    setError(`${file.name} is not a supported image format. Please use JPG, PNG, HEIC, or WebP.`);
-    return false;
-  }
-  if (file.size > MAX_FILE_SIZE) {
-    setError(`${file.name} exceeds 10MB limit.`);
-    return false;
-  }
-  return true;
-};
-
-// Thumbnail Generation
-export const generateThumbnail = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const maxWidth = 400;
-        const scaleFactor = maxWidth / img.width;
-        canvas.width = maxWidth;
-        canvas.height = img.height * scaleFactor;
-        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
-      };
-      img.onerror = reject;
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-};
-
-// Process Files
-export const processFiles = async (
-  files: File[],
-  setError: (error: string) => void,
-  setIsProcessing: (isProcessing: boolean) => void
-): Promise<HomeworkSheet[]> => {
-  setIsProcessing(true);
-  const sheets: HomeworkSheet[] = [];
-
-  try {
-    for (const file of files) {
-      if (validateFile(file, setError)) {
-        const thumbnail = await generateThumbnail(file);
-        sheets.push({
-          id: `sheet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          file,
-          thumbnail
-        });
-      }
-    }
-  } catch (error) {
-    setError('Failed to process images. Please try again.');
-  } finally {
-    setIsProcessing(false);
-  }
-
-  return sheets;
-};
-
-// Drag and Drop Handlers
-export const handleDrag = (
-  e: React.DragEvent,
-  setDragActive: (active: boolean) => void
-) => {
-  e.preventDefault();
-  e.stopPropagation();
-  if (e.type === 'dragenter' || e.type === 'dragover') {
-    setDragActive(true);
-  } else if (e.type === 'dragleave') {
-    setDragActive(false);
-  }
-};
-
-export const handleDrop = (
-  e: React.DragEvent,
-  setDragActive: (active: boolean) => void,
-  onFilesDropped: (files: File[]) => void
-) => {
-  e.preventDefault();
-  e.stopPropagation();
-  setDragActive(false);
-
-  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-    onFilesDropped(Array.from(e.dataTransfer.files));
-  }
 };
 
 // Poker Card Stacking Preview Component
@@ -281,26 +182,6 @@ export const StackedSheetsPreview = ({ sheets, studentNumber, onDelete, isMobile
   );
 };
 
-// Error Alert Component
-interface ErrorAlertProps {
-  error: string;
-  onDismiss: () => void;
-}
-
-export const ErrorAlert = ({ error, onDismiss }: ErrorAlertProps) => {
-  if (!error) return null;
-
-  return (
-    <Alert variant="destructive" className="mb-4">
-      <AlertCircle className="w-4 h-4" />
-      <AlertDescription>{error}</AlertDescription>
-      <button onClick={onDismiss} className="ml-auto">
-        <X className="w-4 h-4" />
-      </button>
-    </Alert>
-  );
-};
-
 // Loading Overlay Component
 interface LoadingOverlayProps {
   isProcessing: boolean;
@@ -321,32 +202,48 @@ export const LoadingOverlay = ({ isProcessing }: LoadingOverlayProps) => {
 
 // Initial Upload Area Component
 interface InitialUploadAreaProps {
-  dragActive: boolean;
-  onDragEnter: (e: React.DragEvent) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragLeave: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent) => void;
+  onFilesDropped: (files: File[]) => void;
   onUploadClick: () => void;
   onCameraClick: () => void;
   isMobile: boolean;
 }
 
 export const InitialUploadArea = ({
-  dragActive,
-  onDragEnter,
-  onDragOver,
-  onDragLeave,
-  onDrop,
+  onFilesDropped,
   onUploadClick,
   onCameraClick,
   isMobile,
 }: InitialUploadAreaProps) => {
+  // Drag state managed internally
+  const [dragActive, setDragActive] = useState(false);
+
+  // Drag handlers defined internally
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onFilesDropped(Array.from(e.dataTransfer.files));
+    }
+  };
+
   return (
     <div
-      onDragEnter={!isMobile ? onDragEnter : undefined}
-      onDragOver={!isMobile ? onDragOver : undefined}
-      onDragLeave={!isMobile ? onDragLeave : undefined}
-      onDrop={!isMobile ? onDrop : undefined}
+      onDragEnter={!isMobile ? handleDrag : undefined}
+      onDragOver={!isMobile ? handleDrag : undefined}
+      onDragLeave={!isMobile ? handleDrag : undefined}
+      onDrop={!isMobile ? handleDrop : undefined}
       className="rounded-2xl p-8 text-center transition-all duration-300"
       style={{
         background: dragActive && !isMobile

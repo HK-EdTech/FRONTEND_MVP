@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { api, ClassWithHomeworkResponse } from '@/lib/api';
 import { HomeworkCriteria } from './HomeworkCriteria';
 
@@ -10,10 +11,6 @@ import {
   HomeworkSheet,
   StudentHomework,
   glassStyle,
-  processFiles,
-  handleDrag,
-  handleDrop,
-  ErrorAlert,
   LoadingOverlay,
   InitialUploadArea,
   HomeworkListDisplay,
@@ -25,8 +22,6 @@ export function ScanHomework() {
   // State Management
   const [homeworkList, setHomeworkList] = useState<StudentHomework[]>([]);
   const [selectedHomeworkId, setSelectedHomeworkId] = useState<string | null>(null);
-  const [dragActive, setDragActive] = useState(false);
-  const [error, setError] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -71,8 +66,58 @@ export function ScanHomework() {
   const handleFiles = async (files: File[], homeworkId: string | null) => {
     if (isUploadDisabled) return;
 
-    setError('');
-    const sheets = await processFiles(files, setError, setIsProcessing);
+    // Constants for file validation
+    const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp', 'image/jpg'];
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+    setIsProcessing(true);
+    const sheets: HomeworkSheet[] = [];
+
+    try {
+      for (const file of files) {
+        // File Validation
+        if (!ACCEPTED_TYPES.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|heic|heif|webp)$/i)) {
+          toast.error(`${file.name} is not a supported image format. Please use JPG, PNG, HEIC, or WebP.`);
+          continue;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error(`${file.name} exceeds 10MB limit.`);
+          continue;
+        }
+
+        // Thumbnail Generation
+        const thumbnail = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              const maxWidth = 400;
+              const scaleFactor = maxWidth / img.width;
+              canvas.width = maxWidth;
+              canvas.height = img.height * scaleFactor;
+              ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+              resolve(canvas.toDataURL('image/jpeg', 0.8));
+            };
+            img.onerror = reject;
+            img.src = e.target?.result as string;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        sheets.push({
+          id: `sheet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          file,
+          thumbnail
+        });
+      }
+    } catch (error) {
+      toast.error('Failed to process images. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
 
     if (sheets.length === 0) return;
 
@@ -128,9 +173,6 @@ export function ScanHomework() {
 
   return (
     <div className="space-y-6">
-      {/* Error Alert */}
-      <ErrorAlert error={error} onDismiss={() => setError('')} />
-
       {/* Loading State */}
       <LoadingOverlay isProcessing={isProcessing} />
 
@@ -204,11 +246,7 @@ export function ScanHomework() {
             {/* Initial Upload Area (when no homework exists) */}
             {homeworkList.length === 0 && (
               <InitialUploadArea
-                dragActive={dragActive}
-                onDragEnter={(e) => handleDrag(e, setDragActive)}
-                onDragOver={(e) => handleDrag(e, setDragActive)}
-                onDragLeave={(e) => handleDrag(e, setDragActive)}
-                onDrop={(e) => handleDrop(e, setDragActive, (files) => handleFiles(files, null))}
+                onFilesDropped={(files) => handleFiles(files, null)}
                 onUploadClick={() => fileInputRef.current?.click()}
                 onCameraClick={() => cameraInputRef.current?.click()}
                 isMobile={isMobile}
