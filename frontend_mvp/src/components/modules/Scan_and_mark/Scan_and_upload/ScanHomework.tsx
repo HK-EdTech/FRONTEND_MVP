@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { api, ClassWithHomeworkResponse } from '@/lib/api';
-import { HomeworkCriteria } from './HomeworkCriteria';
+import { HomeworkCriteria_OnetimeUpload } from '@/components/homeworkCriteria/HomeworkCriteria_OnetimeUpload';
 
 // Import from component file
 import {
@@ -25,42 +24,10 @@ export function ScanHomework() {
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-
-  // Class and Subject Selection State
-  const [classes, setClasses] = useState<ClassWithHomeworkResponse[]>([]);
-  const [selectedClassName, setSelectedClassName] = useState<string>('');
-  const [selectedSubject, setSelectedSubject] = useState<string>('');
-  const [isLoadingClasses, setIsLoadingClasses] = useState(true);
-
-  // Homework Criteria State
-  const [isOneTimeUpload, setIsOneTimeUpload] = useState(true);
-  const [selectedDbHomeworkId, setSelectedDbHomeworkId] = useState<string | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState<string>('');
-  const [selectedOneTimeSubject, setSelectedOneTimeSubject] = useState<string>('');
+  const [isUploadDisabled, setIsUploadDisabled] = useState(true);
 
   // Mobile Detection
   const isMobile = useIsMobile();
-
-  // Upload disabled until criteria are filled for the active mode
-  const isUploadDisabled = isOneTimeUpload
-    ? !selectedLevel || !selectedOneTimeSubject
-    : !selectedDbHomeworkId;
-
-  // Fetch teacher's classes with homework on mount
-  useEffect(() => {
-    const fetchClasses = async () => {
-      try {
-        const data = await api.getClassesSubjectHomework();
-        setClasses(data);
-      } catch (err) {
-        console.error('Failed to fetch classes:', err);
-        setClasses([]);
-      } finally {
-        setIsLoadingClasses(false);
-      }
-    };
-    fetchClasses();
-  }, []);
 
   // Main File Handler
   const handleFiles = async (files: File[], homeworkId: string | null) => {
@@ -198,22 +165,9 @@ export function ScanHomework() {
       {/* Main Content */}
       <motion.div layout transition={{ duration: 0.3, ease: 'easeInOut' }} className="rounded-2xl p-6 shadow-xl relative group/upload" style={glassStyle}>
         {/* Homework Criteria Panel */}
-        <HomeworkCriteria
-          classes={classes}
-          isLoadingClasses={isLoadingClasses}
-          isOneTimeUpload={isOneTimeUpload}
-          onToggleOneTimeUpload={setIsOneTimeUpload}
-          selectedClassName={selectedClassName}
-          onSelectClassName={setSelectedClassName}
-          selectedSubject={selectedSubject}
-          onSelectSubject={setSelectedSubject}
-          selectedDbHomeworkId={selectedDbHomeworkId}
-          onSelectDbHomeworkId={setSelectedDbHomeworkId}
-          selectedLevel={selectedLevel}
-          onSelectLevel={setSelectedLevel}
-          selectedOneTimeSubject={selectedOneTimeSubject}
-          onSelectOneTimeSubject={setSelectedOneTimeSubject}
-          isMobile={isMobile}
+        <HomeworkCriteria_OnetimeUpload
+          isUploadDisabled={isUploadDisabled}
+          setIsUploadDisabled={setIsUploadDisabled}
         />
 
         {/* Separator */}
