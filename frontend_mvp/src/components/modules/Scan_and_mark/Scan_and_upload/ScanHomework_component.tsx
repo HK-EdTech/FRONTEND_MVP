@@ -57,7 +57,17 @@ export const useIsMobile = (breakpoint = 768) => {
 };
 
 // Poker Card Stacking Preview Component
-export const StackedSheetsPreview = ({ sheets, studentNumber, onDelete, isMobile }: { sheets: HomeworkSheet[], studentNumber?: number, onDelete?: () => void, isMobile?: boolean }) => {
+export const StackedSheetsPreview = ({
+  sheets,
+  studentNumber,
+  onDelete,
+  isMobile,
+}: {
+  sheets: HomeworkSheet[];
+  studentNumber?: number;
+  onDelete?: () => void;
+  isMobile?: boolean;
+}) => {
   if (sheets.length === 1) {
     return (
       <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-300 group-hover:border-purple-400 transition-colors">

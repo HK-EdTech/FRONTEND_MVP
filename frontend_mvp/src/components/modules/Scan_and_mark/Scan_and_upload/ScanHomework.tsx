@@ -3,28 +3,30 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { HomeworkCriteria_OnetimeUpload } from '@/components/homeworkCriteria/HomeworkCriteria_OnetimeUpload';
+import { HomeworkCriteria_OnetimeUpload } from '@/components/Scan_and_mark/Scan_and_upload/homeworkCriteria/HomeworkCriteria_OnetimeUpload';
 
 // Import from component file
 import {
   HomeworkSheet,
   StudentHomework,
-  glassStyle,
   LoadingOverlay,
   InitialUploadArea,
   HomeworkListDisplay,
   HomeworkDialog,
   useIsMobile,
 } from './ScanHomework_component';
+import { GlassPanel } from '@/components/common/GlassPanel';
 
 export function ScanHomework() {
   // State Management
   const [homeworkList, setHomeworkList] = useState<StudentHomework[]>([]);
   const [selectedHomeworkId, setSelectedHomeworkId] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
   const [isUploadDisabled, setIsUploadDisabled] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Mobile Detection
   const isMobile = useIsMobile();
@@ -103,8 +105,6 @@ export function ScanHomework() {
         createdAt: new Date()
       };
       setHomeworkList(prev => [...prev, newHomework]);
-      // Auto-open dialog for newly created homework
-      setSelectedHomeworkId(newHomework.id);
     }
   };
 
@@ -120,10 +120,6 @@ export function ScanHomework() {
   // Handle deleting entire homework
   const handleHomeworkDelete = (homeworkId: string) => {
     setHomeworkList(prev => prev.filter(hw => hw.id !== homeworkId));
-    // Close dialog if the deleted homework was open
-    if (selectedHomeworkId === homeworkId) {
-      setSelectedHomeworkId(null);
-    }
   };
 
   // Handle deleting individual sheet
@@ -163,7 +159,7 @@ export function ScanHomework() {
       />
 
       {/* Main Content */}
-      <motion.div layout transition={{ duration: 0.3, ease: 'easeInOut' }} className="rounded-2xl p-6 shadow-xl relative group/upload" style={glassStyle}>
+      <GlassPanel className="relative group/upload">
         {/* Homework Criteria Panel */}
         <HomeworkCriteria_OnetimeUpload
           isUploadDisabled={isUploadDisabled}
@@ -220,7 +216,7 @@ export function ScanHomework() {
             )}
           </motion.div>
         </div>
-      </motion.div>
+      </GlassPanel>
 
       {/* Dialog for Viewing and Adding Sheets */}
       <HomeworkDialog
