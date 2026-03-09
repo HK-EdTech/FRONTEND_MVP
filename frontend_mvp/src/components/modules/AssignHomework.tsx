@@ -5,6 +5,7 @@ import type { FormEvent } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api, ClassResponse, TeacherHomeworkResponse } from '@/lib/api';
+import { ClassSubjectButtonCard } from '@/components/common/ClassSubjectButtonCard';
 import { GlassPanel } from '@/components/common/GlassPanel';
 import { HomeworkSummaryCard } from '@/components/common/HomeworkSummaryCard';
 import { SectionHeaderBar } from '@/components/common/SectionHeaderBar';
@@ -360,14 +361,12 @@ export function AssignHomework() {
 
           {!isLoadingClasses &&
             filteredClasses.map((classroom) => (
-              <button
+              <ClassSubjectButtonCard
                 key={classroom.id}
-                type="button"
-                className="w-[calc(50%-0.375rem)] sm:w-[calc(33.333%-0.5rem)] md:w-[calc(25%-0.5625rem)] lg:w-[calc(20%-0.6rem)] min-h-12 min-w-[110px] bg-white border border-white/10 rounded-xl px-3 py-3 flex items-center justify-center text-sm font-bold text-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                className="w-[calc(50%-0.375rem)] sm:w-[calc(33.333%-0.5rem)] md:w-[calc(25%-0.5625rem)] lg:w-[calc(20%-0.6rem)]"
                 onClick={() => router.push(`/class/${classroom.id}/homework`)}
-              >
-                {classroom.name}
-              </button>
+                label={`${classroom.name} - ${classroom.subject}`}
+              />
             ))}
         </div>
 
