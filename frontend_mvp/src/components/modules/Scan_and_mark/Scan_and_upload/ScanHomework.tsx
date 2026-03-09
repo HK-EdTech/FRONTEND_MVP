@@ -3,6 +3,8 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 import { HomeworkCriteria_OnetimeUpload } from '@/components/Scan_and_mark/Scan_and_upload/homeworkCriteria/HomeworkCriteria_OnetimeUpload';
 
 // Import from component file
@@ -20,6 +22,7 @@ import { GlassPanel } from '@/components/common/GlassPanel';
 export function ScanHomework() {
   // State Management
   const [homeworkList, setHomeworkList] = useState<StudentHomework[]>([]);
+  const homeworkListRoot = useSelector((state: RootState) => state.uploadHomework_ScanAndMark.homeworkList);
   const [selectedHomeworkId, setSelectedHomeworkId] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -194,23 +197,16 @@ export function ScanHomework() {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
             {/* Initial Upload Area (when no homework exists) */}
-            {homeworkList.length === 0 && (
+            {homeworkListRoot.length === 0 && (
               <InitialUploadArea
-                onFilesDropped={(files) => handleFiles(files, null)}
-                onUploadClick={() => fileInputRef.current?.click()}
-                onCameraClick={() => cameraInputRef.current?.click()}
                 isMobile={isMobile}
               />
             )}
 
             {/* Homework List Display (when homework exists) */}
-            {homeworkList.length > 0 && (
+            {homeworkListRoot.length > 0 && (
               <HomeworkListDisplay
-                homeworkList={homeworkList}
                 onHomeworkClick={(id) => setSelectedHomeworkId(id)}
-                onHomeworkDelete={handleHomeworkDelete}
-                onUploadClick={() => fileInputRef.current?.click()}
-                onCameraClick={() => cameraInputRef.current?.click()}
                 isMobile={isMobile}
               />
             )}

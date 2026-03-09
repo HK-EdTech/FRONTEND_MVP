@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import Homeworkcriteria_onetimeUploadReducer from './slices/homeworkCriteria_OnetimeUpload_slice';
 import HomeworkCriteria_classReducer from './slices/homeworkCriteria_Class_slice';
+import uploadHomework_ScanAndMarkReducer from './slices/uploadHomework_ScanAndMark_slice';
 
 export const store = configureStore({
   reducer: {
     Homeworkcriteria_onetimeUpload: Homeworkcriteria_onetimeUploadReducer,
     Homeworkcrieria_class: HomeworkCriteria_classReducer,
+    uploadHomework_ScanAndMark: uploadHomework_ScanAndMarkReducer,
   },
 });
 
