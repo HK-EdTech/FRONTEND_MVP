@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api, ClassManagementResponse } from '@/lib/api';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { ClassSubjectButtonCard } from '@/components/common/ClassSubjectButtonCard';
 import { GlassPanel } from '@/components/common/GlassPanel';
 import { SectionHeaderBar } from '@/components/common/SectionHeaderBar';
@@ -55,6 +56,7 @@ export default function ClassManagementPage() {
   return (
     <div className="space-y-6">
       <GlassPanel>
+        <Breadcrumb items={[{ label: 'Classes' }]} />
         <SectionHeaderBar
           title="Class Management"
           titleClassName="font-bold"
