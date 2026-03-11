@@ -155,6 +155,26 @@ export interface CreateClassRequest {
   organization_id?: string;
 }
 
+export interface ClassManagementHomeworkItem {
+  id: string;
+  title: string | null;
+  due_date: string | null;
+  created_at: string;
+}
+
+export interface ClassManagementSubject {
+  id: string;
+  subjectName: string;
+  homework: ClassManagementHomeworkItem[];
+}
+
+export interface ClassManagementGroup {
+  className: string;
+  subjects: ClassManagementSubject[];
+}
+
+export type ClassManagementResponse = ClassManagementGroup[];
+
 export interface TeacherProfileResponse {
   id: string;
   bio: string | null;
@@ -326,6 +346,15 @@ export const api = {
    */
   async getMyTeacherClasses(): Promise<ClassResponse[]> {
     return apiRequest<ClassResponse[]>('/class/me/teacher', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Get grouped class management data for authenticated teacher
+   */
+  async getMyTeacherClassManagement(): Promise<ClassManagementResponse> {
+    return apiRequest<ClassManagementResponse>('/class/me/teacher/management', {
       method: 'GET',
     });
   },
