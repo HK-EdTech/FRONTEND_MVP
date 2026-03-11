@@ -106,7 +106,7 @@ interface ModeInfo {
 }
 
 class ATSApiService {
-  private baseUrl = 'http://localhost:8000/api';
+  private baseUrl = 'http://localhost:5000/api';
   private isBackendAvailable = false;
   private mockResumes: Resume[] = [];
   private mockJobProfiles: JobProfile[] = [];
