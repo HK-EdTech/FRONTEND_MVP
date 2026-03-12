@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Camera, Upload, X, Plus, AlertCircle, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { addHomework, deleteHomework } from '@/store/slices/uploadHomework_ScanAndMark_slice';
+import { RootState } from '@/store/store';
+import { handleUploadFiles } from '@/common/utility/handleUploadFiles';
+import { Loading } from '@/components/common/Loading';
+import { Camera, Upload, Plus, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
@@ -8,7 +14,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // TypeScript Interfaces
 export interface HomeworkSheet {
@@ -22,10 +27,6 @@ export interface StudentHomework {
   sheets: HomeworkSheet[];
   createdAt: Date;
 }
-
-// Constants
-export const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp', 'image/jpg'];
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Glassmorphism Style
 export const glassStyle = {
@@ -61,102 +62,26 @@ export const useIsMobile = (breakpoint = 768) => {
   return isMobile;
 };
 
-// File Validation
-export const validateFile = (file: File, setError: (error: string) => void): boolean => {
-  if (!ACCEPTED_TYPES.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|heic|heif|webp)$/i)) {
-    setError(`${file.name} is not a supported image format. Please use JPG, PNG, HEIC, or WebP.`);
-    return false;
-  }
-  if (file.size > MAX_FILE_SIZE) {
-    setError(`${file.name} exceeds 10MB limit.`);
-    return false;
-  }
-  return true;
-};
-
-// Thumbnail Generation
-export const generateThumbnail = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const maxWidth = 400;
-        const scaleFactor = maxWidth / img.width;
-        canvas.width = maxWidth;
-        canvas.height = img.height * scaleFactor;
-        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
-      };
-      img.onerror = reject;
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-};
-
-// Process Files
-export const processFiles = async (
-  files: File[],
-  setError: (error: string) => void,
-  setIsProcessing: (isProcessing: boolean) => void
-): Promise<HomeworkSheet[]> => {
-  setIsProcessing(true);
-  const sheets: HomeworkSheet[] = [];
-
-  try {
-    for (const file of files) {
-      if (validateFile(file, setError)) {
-        const thumbnail = await generateThumbnail(file);
-        sheets.push({
-          id: `sheet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          file,
-          thumbnail
-        });
-      }
-    }
-  } catch (error) {
-    setError('Failed to process images. Please try again.');
-  } finally {
-    setIsProcessing(false);
-  }
-
-  return sheets;
-};
-
-// Drag and Drop Handlers
-export const handleDrag = (
-  e: React.DragEvent,
-  setDragActive: (active: boolean) => void
-) => {
-  e.preventDefault();
-  e.stopPropagation();
-  if (e.type === 'dragenter' || e.type === 'dragover') {
-    setDragActive(true);
-  } else if (e.type === 'dragleave') {
-    setDragActive(false);
-  }
-};
-
-export const handleDrop = (
-  e: React.DragEvent,
-  setDragActive: (active: boolean) => void,
-  onFilesDropped: (files: File[]) => void
-) => {
-  e.preventDefault();
-  e.stopPropagation();
-  setDragActive(false);
-
-  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-    onFilesDropped(Array.from(e.dataTransfer.files));
-  }
-};
-
 // Poker Card Stacking Preview Component
-export const StackedSheetsPreview = ({ sheets, studentNumber, onDelete, isMobile }: { sheets: HomeworkSheet[], studentNumber?: number, onDelete?: () => void, isMobile?: boolean }) => {
+export const StackedSheetsPreview = ({
+  homework,
+  studentNumber,
+  isMobile,
+}: {
+  homework: { id: string; sheets: { id: string; file: File; thumbnail: string }[] };
+  studentNumber?: number;
+  isMobile?: boolean;
+}) => {
+  const dispatch = useDispatch();
+  const { sheets } = homework;
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`Delete Student ${studentNumber}'s homework?`)) {
+      dispatch(deleteHomework(homework.id));
+    }
+  };
+
   if (sheets.length === 1) {
     return (
       <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-300 group-hover:border-purple-400 transition-colors">
@@ -179,19 +104,14 @@ export const StackedSheetsPreview = ({ sheets, studentNumber, onDelete, isMobile
         </div>
 
         {/* Delete button */}
-        {onDelete && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className={`absolute bottom-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg transition-all z-20
-              ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
-            aria-label="Delete homework"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        )}
+        <button
+          onClick={handleDelete}
+          className={`absolute bottom-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg transition-all z-20
+            ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
+          aria-label="Delete homework"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
       </div>
     );
   }
@@ -264,40 +184,15 @@ export const StackedSheetsPreview = ({ sheets, studentNumber, onDelete, isMobile
       </div>
 
       {/* Delete button */}
-      {onDelete && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className={`absolute bottom-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg transition-all z-20
-            ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
-          aria-label="Delete homework"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-  );
-};
-
-// Error Alert Component
-interface ErrorAlertProps {
-  error: string;
-  onDismiss: () => void;
-}
-
-export const ErrorAlert = ({ error, onDismiss }: ErrorAlertProps) => {
-  if (!error) return null;
-
-  return (
-    <Alert variant="destructive" className="mb-4">
-      <AlertCircle className="w-4 h-4" />
-      <AlertDescription>{error}</AlertDescription>
-      <button onClick={onDismiss} className="ml-auto">
-        <X className="w-4 h-4" />
+      <button
+        onClick={handleDelete}
+        className={`absolute bottom-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg transition-all z-20
+          ${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-70 hover:!opacity-100'}`}
+        aria-label="Delete homework"
+      >
+        <Trash2 className="w-4 h-4" />
       </button>
-    </Alert>
+    </div>
   );
 };
 
@@ -321,173 +216,210 @@ export const LoadingOverlay = ({ isProcessing }: LoadingOverlayProps) => {
 
 // Initial Upload Area Component
 interface InitialUploadAreaProps {
-  dragActive: boolean;
-  onDragEnter: (e: React.DragEvent) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragLeave: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent) => void;
-  onUploadClick: () => void;
-  onCameraClick: () => void;
   isMobile: boolean;
 }
 
 export const InitialUploadArea = ({
-  dragActive,
-  onDragEnter,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onUploadClick,
-  onCameraClick,
   isMobile,
 }: InitialUploadAreaProps) => {
-  return (
-    <div
-      onDragEnter={!isMobile ? onDragEnter : undefined}
-      onDragOver={!isMobile ? onDragOver : undefined}
-      onDragLeave={!isMobile ? onDragLeave : undefined}
-      onDrop={!isMobile ? onDrop : undefined}
-      className="rounded-2xl p-8 text-center transition-all duration-300"
-      style={{
-        background: dragActive && !isMobile
-          ? 'linear-gradient(145deg, rgba(139, 92, 246, 0.15), rgba(20, 184, 166, 0.15))'
-          : 'linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(20, 184, 166, 0.1))',
-        border: `2px dashed ${dragActive && !isMobile ? 'rgba(139, 92, 246, 0.6)' : 'rgba(139, 92, 246, 0.3)'}`,
-        transform: dragActive && !isMobile ? 'scale(1.02)' : 'scale(1)',
-      }}
-    >
-      <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <Upload className="w-8 h-8 text-white" />
-      </div>
-      <h3 className="text-lg text-gray-800 mb-2">Scan or upload photos for one or more students&apos; homework</h3>
-      <div className="mb-6">
-        {!isMobile && (
-          <p className="text-sm text-gray-600">Drag and drop or click to browse</p>
-        )}
-      </div>
+  const dispatch = useDispatch();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
-      <div className="flex gap-3 justify-center">
-        {isMobile && (
-          <Button
-            onClick={onCameraClick}
-            variant="outline"
-            size="lg"
-            className="px-8 py-6 text-lg rounded-xl"
-          >
-            <Camera className="w-7 h-7 mr-3" />
-            Take Picture
-          </Button>
-        )}
-        {!isMobile ? (
-          <button
-            onClick={onUploadClick}
-            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:-translate-y-1 flex items-center gap-2"
-          >
-            <Upload className="w-5 h-5" />
-            Upload Picture
-          </button>
-        ) : (
-          <Button
-            onClick={onUploadClick}
-            variant="outline"
-            size="lg"
-            className="px-8 py-6 text-lg rounded-xl"
-          >
-            <Upload className="w-7 h-7 mr-3" />
-            Upload Picture
-          </Button>
-        )}
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    setIsProcessing(true);
+    const sheets = await handleUploadFiles(Array.from(e.target.files));
+    setIsProcessing(false);
+    if (sheets.length === 0) return;
+    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: '', sheets }));
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+    setIsProcessing(true);
+    const sheets = await handleUploadFiles(Array.from(e.dataTransfer.files));
+    setIsProcessing(false);
+    if (sheets.length === 0) return;
+    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: '', sheets }));
+  };
+
+  return (
+    <>
+      <Loading isProcessing={isProcessing} />
+      <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleInputChange} />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleInputChange} />
+
+      <div
+        onDragEnter={!isMobile ? handleDrag : undefined}
+        onDragOver={!isMobile ? handleDrag : undefined}
+        onDragLeave={!isMobile ? handleDrag : undefined}
+        onDrop={!isMobile ? handleDrop : undefined}
+        className="rounded-2xl p-8 text-center transition-all duration-300"
+        style={{
+          background: dragActive && !isMobile
+            ? 'linear-gradient(145deg, rgba(139, 92, 246, 0.15), rgba(20, 184, 166, 0.15))'
+            : 'linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(20, 184, 166, 0.1))',
+          border: `2px dashed ${dragActive && !isMobile ? 'rgba(139, 92, 246, 0.6)' : 'rgba(139, 92, 246, 0.3)'}`,
+          transform: dragActive && !isMobile ? 'scale(1.02)' : 'scale(1)',
+        }}
+      >
+        <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <Upload className="w-8 h-8 text-white" />
+        </div>
+        <h3 className="text-lg text-gray-800 mb-2">Scan or upload photos for one or more students&apos; homework</h3>
+        <div className="mb-6">
+          {!isMobile && (
+            <p className="text-sm text-gray-600">Drag and drop or click to browse</p>
+          )}
+        </div>
+
+        <div className="flex gap-3 justify-center">
+          {isMobile && (
+            <Button
+              onClick={() => cameraInputRef.current?.click()}
+              variant="outline"
+              size="lg"
+              className="px-8 py-6 text-lg rounded-xl"
+            >
+              <Camera className="w-7 h-7 mr-3" />
+              Take Picture
+            </Button>
+          )}
+          {!isMobile ? (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:-translate-y-1 flex items-center gap-2"
+            >
+              <Upload className="w-5 h-5" />
+              Upload Picture
+            </button>
+          ) : (
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="outline"
+              size="lg"
+              className="px-8 py-6 text-lg rounded-xl"
+            >
+              <Upload className="w-7 h-7 mr-3" />
+              Upload Picture
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
 // Homework List Display Component
 interface HomeworkListDisplayProps {
-  homeworkList: StudentHomework[];
   onHomeworkClick: (homeworkId: string) => void;
-  onHomeworkDelete: (homeworkId: string) => void;
-  onUploadClick: () => void;
-  onCameraClick: () => void;
   isMobile: boolean;
 }
 
 export const HomeworkListDisplay = ({
-  homeworkList,
   onHomeworkClick,
-  onHomeworkDelete,
-  onUploadClick,
-  onCameraClick,
   isMobile,
 }: HomeworkListDisplayProps) => {
+  const dispatch = useDispatch();
+  const homeworkList = useSelector((state: RootState) => state.uploadHomework_ScanAndMark.homeworkList);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    setIsProcessing(true);
+    const sheets = await handleUploadFiles(Array.from(e.target.files));
+    setIsProcessing(false);
+    if (sheets.length === 0) return;
+    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: '', sheets }));
+  };
+
   return (
-    <div>
-      {/* Title */}
-      <h2 className="text-lg text-gray-800 mb-4">Uploaded Students&apos; Homework</h2>
+    <>
+      <Loading isProcessing={isProcessing} />
+      <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleInputChange} />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleInputChange} />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-      {homeworkList.map((homework, index) => (
-        <button
-          key={homework.id}
-          onClick={() => onHomeworkClick(homework.id)}
-          className="group rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl w-full aspect-[3/4]"
-        >
-          <StackedSheetsPreview
-            sheets={homework.sheets}
-            studentNumber={index + 1}
-            onDelete={() => {
-              if (window.confirm(`Delete Student ${index + 1}'s homework?`)) {
-                onHomeworkDelete(homework.id);
-              }
-            }}
-            isMobile={isMobile}
-          />
-        </button>
-      ))}
+      <div>
+        {/* Title */}
+        <h2 className="text-lg text-gray-800 mb-4">Uploaded Students&apos; Homework</h2>
 
-      {/* Add New Student Homework Box */}
-      <div
-        className="rounded-xl p-2 border-2 border-dashed border-purple-300 hover:border-purple-500 transition-colors w-full aspect-[3/4]"
-        style={{
-          background: 'rgba(139, 92, 246, 0.05)',
-        }}
-      >
-        {isMobile ? (
-          // Mobile: Two boxes stacked vertically
-          <div className="flex flex-col gap-2 h-full">
-            {/* Upload Box */}
-            <button
-              onClick={onUploadClick}
-              className="flex-1 flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
-            >
-              <Upload className="w-8 h-8 text-purple-500 mb-1" />
-              <p className="text-xs text-gray-700 font-medium">Tap to upload homework for </p>
-              <p className="text-xs text-gray-700 font-medium">one more student</p>
-            </button>
-
-            {/* Scan Box */}
-            <button
-              onClick={onCameraClick}
-              className="flex-1 flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
-            >
-              <Camera className="w-8 h-8 text-purple-500 mb-1" />
-              <p className="text-xs text-gray-700 font-medium">Tap to scan homework for</p>
-              <p className="text-xs text-gray-700 font-medium">one more student</p>
-            </button>
-          </div>
-        ) : (
-          // Desktop: Single upload box
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+        {homeworkList.map((homework, index) => (
           <button
-            onClick={onUploadClick}
-            className="w-full h-full flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
+            key={homework.id}
+            onClick={() => onHomeworkClick(homework.id)}
+            className="group rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl w-full aspect-[3/4]"
           >
-            <Upload className="w-12 h-12 text-purple-500 mb-2" />
-            <p className="text-sm text-gray-700 font-medium">Click to upload</p>
+            <StackedSheetsPreview
+              homework={homework}
+              studentNumber={index + 1}
+              isMobile={isMobile}
+            />
           </button>
-        )}
+        ))}
+
+        {/* Add New Student Homework Box */}
+        <div
+          className="rounded-xl p-2 border-2 border-dashed border-purple-300 hover:border-purple-500 transition-colors w-full aspect-[3/4]"
+          style={{
+            background: 'rgba(139, 92, 246, 0.05)',
+          }}
+        >
+          {isMobile ? (
+            // Mobile: Two boxes stacked vertically
+            <div className="flex flex-col gap-2 h-full">
+              {/* Upload Box */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
+              >
+                <Upload className="w-8 h-8 text-purple-500 mb-1" />
+                <p className="text-xs text-gray-700 font-medium">Tap to upload homework for </p>
+                <p className="text-xs text-gray-700 font-medium">one more student</p>
+              </button>
+
+              {/* Scan Box */}
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex-1 flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
+              >
+                <Camera className="w-8 h-8 text-purple-500 mb-1" />
+                <p className="text-xs text-gray-700 font-medium">Tap to scan homework for</p>
+                <p className="text-xs text-gray-700 font-medium">one more student</p>
+              </button>
+            </div>
+          ) : (
+            // Desktop: Single upload box
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full h-full flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
+            >
+              <Upload className="w-12 h-12 text-purple-500 mb-2" />
+              <p className="text-sm text-gray-700 font-medium">Click to upload</p>
+            </button>
+          )}
+        </div>
+        </div>
       </div>
-      </div>
-    </div>
+    </>
   );
 };
 
