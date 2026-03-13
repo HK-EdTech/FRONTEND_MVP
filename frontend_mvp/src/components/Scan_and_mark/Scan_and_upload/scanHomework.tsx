@@ -4,9 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
-import { HomeworkCriteria_OnetimeUpload } from '@/components/Scan_and_mark/Scan_and_upload/homeworkCriteria/HomeworkCriteria_OnetimeUpload';
 
-// Import from component file
 import {
   InitialUploadArea,
   HomeworkListDisplay,
@@ -15,7 +13,14 @@ import {
 } from './ScanHomework_component';
 import { GlassPanel } from '@/components/common/GlassPanel';
 
-export function ScanHomework() {
+interface ScanHomeworkProps {
+  HomeworkCriteria: React.ComponentType<{
+    isUploadDisabled: boolean;
+    setIsUploadDisabled: (disabled: boolean) => void;
+  }>;
+}
+
+export function ScanHomework({ HomeworkCriteria }: ScanHomeworkProps) {
   // State Management
   const homeworkListRoot = useSelector((state: RootState) => state.uploadHomework_ScanAndMark.homeworkList);
   const [selectedHomeworkId, setSelectedHomeworkId] = useState<string | null>(null);
@@ -33,7 +38,7 @@ export function ScanHomework() {
       {/* Main Content */}
       <GlassPanel className="relative group/upload">
         {/* Homework Criteria Panel */}
-        <HomeworkCriteria_OnetimeUpload
+        <HomeworkCriteria
           isUploadDisabled={isUploadDisabled}
           setIsUploadDisabled={setIsUploadDisabled}
         />
