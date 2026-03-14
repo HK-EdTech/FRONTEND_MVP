@@ -32,6 +32,11 @@ export interface ProfileUpdateRequest {
   avatar_url?: string;
 }
 
+export interface MarkingSchemeResponse {
+  id: string;
+  doc_path: string | null;
+}
+
 export interface HomeworkResponse {
   id: string;
   title: string | null;
@@ -39,6 +44,8 @@ export interface HomeworkResponse {
   class_id: string | null;
   due_date: string | null;
   full_score: number | null;
+  marking_scheme_id: string | null;
+  marking_scheme: MarkingSchemeResponse | null;
   created_at: string;
 }
 

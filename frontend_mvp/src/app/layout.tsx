@@ -7,6 +7,7 @@ import { supabase, setCachedToken } from '@/lib/supabase';
 import { api, ProfileResponse, ModuleWithPermissions, ProfileWithModulesResponse } from '@/lib/api';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import StoreProvider from '@/store/StoreProvider';
 import { Toaster } from '@/components/ui/sonner';
 import "./globals.css";
 
@@ -78,7 +79,6 @@ export default function RootLayout({
           if (pathname !== '/signin') {
             router.push("/signin");
           }
-          setIsLoading(false);
           return;
         }
 
@@ -112,7 +112,6 @@ export default function RootLayout({
         if (pathname !== '/signin') {
           router.push("/signin");
         }
-        setIsLoading(false);
       }
     };
 
@@ -156,6 +155,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-teal-50`}>
+        <StoreProvider>
         {/* Background Pattern */}
         <div className="fixed inset-0 opacity-30 pointer-events-none">
           <div className="absolute top-0 left-0 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
@@ -198,6 +198,7 @@ export default function RootLayout({
             </main>
           </SidebarProvider>
         </div>
+        </StoreProvider>
         <Toaster />
 
         <style jsx global>{`
