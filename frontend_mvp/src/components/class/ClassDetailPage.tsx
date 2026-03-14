@@ -12,7 +12,7 @@ import { StatusMessage } from '@/components/common/StatusMessage';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getMockClassroomDetail } from './mockData';
 
-interface ClassroomLayoutShellProps {
+interface ClassDetailPageProps {
   classId: string;
   children: ReactNode;
 }
@@ -23,7 +23,7 @@ function activeTabFromPath(pathname: string): 'homework' | 'students' | 'teacher
   return 'homework';
 }
 
-export function ClassroomLayoutShell({ classId, children }: ClassroomLayoutShellProps) {
+export function ClassDetailPage({ classId, children }: ClassDetailPageProps) {
   const params = useParams();
   const pathname = usePathname();
   const [classDetail, setClassDetail] = useState<ClassroomDetailResponse>(getMockClassroomDetail(classId));

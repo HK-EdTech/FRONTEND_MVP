@@ -112,6 +112,15 @@ export interface ClassroomHomeworkResponse {
   created_at: string;
 }
 
+export interface ClassHomeworkSubmissionResponse {
+  student_id: string;
+  full_name: string;
+  score: number | null;
+  submission_datetime: string | null;
+  is_marked: boolean | null;
+  has_submission: boolean;
+}
+
 export interface CreateClassHomeworkRequest {
   title: string;
   subject?: string;
@@ -391,6 +400,21 @@ export const api = {
     return apiRequest<ClassroomHomeworkResponse[]>(`/class/${classId}/homework`, {
       method: 'GET',
     });
+  },
+
+  /**
+   * Get homework submissions under a classroom homework (teacher only)
+   */
+  async getClassHomeworkSubmissions(
+    classId: string,
+    homeworkId: string
+  ): Promise<ClassHomeworkSubmissionResponse[]> {
+    return apiRequest<ClassHomeworkSubmissionResponse[]>(
+      `/class/${classId}/homework/${homeworkId}/submissions`,
+      {
+        method: 'GET',
+      }
+    );
   },
 
   /**
