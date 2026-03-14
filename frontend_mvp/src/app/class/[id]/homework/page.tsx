@@ -13,7 +13,7 @@ import {
   CreateClassHomeworkDialogFormState,
 } from '@/components/dialogs/CreateClassHomeworkDialog';
 import { Button } from '@/components/ui/button';
-import { mockHomeworkItems } from '@/components/classroom/mockData';
+import { mockHomeworkItems } from '@/components/class/mockData';
 
 export default function ClassroomHomeworkPage() {
   const params = useParams();

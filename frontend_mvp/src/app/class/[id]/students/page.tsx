@@ -8,7 +8,7 @@ import { api, ClassStudentCandidateResponse, ClassroomStudentResponse } from '@/
 import { PersonInfoCard } from '@/components/common/PersonInfoCard';
 import { SectionHeaderBar } from '@/components/common/SectionHeaderBar';
 import { StatusMessage } from '@/components/common/StatusMessage';
-import { mockStudents } from '@/components/classroom/mockData';
+import { mockStudents } from '@/components/class/mockData';
 import { AddStudentDialog } from '@/components/dialogs/AddStudentDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';

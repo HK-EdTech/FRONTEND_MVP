@@ -7,7 +7,7 @@ import { api, ClassroomTeacherResponse } from '@/lib/api';
 import { PersonInfoCard } from '@/components/common/PersonInfoCard';
 import { SectionHeaderBar } from '@/components/common/SectionHeaderBar';
 import { StatusMessage } from '@/components/common/StatusMessage';
-import { mockTeachers } from '@/components/classroom/mockData';
+import { mockTeachers } from '@/components/class/mockData';
 import { AddTeacherDialog, AddTeacherDialogFormState } from '@/components/dialogs/AddTeacherDialog';
 import { Button } from '@/components/ui/button';
 

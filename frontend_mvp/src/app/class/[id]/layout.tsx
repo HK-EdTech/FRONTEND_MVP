@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ClassroomLayoutShell } from '@/components/classroom/ClassroomLayoutShell';
+import { ClassroomLayoutShell } from '@/components/class/ClassDetailPage';
 
 interface ClassLayoutProps {
   children: ReactNode;
