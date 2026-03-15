@@ -7,7 +7,7 @@ import {
   setSelectedLevel,
   setSelectedOneTimeSubject,
 } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
-import { glassStyle } from '@/components/modules/Scan_and_mark/Scan_and_upload/ScanHomework_component';
+import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const LEVELS = ['Secondary 1', 'Secondary 2', 'Secondary 3', 'Secondary 4', 'Secondary 5', 'Secondary 6'];

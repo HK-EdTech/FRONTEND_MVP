@@ -3,9 +3,9 @@
 import React from 'react';
 import { ScanHomework } from '@/components/Scan_and_mark/Scan_and_upload/scanHomework';
 import { HomeworkCriteria_OnetimeUpload } from '@/components/Scan_and_mark/Scan_and_upload/homeworkCriteria/HomeworkCriteria_OnetimeUpload';
-import { OcrAndAdjustDummy } from '@/components/modules/Scan_and_mark/OCR_and_adjust/OcrAndAdjustDummy';
-import { ResultDummy } from '@/components/modules/Scan_and_mark/Result/ResultDummy';
-import { glassStyle } from '@/components/modules/Scan_and_mark/Scan_and_upload/ScanHomework_component';
+import { OcrAndAdjustDummy } from '@/components/Scan_and_mark/OCR_and_adjust/OcrAndAdjustDummy';
+import { ResultDummy } from '@/components/Scan_and_mark/Result/ResultDummy';
+import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
 import { motion } from 'framer-motion';
 
 const STAGES = [
