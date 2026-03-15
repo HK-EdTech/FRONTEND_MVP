@@ -52,11 +52,11 @@ const toRecentHomeworkItem = (item: TeacherHomeworkResponse): RecentHomeworkItem
     id: item.id,
     title: item.title || item.subject || 'Untitled Homework',
     subject: item.subject || '',
-    classIds: item.assigned_class_ids?.length ? item.assigned_class_ids : item.class_id ? [item.class_id] : [],
+    classIds: item.assigned_class_ids ?? [],
     dueDateRaw: item.due_date,
     fullScore: item.full_score,
-    assignedClasses: item.assigned_classes,
-    assignedStudents: item.assigned_students,
+    assignedClasses: item.assigned_classes ?? 0,
+    assignedStudents: item.assigned_students ?? 0,
     dueDate: dueDateLabel,
   };
 };
@@ -111,6 +111,16 @@ export function AssignHomework() {
   const recentHomeworkItems = useMemo(
     () => (homework || []).map(toRecentHomeworkItem),
     [homework]
+  );
+
+  const unassignedHomeworkItems = useMemo(
+    () => recentHomeworkItems.filter((item) => item.assignedClasses === 0),
+    [recentHomeworkItems]
+  );
+
+  const activeHomeworkItems = useMemo(
+    () => recentHomeworkItems.filter((item) => item.assignedClasses > 0),
+    [recentHomeworkItems]
   );
 
   const filteredClasses = useMemo(() => {
@@ -238,13 +248,13 @@ export function AssignHomework() {
     const title = homeworkForm.title.trim();
     const subject = homeworkForm.subject.trim();
 
-    if (!homeworkForm.classIds.length) {
-      setHomeworkActionError('Please select at least one class');
-      return;
-    }
-
     if (homeworkDialogMode === 'create' && !title) {
       setHomeworkActionError('Homework title is required');
+      return;
+    }
+    
+    if (homeworkDialogMode === 'assign' && !homeworkForm.classIds.length) {
+      setHomeworkActionError('Please select at least one class');
       return;
     }
 
@@ -287,7 +297,7 @@ export function AssignHomework() {
     <div className="space-y-6">
       <GlassPanel>
         <SectionHeaderBar
-          title="Recent Homework"
+          title="Unassigned Homework"
           actions={(
             <>
               <Button variant="outline" size="sm">
@@ -295,24 +305,67 @@ export function AssignHomework() {
               </Button>
               <Button
                 size="sm"
-                className="w-9 h-9 p-0 rounded-lg bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
+                className="p-0 rounded-lg bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
                 onClick={openCreateHomeworkDialog}
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4" /> Create Homework
               </Button>
             </>
           )}
         />
 
         <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap gap-4 pb-1 w-full">
-          {isLoadingHomework && <StatusMessage variant="loading" text="Loading recent homework..." />}
+          {isLoadingHomework && <StatusMessage variant="loading" text="Loading homework..." />}
 
-          {!isLoadingHomework && recentHomeworkItems.length === 0 && !homeworkError && (
-            <StatusMessage variant="empty" text="No homework found." />
+          {!isLoadingHomework && unassignedHomeworkItems.length === 0 && !homeworkError && (
+            <StatusMessage variant="empty" text="No unassigned homework found." />
           )}
 
           {!isLoadingHomework &&
-            recentHomeworkItems.map((item) => (
+            unassignedHomeworkItems.map((item) => (
+              <HomeworkSummaryCard
+                key={item.id}
+                className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.666rem)] lg:w-[calc(20%-0.8rem)]"
+                title={item.title}
+                assignedText={`Assigned to ${item.assignedClasses} classes • ${item.assignedStudents} students`}
+                dueText={item.dueDate}
+                actionLabel="Assign to Classes"
+                onActionClick={() => openAssignHomeworkDialog(item)}
+              />
+            ))}
+        </div>
+
+        {homeworkError && <StatusMessage variant="error" text={homeworkError} className="mt-4" />}
+      </GlassPanel>
+
+      <GlassPanel>
+        <SectionHeaderBar
+          title="Active Homework"
+          actions={(
+            <>
+              <Button variant="outline" size="sm">
+                Show more
+              </Button>
+              <Button
+                size="sm"
+                className="p-0 rounded-lg bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
+                onClick={openCreateHomeworkDialog}
+              >
+                <Plus className="w-4 h-4" /> Create Homework
+              </Button>
+            </>
+          )}
+        />
+
+        <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap gap-4 pb-1 w-full">
+          {isLoadingHomework && <StatusMessage variant="loading" text="Loading homework..." />}
+
+          {!isLoadingHomework && activeHomeworkItems.length === 0 && !homeworkError && (
+            <StatusMessage variant="empty" text="No active homework found." />
+          )}
+
+          {!isLoadingHomework &&
+            activeHomeworkItems.map((item) => (
               <HomeworkSummaryCard
                 key={item.id}
                 className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.666rem)] lg:w-[calc(20%-0.8rem)] cursor-pointer"
@@ -328,7 +381,7 @@ export function AssignHomework() {
         {homeworkError && <StatusMessage variant="error" text={homeworkError} className="mt-4" />}
       </GlassPanel>
 
-      <GlassPanel>
+      {/* <GlassPanel>
         <SectionHeaderBar
           title="Your Classroom"
           actions={(
@@ -376,7 +429,7 @@ export function AssignHomework() {
         </div>
 
         {classErrorMessage && <StatusMessage variant="error" text={classErrorMessage} className="mt-4" />}
-      </GlassPanel>
+      </GlassPanel> */}
 
       <CreateClassDialog
         open={isCreateClassDialogOpen}

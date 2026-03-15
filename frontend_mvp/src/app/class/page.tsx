@@ -41,7 +41,7 @@ export default function ClassManagementPage() {
 
   return (
     <div className="space-y-6">
-      <GlassPanel>
+      {/* <GlassPanel>
         <Breadcrumb items={[{ label: 'Classes' }]} />
         <SectionHeaderBar
           title="Class Management"
@@ -62,7 +62,7 @@ export default function ClassManagementPage() {
         {!isLoading && data.length === 0 && !errorMessage && (
           <StatusMessage variant="empty" text="No classes found." className="mt-4" />
         )}
-      </GlassPanel>
+      </GlassPanel> */}
 
       {!isLoading && data.map((group) => (
         <GlassPanel key={group.className}>
