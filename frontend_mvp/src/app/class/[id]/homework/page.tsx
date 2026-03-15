@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
-import { api, ClassroomHomeworkResponse } from '@/lib/api';
 import { HomeworkSummaryCard } from '@/components/common/HomeworkSummaryCard';
 import { SectionHeaderBar } from '@/components/common/SectionHeaderBar';
 import { StatusMessage } from '@/components/common/StatusMessage';
@@ -13,18 +12,23 @@ import {
   CreateClassHomeworkDialogFormState,
 } from '@/components/dialogs/CreateClassHomeworkDialog';
 import { Button } from '@/components/ui/button';
-import { mockHomeworkItems } from '@/components/class/mockData';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { createClassHomework, fetchClassHomework } from '@/store/slices/classHomeworkSlice';
 
 export default function ClassroomHomeworkPage() {
   const params = useParams();
   const router = useRouter();
   const classId = String(params.id || '');
+  const dispatch = useAppDispatch();
+  const homeworkItems = useAppSelector((state) => state.classHomework.itemsByClassId[classId] || []);
+  const homeworkStatus = useAppSelector((state) => state.classHomework.statusByClassId[classId] || 'idle');
+  const homeworkError = useAppSelector((state) => state.classHomework.errorByClassId[classId] || '');
+  const createStatus = useAppSelector((state) => state.classHomework.createStatusByClassId[classId] || 'idle');
+  const createError = useAppSelector((state) => state.classHomework.createErrorByClassId[classId] || '');
+  const isLoadingHomework = homeworkStatus === 'loading' || homeworkStatus === 'idle';
 
-  const [homeworkItems, setHomeworkItems] = useState<ClassroomHomeworkResponse[]>(mockHomeworkItems);
-  const [isLoadingHomework, setIsLoadingHomework] = useState(true);
-  const [homeworkError, setHomeworkError] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isCreatingHomework, setIsCreatingHomework] = useState(false);
+  const [formError, setFormError] = useState('');
   const [homeworkForm, setHomeworkForm] = useState<CreateClassHomeworkDialogFormState>({
     title: '',
     subject: '',
@@ -32,23 +36,10 @@ export default function ClassroomHomeworkPage() {
   });
 
   useEffect(() => {
-    const fetchHomework = async () => {
-      try {
-        setIsLoadingHomework(true);
-        setHomeworkError('');
-        const response = await api.getClassHomework(classId);
-        if (response.length > 0) {
-          setHomeworkItems(response);
-        }
-      } catch (error: any) {
-        setHomeworkError(error?.message || 'Failed to load class homework');
-      } finally {
-        setIsLoadingHomework(false);
-      }
-    };
-
-    fetchHomework();
-  }, [classId]);
+    if (homeworkStatus === 'idle') {
+      dispatch(fetchClassHomework(classId));
+    }
+  }, [classId, dispatch, homeworkStatus]);
 
   const sortedHomework = useMemo(
     () =>
@@ -74,27 +65,26 @@ export default function ClassroomHomeworkPage() {
     const subject = homeworkForm.subject.trim();
 
     if (!title) {
-      setHomeworkError('Homework title is required');
+      setFormError('Homework title is required');
       return;
     }
 
     try {
-      setIsCreatingHomework(true);
-      setHomeworkError('');
-
-      const created = await api.createClassHomework(classId, {
-        title,
-        subject: subject || undefined,
-        due_date: homeworkForm.dueDate ? new Date(homeworkForm.dueDate).toISOString() : undefined,
-      });
-
-      setHomeworkItems((prev) => [created, ...prev]);
+      setFormError('');
+      await dispatch(
+        createClassHomework({
+          classId,
+          data: {
+            title,
+            subject: subject || undefined,
+            due_date: homeworkForm.dueDate ? new Date(homeworkForm.dueDate).toISOString() : undefined,
+          },
+        })
+      ).unwrap();
       setIsCreateDialogOpen(false);
       setHomeworkForm({ title: '', subject: '', dueDate: '' });
     } catch (error: any) {
-      setHomeworkError(error?.message || 'Failed to create homework');
-    } finally {
-      setIsCreatingHomework(false);
+      setFormError(error?.message || 'Failed to create homework');
     }
   };
 
@@ -115,12 +105,12 @@ export default function ClassroomHomeworkPage() {
       />
 
       <div className="flex gap-4 pb-1 flex-wrap">
-        {isLoadingHomework && (
-          <StatusMessage variant="loading" text="Loading class homework..." />
-        )}
+      {isLoadingHomework && (
+        <StatusMessage variant="loading" text="Loading class homework..." />
+      )}
 
-        {!isLoadingHomework && sortedHomework.map((item) => (
-          <HomeworkSummaryCard
+      {!isLoadingHomework && sortedHomework.map((item) => (
+        <HomeworkSummaryCard
             key={item.id}
             className="flex-none w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.666rem)] lg:w-[calc(20%-0.8rem)] bg-white border border-white/10 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 text-left"
             title={item.title || item.subject || 'Untitled Homework'}
@@ -131,8 +121,8 @@ export default function ClassroomHomeworkPage() {
         ))}
       </div>
 
-      {homeworkError && (
-        <StatusMessage variant="error" text={homeworkError} className="mt-4" />
+      {(formError || createError || homeworkError) && (
+        <StatusMessage variant="error" text={formError || createError || homeworkError} className="mt-4" />
       )}
 
       <CreateClassHomeworkDialog
@@ -141,7 +131,7 @@ export default function ClassroomHomeworkPage() {
         form={homeworkForm}
         onFormChange={setHomeworkForm}
         onSubmit={handleCreateHomework}
-        isSubmitting={isCreatingHomework}
+        isSubmitting={createStatus === 'loading'}
       />
     </div>
   );

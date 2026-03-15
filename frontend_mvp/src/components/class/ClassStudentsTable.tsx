@@ -134,9 +134,9 @@ export function ClassStudentsTable({
     );
   }
 
-  if (visibleStudents.length === 0) {
-    return <StatusMessage variant="empty" text="No students found." />;
-  }
+  // if (visibleStudents.length === 0) {
+  //   return <StatusMessage variant="empty" text="No students found." />;
+  // }
 
   return (
     <div className="rounded-xl border border-white/20 bg-white shadow-lg p-2">

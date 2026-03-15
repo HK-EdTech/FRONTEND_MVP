@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { api, ClassroomDetailResponse } from '@/lib/api';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { GlassPanel } from '@/components/common/GlassPanel';
 import { SectionHeaderBar } from '@/components/common/SectionHeaderBar';
 import { StatusMessage } from '@/components/common/StatusMessage';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchClassDetail } from '@/store/slices/classDetailSlice';
+import { fetchClassHomework } from '@/store/slices/classHomeworkSlice';
 import { getMockClassroomDetail } from './mockData';
 
 interface ClassDetailPageProps {
@@ -26,45 +28,28 @@ function activeTabFromPath(pathname: string): 'homework' | 'students' | 'teacher
 export function ClassDetailPage({ classId, children }: ClassDetailPageProps) {
   const params = useParams();
   const pathname = usePathname();
-  const [classDetail, setClassDetail] = useState<ClassroomDetailResponse>(getMockClassroomDetail(classId));
-  const [detailError, setDetailError] = useState('');
-  const [homeworkTitle, setHomeworkTitle] = useState('');
+  const dispatch = useAppDispatch();
+  const classDetail = useAppSelector((state) => state.classDetail.entities[classId]);
+  const classDetailStatus = useAppSelector((state) => state.classDetail.statusById[classId] || 'idle');
+  const detailError = useAppSelector((state) => state.classDetail.errorById[classId] || '');
+  const homeworkItems = useAppSelector((state) => state.classHomework.itemsByClassId[classId] || []);
+  const homeworkStatus = useAppSelector((state) => state.classHomework.statusByClassId[classId] || 'idle');
 
   useEffect(() => {
-    const fetchClassDetail = async () => {
-      try {
-        setDetailError('');
-        const detail = await api.getClassById(classId);
-        setClassDetail(detail);
-      } catch (error: any) {
-        setDetailError(error?.message || 'Failed to load classroom details');
-      }
-    };
-
-    fetchClassDetail();
-  }, [classId]);
+    if (classDetailStatus === 'idle') {
+      dispatch(fetchClassDetail(classId));
+    }
+  }, [classDetailStatus, classId, dispatch]);
 
   const homeworkId = Array.isArray(params.homeworkId) ? params.homeworkId[0] : (params.homeworkId as string | undefined);
   const isHomeworkDetail = Boolean(homeworkId);
 
   useEffect(() => {
-    if (!homeworkId) {
-      setHomeworkTitle('');
-      return;
+    if (!homeworkId) return;
+    if (homeworkStatus === 'idle') {
+      dispatch(fetchClassHomework(classId));
     }
-
-    const fetchHomeworkTitle = async () => {
-      try {
-        const homeworkList = await api.getClassHomework(classId);
-        const match = homeworkList.find((item) => item.id === homeworkId);
-        setHomeworkTitle(match?.title || match?.subject || 'Homework');
-      } catch (error: any) {
-        setHomeworkTitle('Homework');
-      }
-    };
-
-    fetchHomeworkTitle();
-  }, [classId, homeworkId]);
+  }, [classId, dispatch, homeworkId, homeworkStatus]);
 
   const activeTab = useMemo(() => activeTabFromPath(pathname), [pathname]);
   const showClassDetailTabs = useMemo(() => {
@@ -74,8 +59,14 @@ export function ClassDetailPage({ classId, children }: ClassDetailPageProps) {
       (pathname.includes('/teachers') && !pathname.includes('/teachers/'))
     );
   }, [isHomeworkDetail, pathname]);
-  const classLabel = `${classDetail.name} - ${classDetail.subject}`;
-  const headerTitle = isHomeworkDetail ? (homeworkTitle || 'Homework') : classDetail.name;
+  const resolvedDetail = classDetail || getMockClassroomDetail(classId);
+  const homeworkTitle = useMemo(() => {
+    if (!homeworkId) return '';
+    const match = homeworkItems.find((item) => item.id === homeworkId);
+    return match?.title || match?.subject || 'Homework';
+  }, [homeworkId, homeworkItems]);
+  const classLabel = `${resolvedDetail.name} - ${resolvedDetail.subject}`;
+  const headerTitle = isHomeworkDetail ? (homeworkTitle || 'Homework') : resolvedDetail.name;
 
   const breadcrumbItems = useMemo(() => {
     const items = [
@@ -108,7 +99,7 @@ export function ClassDetailPage({ classId, children }: ClassDetailPageProps) {
             titleClassName="font-bold"
           />
           <p className="text-sm text-gray-600">
-            {`Subject: ${classDetail.subject} • Target Level: ${classDetail.target_level || '-'} • Organization: ${classDetail.organization_name || '-'} • Teacher: ${classDetail.teacher_name} • Students: ${classDetail.num_students}`}
+            {`Subject: ${resolvedDetail.subject} • Target Level: ${resolvedDetail.target_level || '-'} • Organization: ${resolvedDetail.organization_name || '-'} • Teacher: ${resolvedDetail.teacher_name} • Students: ${resolvedDetail.num_students}`}
           </p>
 
           {showClassDetailTabs && (

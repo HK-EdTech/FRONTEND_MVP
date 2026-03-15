@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { api, ClassManagementResponse } from '@/lib/api';
+import { ClassManagementResponse } from '@/lib/api';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { ClassSubjectButtonCard } from '@/components/common/ClassSubjectButtonCard';
 import { GlassPanel } from '@/components/common/GlassPanel';
 import { SectionHeaderBar } from '@/components/common/SectionHeaderBar';
 import { StatusMessage } from '@/components/common/StatusMessage';
 import { Button } from '@/components/ui/button';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchClassManagement } from '@/store/slices/classManagementSlice';
 
 const emptyGroupsResponse: ClassManagementResponse = [];
 
@@ -25,33 +27,17 @@ function formatDueDate(value: string | null) {
 
 export default function ClassManagementPage() {
   const router = useRouter();
-  const [data, setData] = useState<ClassManagementResponse>(emptyGroupsResponse);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
+  const dispatch = useAppDispatch();
+  const { groups, status, error } = useAppSelector((state) => state.classManagement);
+  const isLoading = status === 'loading' || status === 'idle';
+  const errorMessage = error || '';
+  const data = groups && groups.length ? groups : emptyGroupsResponse;
 
   useEffect(() => {
-    const loadClassManagement = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage('');
-
-        const response = await api.getMyTeacherClassManagement();
-        if (!response) {
-          setData(emptyGroupsResponse);
-          setErrorMessage('No data received from server.');
-          return;
-        }
-        setData(response);
-      } catch (error: any) {
-        setData(emptyGroupsResponse);
-        setErrorMessage(error?.message || 'Failed to load class management data.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadClassManagement();
-  }, []);
+    if (status === 'idle') {
+      dispatch(fetchClassManagement());
+    }
+  }, [dispatch, status]);
 
   return (
     <div className="space-y-6">

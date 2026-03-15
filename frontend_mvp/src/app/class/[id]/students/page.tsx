@@ -2,33 +2,28 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { CheckedState } from '@radix-ui/react-checkbox';
-import { ArrowUpDown, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { api, ClassStudentCandidateResponse, ClassroomStudentResponse } from '@/lib/api';
 import { PersonInfoCard } from '@/components/common/PersonInfoCard';
 import { SectionHeaderBar } from '@/components/common/SectionHeaderBar';
 import { StatusMessage } from '@/components/common/StatusMessage';
-import { mockStudents } from '@/components/class/mockData';
 import { AddStudentDialog } from '@/components/dialogs/AddStudentDialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { ClassStudentsTable } from '@/components/class/ClassStudentsTable';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import {
+  addClassStudents,
+  fetchCandidateStudents,
+  fetchClassStudents,
+} from '@/store/slices/classStudentsSlice';
 
 type StudentViewMode = 'table' | 'list' | 'card';
 type SortKey = 'name' | 'level' | 'status' | 'enrolled';
 type SortOrder = 'asc' | 'desc';
-
-const formatDate = (value: string) =>
-  new Date(value).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
 
 const initialsFromName = (name: string) =>
   name
@@ -38,62 +33,22 @@ const initialsFromName = (name: string) =>
     .slice(0, 2)
     .toUpperCase();
 
-// Column definition with sortableKey (same pattern as HomeworkSubmissionsTable)
-const columns = [
-  {
-    header: '',
-    width: '40px',
-    sortableKey: null,
-    cell: (row: ClassroomStudentResponse, isChecked: boolean, onToggle: (checked: CheckedState) => void) => (
-      <Checkbox checked={isChecked} onCheckedChange={onToggle} />
-    ),
-  },
-  {
-    header: 'Name',
-    width: 'auto',
-    sortableKey: 'name' as SortKey,
-    cell: (row: ClassroomStudentResponse) => (
-      <div className="flex items-center gap-3">
-        <Avatar className="size-9">
-          <AvatarImage src={row.avatar_url || ''} alt={row.full_name} />
-          <AvatarFallback>{initialsFromName(row.full_name)}</AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="text-gray-800 font-bold">{row.full_name}</p>
-          <p className="text-xs text-gray-600">@{row.username}</p>
-        </div>
-      </div>
-    ),
-  },
-  {
-    header: 'Level',
-    width: '120px',
-    sortableKey: 'level' as SortKey,
-    cell: (row: ClassroomStudentResponse) => row.class_level || '-',
-  },
-  {
-    header: 'Status',
-    width: '140px',
-    sortableKey: 'status' as SortKey,
-    cell: (row: ClassroomStudentResponse) => (
-      <span className="capitalize">{row.status}</span>
-    ),
-  },
-  {
-    header: 'Enrolled',
-    width: '160px',
-    sortableKey: 'enrolled' as SortKey,
-    cell: (row: ClassroomStudentResponse) => formatDate(row.enrolled_at),
-  },
-];
+ 
 
 export default function ClassroomStudentsPage() {
   const params = useParams();
   const classId = String(params.id || '');
+  const dispatch = useAppDispatch();
+  const students = useAppSelector((state) => state.classStudents.studentsByClassId[classId] || []);
+  const studentsStatus = useAppSelector((state) => state.classStudents.statusByClassId[classId] || 'idle');
+  const studentError = useAppSelector((state) => state.classStudents.errorByClassId[classId] || '');
+  const candidateStudents = useAppSelector((state) => state.classStudents.candidatesByClassId[classId] || []);
+  const candidateStatus = useAppSelector((state) => state.classStudents.candidateStatusByClassId[classId] || 'idle');
+  const candidateError = useAppSelector((state) => state.classStudents.candidateErrorByClassId[classId] || '');
+  const addStatus = useAppSelector((state) => state.classStudents.addStatusByClassId[classId] || 'idle');
+  const addStudentError = useAppSelector((state) => state.classStudents.addErrorByClassId[classId] || '');
+  const isLoadingStudents = studentsStatus === 'loading' || studentsStatus === 'idle';
 
-  const [students, setStudents] = useState<ClassroomStudentResponse[]>(mockStudents);
-  const [isLoadingStudents, setIsLoadingStudents] = useState(true);
-  const [studentError, setStudentError] = useState('');
   const [viewMode, setViewMode] = useState<StudentViewMode>('table');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortKey, setSortKey] = useState<SortKey>('name');
@@ -101,29 +56,13 @@ export default function ClassroomStudentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isAddingStudent, setIsAddingStudent] = useState(false);
-  const [isLoadingCandidateStudents, setIsLoadingCandidateStudents] = useState(false);
-  const [candidateStudents, setCandidateStudents] = useState<ClassStudentCandidateResponse[]>([]);
-  const [addStudentError, setAddStudentError] = useState('');
+  const [localAddStudentError, setLocalAddStudentError] = useState('');
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        setIsLoadingStudents(true);
-        setStudentError('');
-        const response = await api.getClassStudents(classId);
-        if (response.length > 0) {
-          setStudents(response);
-        }
-      } catch (error: any) {
-        setStudentError(error?.message || 'Failed to load students');
-      } finally {
-        setIsLoadingStudents(false);
-      }
-    };
-
-    fetchStudents();
-  }, [classId]);
+    if (studentsStatus === 'idle') {
+      dispatch(fetchClassStudents(classId));
+    }
+  }, [classId, dispatch, studentsStatus]);
 
   const visibleStudents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -191,54 +130,32 @@ export default function ClassroomStudentsPage() {
     }
   };
 
-  const fetchCandidateStudents = async () => {
-    try {
-      setIsLoadingCandidateStudents(true);
-      setAddStudentError('');
-      const response = await api.getClassStudentCandidates(classId);
-      setCandidateStudents(response);
-    } catch (error: any) {
-      setCandidateStudents([]);
-      setAddStudentError(error?.message || 'Failed to load available students');
-    } finally {
-      setIsLoadingCandidateStudents(false);
-    }
+  const loadCandidateStudents = async () => {
+    setLocalAddStudentError('');
+    await dispatch(fetchCandidateStudents(classId));
   };
 
   const handleAddDialogOpenChange = (open: boolean) => {
     setIsAddDialogOpen(open);
     if (open) {
-      void fetchCandidateStudents();
+      void loadCandidateStudents();
       return;
     }
-    setAddStudentError('');
+    setLocalAddStudentError('');
   };
 
   const handleAddStudents = async (studentIds: string[]) => {
     if (studentIds.length === 0) {
-      setAddStudentError('Please select at least one student');
+      setLocalAddStudentError('Please select at least one student');
       return;
     }
 
     try {
-      setIsAddingStudent(true);
-      setAddStudentError('');
-
-      const created = await api.addClassStudents(classId, {
-        student_ids: studentIds,
-      });
-
-      setStudents((prev) => {
-        const existingIds = new Set(prev.map((student) => student.id));
-        const nextItems = created.filter((student) => !existingIds.has(student.id));
-        return [...nextItems, ...prev];
-      });
-
+      setLocalAddStudentError('');
+      await dispatch(addClassStudents({ classId, studentIds })).unwrap();
       handleAddDialogOpenChange(false);
     } catch (error: any) {
-      setAddStudentError(error?.message || 'Failed to add students');
-    } finally {
-      setIsAddingStudent(false);
+      setLocalAddStudentError(error?.message || 'Failed to add students');
     }
   };
 
@@ -306,7 +223,7 @@ export default function ClassroomStudentsPage() {
         <StatusMessage variant="loading" text="Loading students..." />
       )}
 
-      {!isLoadingStudents && viewMode === 'table' && (
+      {!isLoadingStudents && viewMode === 'table' && visibleStudents.length > 0 && (
         <ClassStudentsTable
           visibleStudents={visibleStudents}
           selectedIds={selectedIds}
@@ -320,7 +237,7 @@ export default function ClassroomStudentsPage() {
         />
       )}
 
-      {!isLoadingStudents && viewMode === 'list' && (
+      {!isLoadingStudents && viewMode === 'list' && visibleStudents.length > 0 && (
         <div className="flex flex-col gap-3">
           {visibleStudents.map((student) => (
             <PersonInfoCard
@@ -334,7 +251,7 @@ export default function ClassroomStudentsPage() {
         </div>
       )}
 
-      {!isLoadingStudents && viewMode === 'card' && (
+      {!isLoadingStudents && viewMode === 'card' && visibleStudents.length > 0 && (
         <div className="flex flex-wrap gap-3 w-full">
           {visibleStudents.map((student) => (
             <PersonInfoCard
@@ -361,9 +278,9 @@ export default function ClassroomStudentsPage() {
         open={isAddDialogOpen}
         onOpenChange={handleAddDialogOpenChange}
         students={candidateStudents}
-        isLoading={isLoadingCandidateStudents}
-        isSubmitting={isAddingStudent}
-        errorMessage={addStudentError}
+        isLoading={candidateStatus === 'loading'}
+        isSubmitting={addStatus === 'loading'}
+        errorMessage={localAddStudentError || candidateError || addStudentError}
         onSubmit={handleAddStudents}
       />
     </div>

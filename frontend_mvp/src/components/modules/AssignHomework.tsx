@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { api, ClassResponse, TeacherHomeworkResponse } from '@/lib/api';
+import { TeacherHomeworkResponse } from '@/lib/api';
 import { ClassSubjectButtonCard } from '@/components/common/ClassSubjectButtonCard';
 import { GlassPanel } from '@/components/common/GlassPanel';
 import { HomeworkSummaryCard } from '@/components/common/HomeworkSummaryCard';
@@ -18,6 +18,14 @@ import {
 } from '@/components/dialogs/HomeworkAssignmentDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import {
+  assignHomeworkToClasses,
+  createClass,
+  createTeacherHomework,
+  fetchTeacherClasses,
+  fetchTeacherHomework,
+} from '@/store/slices/assignHomeworkSlice';
 
 interface RecentHomeworkItem {
   id: string;
@@ -31,22 +39,53 @@ interface RecentHomeworkItem {
   dueDate: string;
 }
 
+const toRecentHomeworkItem = (item: TeacherHomeworkResponse): RecentHomeworkItem => {
+  const dueDateLabel = item.due_date
+    ? `Due: ${new Date(item.due_date).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })}`
+    : 'Due: Not set';
+
+  return {
+    id: item.id,
+    title: item.title || item.subject || 'Untitled Homework',
+    subject: item.subject || '',
+    classIds: item.assigned_class_ids?.length ? item.assigned_class_ids : item.class_id ? [item.class_id] : [],
+    dueDateRaw: item.due_date,
+    fullScore: item.full_score,
+    assignedClasses: item.assigned_classes,
+    assignedStudents: item.assigned_students,
+    dueDate: dueDateLabel,
+  };
+};
+
 export function AssignHomework() {
   const router = useRouter();
-  const [classes, setClasses] = useState<ClassResponse[]>([]);
-  const [isLoadingClasses, setIsLoadingClasses] = useState(true);
-  const [classError, setClassError] = useState('');
-  const [recentHomeworkItems, setRecentHomeworkItems] = useState<RecentHomeworkItem[]>([]);
-  const [isLoadingHomework, setIsLoadingHomework] = useState(true);
-  const [homeworkError, setHomeworkError] = useState('');
+  const dispatch = useAppDispatch();
+  const classes = useAppSelector((state) => state.assignHomework.classes);
+  const classesStatus = useAppSelector((state) => state.assignHomework.classesStatus);
+  const classesError = useAppSelector((state) => state.assignHomework.classesError);
+  const homework = useAppSelector((state) => state.assignHomework.homework);
+  const homeworkStatus = useAppSelector((state) => state.assignHomework.homeworkStatus);
+  const homeworkError = useAppSelector((state) => state.assignHomework.homeworkError);
+  const createClassStatus = useAppSelector((state) => state.assignHomework.createClassStatus);
+  const createClassError = useAppSelector((state) => state.assignHomework.createClassError);
+  const createHomeworkStatus = useAppSelector((state) => state.assignHomework.createHomeworkStatus);
+  const createHomeworkError = useAppSelector((state) => state.assignHomework.createHomeworkError);
+  const assignHomeworkStatus = useAppSelector((state) => state.assignHomework.assignHomeworkStatus);
+  const assignHomeworkError = useAppSelector((state) => state.assignHomework.assignHomeworkError);
+
+  const isLoadingClasses = classesStatus === 'loading' || classesStatus === 'idle';
+  const isLoadingHomework = homeworkStatus === 'loading' || homeworkStatus === 'idle';
   const [classSearch, setClassSearch] = useState('');
   const [isCreateClassDialogOpen, setIsCreateClassDialogOpen] = useState(false);
-  const [isCreatingClass, setIsCreatingClass] = useState(false);
   const [isHomeworkDialogOpen, setIsHomeworkDialogOpen] = useState(false);
-  const [isSubmittingHomework, setIsSubmittingHomework] = useState(false);
   const [homeworkDialogMode, setHomeworkDialogMode] = useState<HomeworkDialogMode>('create');
   const [activeHomeworkId, setActiveHomeworkId] = useState<string | null>(null);
   const [homeworkActionError, setHomeworkActionError] = useState('');
+  const [classActionError, setClassActionError] = useState('');
   const [homeworkForm, setHomeworkForm] = useState<HomeworkAssignmentDialogFormState>({
     title: '',
     subject: '',
@@ -60,60 +99,19 @@ export function AssignHomework() {
     targetLevel: '',
   });
 
-  const fetchClasses = async () => {
-    try {
-      setIsLoadingClasses(true);
-      setClassError('');
-      const teacherClasses = await api.getMyTeacherClasses();
-      setClasses(teacherClasses || []);
-    } catch (error: any) {
-      setClasses([]);
-      setClassError(error?.message || 'Failed to load classes');
-    } finally {
-      setIsLoadingClasses(false);
-    }
-  };
-
-  const toRecentHomeworkItem = (item: TeacherHomeworkResponse): RecentHomeworkItem => {
-    const dueDateLabel = item.due_date
-      ? `Due: ${new Date(item.due_date).toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        })}`
-      : 'Due: Not set';
-
-    return {
-      id: item.id,
-      title: item.title || item.subject || 'Untitled Homework',
-      subject: item.subject || '',
-      classIds: item.assigned_class_ids?.length ? item.assigned_class_ids : item.class_id ? [item.class_id] : [],
-      dueDateRaw: item.due_date,
-      fullScore: item.full_score,
-      assignedClasses: item.assigned_classes,
-      assignedStudents: item.assigned_students,
-      dueDate: dueDateLabel,
-    };
-  };
-
-  const fetchRecentHomework = async () => {
-    try {
-      setIsLoadingHomework(true);
-      setHomeworkError('');
-      const homework = await api.getMyTeacherHomework();
-      setRecentHomeworkItems((homework || []).map(toRecentHomeworkItem));
-    } catch (error: any) {
-      setRecentHomeworkItems([]);
-      setHomeworkError(error?.message || 'Failed to load homework');
-    } finally {
-      setIsLoadingHomework(false);
-    }
-  };
-
   useEffect(() => {
-    fetchClasses();
-    fetchRecentHomework();
-  }, []);
+    if (classesStatus === 'idle') {
+      dispatch(fetchTeacherClasses());
+    }
+    if (homeworkStatus === 'idle') {
+      dispatch(fetchTeacherHomework());
+    }
+  }, [classesStatus, dispatch, homeworkStatus]);
+
+  const recentHomeworkItems = useMemo(
+    () => (homework || []).map(toRecentHomeworkItem),
+    [homework]
+  );
 
   const filteredClasses = useMemo(() => {
     const query = classSearch.trim().toLowerCase();
@@ -201,6 +199,9 @@ export function AssignHomework() {
     setIsCreateClassDialogOpen(open);
     if (!open) {
       resetCreateClassForm();
+      setClassActionError('');
+    } else {
+      setClassActionError('');
     }
   };
 
@@ -212,26 +213,22 @@ export function AssignHomework() {
     const targetLevel = createClassForm.targetLevel.trim();
 
     if (!name || !subject) {
-      setClassError('Class name and subject are required');
+      setClassActionError('Class name and subject are required');
       return;
     }
 
     try {
-      setIsCreatingClass(true);
-      setClassError('');
-
-      const created = await api.createClass({
-        name,
-        subject,
-        target_level: targetLevel || undefined,
-      });
-
-      setClasses((prev) => [created, ...prev]);
+      setClassActionError('');
+      await dispatch(
+        createClass({
+          name,
+          subject,
+          target_level: targetLevel || undefined,
+        })
+      ).unwrap();
       handleDialogOpenChange(false);
     } catch (error: any) {
-      setClassError(error?.message || 'Failed to create class');
-    } finally {
-      setIsCreatingClass(false);
+      setClassActionError(error?.message || 'Failed to create class');
     }
   };
 
@@ -252,31 +249,39 @@ export function AssignHomework() {
     }
 
     try {
-      setIsSubmittingHomework(true);
       setHomeworkActionError('');
 
       if (homeworkDialogMode === 'create') {
-        await api.createTeacherHomework({
-          title,
-          subject: subject || undefined,
-          due_date: homeworkForm.dueDate ? new Date(homeworkForm.dueDate).toISOString() : undefined,
-          full_score: homeworkForm.fullScore !== '' ? Number(homeworkForm.fullScore) : undefined,
-          class_ids: homeworkForm.classIds,
-        });
+        await dispatch(
+          createTeacherHomework({
+            title,
+            subject: subject || undefined,
+            due_date: homeworkForm.dueDate ? new Date(homeworkForm.dueDate).toISOString() : undefined,
+            full_score: homeworkForm.fullScore !== '' ? Number(homeworkForm.fullScore) : undefined,
+            class_ids: homeworkForm.classIds,
+          })
+        ).unwrap();
       } else if (activeHomeworkId) {
-        await api.assignHomeworkToClasses(activeHomeworkId, {
-          class_ids: homeworkForm.classIds,
-        });
+        await dispatch(
+          assignHomeworkToClasses({
+            homeworkId: activeHomeworkId,
+            data: { class_ids: homeworkForm.classIds },
+          })
+        ).unwrap();
       }
 
       handleHomeworkDialogOpenChange(false);
-      fetchRecentHomework();
     } catch (error: any) {
       setHomeworkActionError(error?.message || 'Failed to save homework assignment');
-    } finally {
-      setIsSubmittingHomework(false);
     }
   };
+
+  const classErrorMessage = classActionError || createClassError || classesError || '';
+  const homeworkRequestError = homeworkDialogMode === 'create' ? createHomeworkError : assignHomeworkError;
+  const homeworkDialogError = homeworkActionError || homeworkRequestError || '';
+  const isSubmittingHomework = homeworkDialogMode === 'create'
+    ? createHomeworkStatus === 'loading'
+    : assignHomeworkStatus === 'loading';
 
   return (
     <div className="space-y-6">
@@ -370,7 +375,7 @@ export function AssignHomework() {
             ))}
         </div>
 
-        {classError && <StatusMessage variant="error" text={classError} className="mt-4" />}
+        {classErrorMessage && <StatusMessage variant="error" text={classErrorMessage} className="mt-4" />}
       </GlassPanel>
 
       <CreateClassDialog
@@ -379,7 +384,7 @@ export function AssignHomework() {
         form={createClassForm}
         onFormChange={setCreateClassForm}
         onSubmit={handleCreateClass}
-        isSubmitting={isCreatingClass}
+        isSubmitting={createClassStatus === 'loading'}
       />
 
       <HomeworkAssignmentDialog
@@ -388,7 +393,7 @@ export function AssignHomework() {
         mode={homeworkDialogMode}
         form={homeworkForm}
         classes={classes}
-        errorMessage={homeworkActionError}
+        errorMessage={homeworkDialogError}
         isSubmitting={isSubmittingHomework}
         onSubmit={handleSubmitHomework}
         onFormChange={setHomeworkForm}

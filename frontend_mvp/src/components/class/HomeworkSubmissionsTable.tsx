@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowUpDown } from 'lucide-react';
-import { api, ClassHomeworkSubmissionResponse } from '@/lib/api';
+import { ClassHomeworkSubmissionResponse } from '@/lib/api';
 import { StatusMessage } from '@/components/common/StatusMessage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchHomeworkSubmissions } from '@/store/slices/homeworkSubmissionsSlice';
 
 type SubmissionStatusFilter = 'all' | 'submitted' | 'not_submitted';
 type MarkedStatusFilter = 'all' | 'marked' | 'not_marked';
@@ -117,9 +119,12 @@ const columns = [
 ];
 
 export function HomeworkSubmissionsTable({ classId, homeworkId }: HomeworkSubmissionsTableProps) {
-  const [rows, setRows] = useState<ClassHomeworkSubmissionResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
+  const dispatch = useAppDispatch();
+  const key = `${classId}:${homeworkId}`;
+  const rows = useAppSelector((state) => state.homeworkSubmissions.rowsByKey[key] || []);
+  const status = useAppSelector((state) => state.homeworkSubmissions.statusByKey[key] || 'idle');
+  const errorMessage = useAppSelector((state) => state.homeworkSubmissions.errorByKey[key] || '');
+  const isLoading = status === 'loading' || status === 'idle';
   const [searchQuery, setSearchQuery] = useState('');
   const [submissionFilter, setSubmissionFilter] = useState<SubmissionStatusFilter>('all');
   const [markedFilter, setMarkedFilter] = useState<MarkedStatusFilter>('all');
@@ -127,31 +132,10 @@ export function HomeworkSubmissionsTable({ classId, homeworkId }: HomeworkSubmis
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchSubmissions = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage('');
-        const response = await api.getClassHomeworkSubmissions(classId, homeworkId);
-        if (!isMounted) return;
-        setRows(response);
-      } catch (error: any) {
-        if (!isMounted) return;
-        setErrorMessage(error?.message || 'Failed to load homework submissions');
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchSubmissions();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [classId, homeworkId]);
+    if (status === 'idle') {
+      dispatch(fetchHomeworkSubmissions({ classId, homeworkId }));
+    }
+  }, [classId, dispatch, homeworkId, status]);
 
   const filteredRows = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
