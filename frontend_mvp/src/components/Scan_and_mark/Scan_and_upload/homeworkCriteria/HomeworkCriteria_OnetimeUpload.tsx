@@ -1,14 +1,17 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
 import {
   setSelectedLevel,
   setSelectedOneTimeSubject,
+  setMarkingScheme,
+  clearMarkingScheme,
 } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
 import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Upload, X } from 'lucide-react';
 
 const LEVELS = ['Secondary 1', 'Secondary 2', 'Secondary 3', 'Secondary 4', 'Secondary 5', 'Secondary 6'];
 const ONE_TIME_SUBJECTS = ['Mathematics', 'English'];
@@ -23,9 +26,16 @@ export function HomeworkCriteria_OnetimeUpload({
   setIsUploadDisabled,
 }: HomeworkCriteria_OnetimeUploadProps) {
   const dispatch = useDispatch();
-  const { selectedLevel, selectedOneTimeSubject } = useSelector(
+  const { selectedLevel, selectedOneTimeSubject, markingSchemeFileName } = useSelector(
     (state: RootState) => state.Homeworkcriteria_onetimeUpload
   );
+  const markingSchemeInputRef = useRef<HTMLInputElement>(null);
+
+  const handleMarkingSchemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    dispatch(setMarkingScheme({ file, fileName: file.name }));
+  };
 
   // Update isUploadDisabled whenever level or subject changes
   useEffect(() => {
@@ -33,8 +43,7 @@ export function HomeworkCriteria_OnetimeUpload({
   }, [selectedLevel, selectedOneTimeSubject, setIsUploadDisabled]);
 
   return (
-    <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Level Selection */}
         <div>
           <p className="text-sm text-gray-600 mb-2">Level</p>
@@ -77,7 +86,39 @@ export function HomeworkCriteria_OnetimeUpload({
             ))}
           </div>
         </div>
+
+        {/* Marking Scheme Upload */}
+        <div>
+          <p className="text-sm text-gray-600 mb-2">Marking Scheme</p>
+          <input
+            ref={markingSchemeInputRef}
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            onChange={handleMarkingSchemeChange}
+          />
+          <div
+            onClick={() => markingSchemeInputRef.current?.click()}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl cursor-pointer transition-all"
+            style={markingSchemeFileName
+              ? { ...glassStyle, border: '2px solid rgba(139, 92, 246, 1)' }
+              : glassStyle
+            }
+          >
+            <Upload className="w-4 h-4 text-purple-500 shrink-0" />
+            <span className={`text-sm truncate flex-1 ${markingSchemeFileName ? 'text-gray-800' : 'text-gray-400'}`}>
+              {markingSchemeFileName || 'Upload marking scheme (PDF)'}
+            </span>
+            {markingSchemeFileName && (
+              <button
+                onClick={(e) => { e.stopPropagation(); dispatch(clearMarkingScheme()); }}
+                className="shrink-0 text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
   );
 }
