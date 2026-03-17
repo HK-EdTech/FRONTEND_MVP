@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
-import { addHomework, deleteHomework } from '@/store/slices/uploadHomework_ScanAndMark_slice';
+import { addHomework, deleteHomework, addSheetsToHomework, reorderSheets, deleteSheet, type UploadHomework } from '@/store/slices/uploadHomework_ScanAndMark_slice';
 import { RootState } from '@/store/store';
 import { handleUploadFiles } from '@/common/utility/handleUploadFiles';
 import { Loading } from '@/components/common/Loading';
@@ -363,17 +363,17 @@ export const HomeworkListDisplay = ({
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
         {homeworkList.map((homework, index) => (
-          <button
+          <div
             key={homework.id}
             onClick={() => onHomeworkClick(homework.id)}
-            className="group rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl w-full aspect-[3/4]"
+            className="group rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl w-full aspect-[3/4] cursor-pointer"
           >
             <StackedSheetsPreview
               homework={homework}
               studentNumber={index + 1}
               isMobile={isMobile}
             />
-          </button>
+          </div>
         ))}
 
         {/* Add New Student Homework Box */}
@@ -426,11 +426,8 @@ export const HomeworkListDisplay = ({
 // Homework Dialog Component
 interface HomeworkDialogProps {
   isOpen: boolean;
-  homework: StudentHomework | undefined;
+  homework: UploadHomework | undefined;
   onClose: () => void;
-  onAddSheets: (files: File[]) => void;
-  onSheetsReorder: (homeworkId: string, newSheets: HomeworkSheet[]) => void;
-  onSheetDelete: (homeworkId: string, sheetId: string) => void;
   isMobile: boolean;
 }
 
@@ -438,11 +435,11 @@ export const HomeworkDialog = ({
   isOpen,
   homework,
   onClose,
-  onAddSheets,
-  onSheetsReorder,
-  onSheetDelete,
   isMobile,
 }: HomeworkDialogProps) => {
+  const dispatch = useDispatch();
+  const [isProcessing, setIsProcessing] = useState(false);
+
   if (!isOpen || !homework) return null;
 
   const moveSheet = (fromIndex: number, toIndex: number) => {
@@ -451,20 +448,29 @@ export const HomeworkDialog = ({
     const newSheets = [...homework.sheets];
     const [movedSheet] = newSheets.splice(fromIndex, 1);
     newSheets.splice(toIndex, 0, movedSheet);
-    onSheetsReorder(homework.id, newSheets);
+    dispatch(reorderSheets({ homeworkId: homework.id, sheets: newSheets }));
   };
 
   const handleDeleteSheet = (sheetId: string) => {
     if (homework.sheets.length === 1) {
-      alert("Cannot delete the last sheet. Delete the entire homework instead.");
+      dispatch(deleteHomework(homework.id));
+      onClose();
       return;
     }
-    if (window.confirm("Delete this homework sheet?")) {
-      onSheetDelete(homework.id, sheetId);
-    }
+    dispatch(deleteSheet({ homeworkId: homework.id, sheetId }));
+  };
+
+  const handleAddSheets = async (files: File[]) => {
+    setIsProcessing(true);
+    const sheets = await handleUploadFiles(files);
+    setIsProcessing(false);
+    if (sheets.length === 0) return;
+    dispatch(addSheetsToHomework({ homeworkId: homework.id, sheets }));
   };
 
   return (
+    <>
+    <Loading isProcessing={isProcessing} />
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[85vh] overflow-y-auto dialog-glass-white"
@@ -561,7 +567,7 @@ export const HomeworkDialog = ({
                     input.multiple = true;
                     input.onchange = (e) => {
                       const files = (e.target as HTMLInputElement).files;
-                      if (files) onAddSheets(Array.from(files));
+                      if (files) handleAddSheets(Array.from(files));
                     };
                     input.click();
                   }}
@@ -582,7 +588,7 @@ export const HomeworkDialog = ({
                     input.multiple = true;
                     input.onchange = (e) => {
                       const files = (e.target as HTMLInputElement).files;
-                      if (files) onAddSheets(Array.from(files));
+                      if (files) handleAddSheets(Array.from(files));
                     };
                     input.click();
                   }}
@@ -602,7 +608,7 @@ export const HomeworkDialog = ({
                   input.multiple = true;
                   input.onchange = (e) => {
                     const files = (e.target as HTMLInputElement).files;
-                    if (files) onAddSheets(Array.from(files));
+                    if (files) handleAddSheets(Array.from(files));
                   };
                   input.click();
                 }}
@@ -617,5 +623,6 @@ export const HomeworkDialog = ({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };

@@ -23,6 +23,23 @@ export const store = configureStore({
     homeworkSubmissions: homeworkSubmissionsReducer,
     assignHomework: assignHomeworkReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredPaths: [
+          'uploadHomework_ScanAndMark.homeworkList',
+          'Homeworkcriteria_onetimeUpload.markingSchemeFile',
+          'Homeworkcrieria_class.markingSchemeFile',
+        ],
+        ignoredActions: [
+          'uploadHomework_ScanAndMark/addHomework',
+          'uploadHomework_ScanAndMark/addSheetsToHomework',
+          'uploadHomework_ScanAndMark/reorderSheets',
+          'Homeworkcriteria_onetimeUpload/setMarkingScheme',
+          'Homeworkcrieria_class/setMarkingScheme',
+        ],
+      },
+    }),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
