@@ -1,12 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+export type UploadHomework = {
+  id: string;
+  studentName: string;
+  sheets: { id: string; file: File; thumbnail: string }[];
+  createdAt: string;
+};
+
 const initialState = {
-  homeworkList: [] as {
-    id: string;
-    studentName: string;
-    sheets: { id: string; file: File; thumbnail: string }[];
-    createdAt: string;
-  }[],
+  homeworkList: [] as UploadHomework[],
 };
 
 const uploadHomework_ScanAndMark_slice = createSlice({
