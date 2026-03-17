@@ -112,6 +112,15 @@ export interface ClassroomHomeworkResponse {
   created_at: string;
 }
 
+export interface ClassHomeworkSubmissionResponse {
+  student_id: string;
+  full_name: string;
+  score: number | null;
+  submission_datetime: string | null;
+  is_marked: boolean | null;
+  has_submission: boolean;
+}
+
 export interface CreateClassHomeworkRequest {
   title: string;
   subject?: string;
@@ -161,6 +170,26 @@ export interface CreateClassRequest {
   target_level?: string;
   organization_id?: string;
 }
+
+export interface ClassManagementHomeworkItem {
+  id: string;
+  title: string | null;
+  due_date: string | null;
+  created_at: string;
+}
+
+export interface ClassManagementSubject {
+  id: string;
+  subjectName: string;
+  homework: ClassManagementHomeworkItem[];
+}
+
+export interface ClassManagementGroup {
+  className: string;
+  subjects: ClassManagementSubject[];
+}
+
+export type ClassManagementResponse = ClassManagementGroup[];
 
 export interface TeacherProfileResponse {
   id: string;
@@ -338,6 +367,15 @@ export const api = {
   },
 
   /**
+   * Get grouped class management data for authenticated teacher
+   */
+  async getMyTeacherClassManagement(): Promise<ClassManagementResponse> {
+    return apiRequest<ClassManagementResponse>('/class/me/teacher/management', {
+      method: 'GET',
+    });
+  },
+
+  /**
    * Get classes enrolled by authenticated student
    */
   async getMyStudentClasses(): Promise<ClassResponse[]> {
@@ -362,6 +400,21 @@ export const api = {
     return apiRequest<ClassroomHomeworkResponse[]>(`/class/${classId}/homework`, {
       method: 'GET',
     });
+  },
+
+  /**
+   * Get homework submissions under a classroom homework (teacher only)
+   */
+  async getClassHomeworkSubmissions(
+    classId: string,
+    homeworkId: string
+  ): Promise<ClassHomeworkSubmissionResponse[]> {
+    return apiRequest<ClassHomeworkSubmissionResponse[]>(
+      `/class/${classId}/homework/${homeworkId}/submissions`,
+      {
+        method: 'GET',
+      }
+    );
   },
 
   /**

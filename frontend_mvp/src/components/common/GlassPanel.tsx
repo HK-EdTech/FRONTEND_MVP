@@ -1,7 +1,7 @@
 import type { CSSProperties, HTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/components/ui/utils';
 
-const defaultGlassStyle: CSSProperties = {
+export const defaultGlassStyle: CSSProperties = {
   backdropFilter: 'blur(16px)',
   background: 'rgba(255, 255, 255, 0.1)',
   border: '1px solid rgba(255, 255, 255, 0.2)',

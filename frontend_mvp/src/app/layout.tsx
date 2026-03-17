@@ -178,7 +178,7 @@ export default function RootLayout({
 
                 {/* Module Title and Description */}
                 {currentModule && (
-                  <div className="flex-1 min-w-0">
+                  <div className="cn(flex-1 min-w-0 z-10)">
                     <h1 className="text-xl md:text-3xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent truncate">
                       {currentModule.module_eng_name}
                     </h1>
