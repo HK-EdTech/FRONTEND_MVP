@@ -115,13 +115,16 @@ export function AppSidebar({ modules, profile }: AppSidebarProps) {
         <nav className="p-4 space-y-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.route;
+            const isRootRoute = item.route === '/';
+            const isActive = isRootRoute
+              ? pathname === item.route
+              : pathname === item.route || pathname.startsWith(`${item.route}/`);
 
             return (
               <button
                 key={item.id}
                 onClick={() => router.push(item.route)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-300
+                className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-300
                   group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:gap-0
                   ${isActive
                     ? 'bg-gradient-to-r from-purple-500 to-teal-500 text-white transform translate-x-1 group-data-[collapsible=icon]:translate-x-0'

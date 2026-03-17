@@ -16,6 +16,8 @@ interface HomeworkSummaryCardProps {
   onClick?: () => void;
   menuLabel?: string;
   onMenuClick?: () => void;
+  actionLabel?: string;
+  onActionClick?: () => void;
 }
 
 export function HomeworkSummaryCard({
@@ -26,6 +28,8 @@ export function HomeworkSummaryCard({
   onClick,
   menuLabel,
   onMenuClick,
+  actionLabel,
+  onActionClick,
 }: HomeworkSummaryCardProps) {
   const cardClassName = cn(
     'bg-white border border-white/10 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300',
@@ -75,6 +79,19 @@ export function HomeworkSummaryCard({
         <Calendar className="w-4 h-4 text-teal-500" />
         {dueText}
       </p>
+
+      {actionLabel && onActionClick && (
+        <Button
+          type="button"
+          className="w-full mt-4 bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
+          onClick={(event) => {
+            event.stopPropagation();
+            onActionClick();
+          }}
+        >
+          {actionLabel}
+        </Button>
+      )}
     </div>
   );
 }

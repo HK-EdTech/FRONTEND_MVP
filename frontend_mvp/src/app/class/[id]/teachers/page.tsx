@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { api, ClassroomTeacherResponse } from '@/lib/api';
 import { PersonInfoCard } from '@/components/common/PersonInfoCard';
 import { SectionHeaderBar } from '@/components/common/SectionHeaderBar';
 import { StatusMessage } from '@/components/common/StatusMessage';
-import { mockTeachers } from '@/components/classroom/mockData';
 import { AddTeacherDialog, AddTeacherDialogFormState } from '@/components/dialogs/AddTeacherDialog';
 import { Button } from '@/components/ui/button';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchClassTeachers } from '@/store/slices/classTeachersSlice';
 
 const initialsFromName = (name: string) =>
   name
@@ -22,31 +22,20 @@ const initialsFromName = (name: string) =>
 export default function ClassroomTeachersPage() {
   const params = useParams();
   const classId = String(params.id || '');
+  const dispatch = useAppDispatch();
+  const teachers = useAppSelector((state) => state.classTeachers.teachersByClassId[classId] || []);
+  const teachersStatus = useAppSelector((state) => state.classTeachers.statusByClassId[classId] || 'idle');
+  const teacherError = useAppSelector((state) => state.classTeachers.errorByClassId[classId] || '');
+  const isLoadingTeachers = teachersStatus === 'loading' || teachersStatus === 'idle';
 
-  const [teachers, setTeachers] = useState<ClassroomTeacherResponse[]>(mockTeachers);
-  const [isLoadingTeachers, setIsLoadingTeachers] = useState(true);
-  const [teacherError, setTeacherError] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [teacherForm, setTeacherForm] = useState<AddTeacherDialogFormState>({ fullName: '', username: '' });
 
   useEffect(() => {
-    const fetchTeachers = async () => {
-      try {
-        setIsLoadingTeachers(true);
-        setTeacherError('');
-        const response = await api.getClassTeachers(classId);
-        if (response.length > 0) {
-          setTeachers(response);
-        }
-      } catch (error: any) {
-        setTeacherError(error?.message || 'Failed to load teachers');
-      } finally {
-        setIsLoadingTeachers(false);
-      }
-    };
-
-    fetchTeachers();
-  }, [classId]);
+    if (teachersStatus === 'idle') {
+      dispatch(fetchClassTeachers(classId));
+    }
+  }, [classId, dispatch, teachersStatus]);
 
   return (
     <div className="rounded-2xl p-6 shadow-xl w-full bg-white/10 border border-white/20 backdrop-blur-lg">

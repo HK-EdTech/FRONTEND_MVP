@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ClassroomLayoutShell } from '@/components/classroom/ClassroomLayoutShell';
+import { ClassDetailPage } from '@/components/class/ClassDetailPage';
 
 interface ClassLayoutProps {
   children: ReactNode;
@@ -8,5 +8,5 @@ interface ClassLayoutProps {
 
 export default async function ClassLayout({ children, params }: ClassLayoutProps) {
   const { id } = await params;
-  return <ClassroomLayoutShell classId={id}>{children}</ClassroomLayoutShell>;
+  return <ClassDetailPage classId={id}>{children}</ClassDetailPage>;
 }
