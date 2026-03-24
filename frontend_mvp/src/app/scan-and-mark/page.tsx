@@ -2,6 +2,6 @@
 
 import { ScanAndMarkWrapper } from '@/components/Scan_and_mark/ScanAndMarkWrapper';
 
-export function ScanAndMark() {
+export default function ScanAndMarkPage() {
   return <ScanAndMarkWrapper />;
 }
