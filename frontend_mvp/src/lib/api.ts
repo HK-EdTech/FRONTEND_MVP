@@ -32,23 +32,6 @@ export interface ProfileUpdateRequest {
   avatar_url?: string;
 }
 
-export interface MarkingSchemeResponse {
-  id: string;
-  doc_path: string | null;
-}
-
-export interface HomeworkResponse {
-  id: string;
-  title: string | null;
-  subject: string | null;
-  class_id: string | null;
-  due_date: string | null;
-  full_score: number | null;
-  marking_scheme_id: string | null;
-  marking_scheme: MarkingSchemeResponse | null;
-  created_at: string;
-}
-
 export interface TeacherHomeworkResponse {
   id: string;
   title: string | null;
@@ -83,10 +66,6 @@ export interface ClassResponse {
   teacher_id: string;
   organization_id: string | null;
   created_at: string;
-}
-
-export interface ClassWithHomeworkResponse extends ClassResponse {
-  homework: HomeworkResponse[];
 }
 
 export interface ClassroomDetailResponse {
@@ -303,15 +282,6 @@ export const api = {
    */
   async getMyTeacherProfile(): Promise<TeacherProfileResponse> {
     return apiRequest<TeacherProfileResponse>('/profile/me/teacher', {
-      method: 'GET',
-    });
-  },
-
-  /**
-   * Get teacher's classes with homework (single call for scan & upload)
-   */
-  async getClassesSubjectHomework(): Promise<ClassWithHomeworkResponse[]> {
-    return apiRequest<ClassWithHomeworkResponse[]>('/scan-and-mark/classes_subject_homework', {
       method: 'GET',
     });
   },

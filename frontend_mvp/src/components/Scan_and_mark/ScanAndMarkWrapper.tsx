@@ -47,7 +47,7 @@ export function ScanAndMarkWrapper() {
               className="px-4 py-2 text-sm font-semibold rounded-xl text-gray-600 hover:text-gray-800 transition-colors"
               style={glassStyle}
             >
-              Next
+              Upload
             </button>
           )}
           {stageIndex === 1 && (

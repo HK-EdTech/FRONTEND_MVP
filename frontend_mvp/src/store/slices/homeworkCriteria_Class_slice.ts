@@ -6,7 +6,7 @@ const initialState = {
   DbHomeworkId: null as string | null,
   markingSchemeFile: null as File | null,
   markingSchemeFileName: '',
-  markingSchemeDocPath: '',
+  markingSchemeFilePath: '',
 };
 
 const homeworkCriteria_Class_slice = createSlice({
@@ -34,7 +34,7 @@ const homeworkCriteria_Class_slice = createSlice({
       state.markingSchemeFileName = '';
     },
     setMarkingSchemeDocPath(state, action: PayloadAction<string>) {
-      state.markingSchemeDocPath = action.payload;
+      state.markingSchemeFilePath = action.payload;
     },
     resetAll() {
       return initialState;

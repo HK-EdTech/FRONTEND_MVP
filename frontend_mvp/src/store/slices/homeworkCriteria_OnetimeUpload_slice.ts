@@ -5,7 +5,7 @@ const initialState = {
   selectedOneTimeSubject: '',
   markingSchemeFile: null as File | null,
   markingSchemeFileName: '',
-  markingSchemeDocPath: '',
+  markingSchemeFilePath: '',
 };
 
 const homeworkCriteria_OnetimeUpload_slice = createSlice({
@@ -27,7 +27,7 @@ const homeworkCriteria_OnetimeUpload_slice = createSlice({
       state.markingSchemeFileName = '';
     },
     setMarkingSchemeDocPath(state, action: PayloadAction<string>) {
-      state.markingSchemeDocPath = action.payload;
+      state.markingSchemeFilePath = action.payload;
     },
     resetAll() {
       return initialState;

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
-import { addHomework, deleteHomework, addSheetsToHomework, reorderSheets, deleteSheet, type UploadHomework } from '@/store/slices/uploadHomework_ScanAndMark_slice';
+import { addHomework, deleteHomework, addSheetsToHomework, reorderSheets, deleteSheet, setStudentName, type UploadHomework } from '@/store/slices/uploadHomework_ScanAndMark_slice';
 import { RootState } from '@/store/store';
 import { handleUploadFiles } from '@/common/utility/handleUploadFiles';
 import { Loading } from '@/components/common/Loading';
@@ -223,6 +223,7 @@ export const InitialUploadArea = ({
   isMobile,
 }: InitialUploadAreaProps) => {
   const dispatch = useDispatch();
+  const homeworkList = useSelector((state: RootState) => state.uploadHomework_ScanAndMark.homeworkList);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -234,7 +235,7 @@ export const InitialUploadArea = ({
     const sheets = await handleUploadFiles(Array.from(e.target.files));
     setIsProcessing(false);
     if (sheets.length === 0) return;
-    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: '', sheets }));
+    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: `Student ${homeworkList.length + 1}`, sheets }));
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -256,7 +257,7 @@ export const InitialUploadArea = ({
     const sheets = await handleUploadFiles(Array.from(e.dataTransfer.files));
     setIsProcessing(false);
     if (sheets.length === 0) return;
-    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: '', sheets }));
+    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: `Student ${homeworkList.length + 1}`, sheets }));
   };
 
   return (
@@ -348,7 +349,7 @@ export const HomeworkListDisplay = ({
     const sheets = await handleUploadFiles(Array.from(e.target.files));
     setIsProcessing(false);
     if (sheets.length === 0) return;
-    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: '', sheets }));
+    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: `Student ${homeworkList.length + 1}`, sheets }));
   };
 
   return (
@@ -363,15 +364,24 @@ export const HomeworkListDisplay = ({
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
         {homeworkList.map((homework, index) => (
-          <div
-            key={homework.id}
-            onClick={() => onHomeworkClick(homework.id)}
-            className="group rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl w-full aspect-[3/4] cursor-pointer"
-          >
-            <StackedSheetsPreview
-              homework={homework}
-              studentNumber={index + 1}
-              isMobile={isMobile}
+          <div key={homework.id} className="flex flex-col gap-1">
+            <div
+              onClick={() => onHomeworkClick(homework.id)}
+              className="group rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl w-full aspect-[3/4] cursor-pointer"
+            >
+              <StackedSheetsPreview
+                homework={homework}
+                studentNumber={index + 1}
+                isMobile={isMobile}
+              />
+            </div>
+            <input
+              type="text"
+              value={homework.studentName}
+              placeholder={`Student ${index + 1}`}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => dispatch(setStudentName({ homeworkId: homework.id, studentName: e.target.value }))}
+              className="w-full text-xs text-center rounded-md border border-gray-300 px-2 py-1 focus:outline-none focus:border-purple-400 bg-white/80 placeholder-gray-400"
             />
           </div>
         ))}
