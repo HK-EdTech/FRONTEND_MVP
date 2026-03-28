@@ -4,11 +4,13 @@ import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
 import {
+  setHomeworkName,
   setSelectedLevel,
   setSelectedOneTimeSubject,
-  setMarkingScheme,
-  clearMarkingScheme,
+  setMarkingSchemePdf_and_metadata,
+  clearMarkingSchemePdf_and_metadata,
 } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
+import { computeSha256 } from '@/common/utility/computeChecksum';
 import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, X } from 'lucide-react';
@@ -26,15 +28,23 @@ export function HomeworkCriteria_OnetimeUpload({
   setIsUploadDisabled,
 }: HomeworkCriteria_OnetimeUploadProps) {
   const dispatch = useDispatch();
-  const { selectedLevel, selectedOneTimeSubject, markingSchemeFileName } = useSelector(
+  const { homeworkName, selectedLevel, selectedOneTimeSubject, markingSchemePdf_and_metadata } = useSelector(
     (state: RootState) => state.Homeworkcriteria_onetimeUpload
   );
+  const markingSchemeFileName = markingSchemePdf_and_metadata.file_name;
   const markingSchemeInputRef = useRef<HTMLInputElement>(null);
 
-  const handleMarkingSchemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMarkingSchemeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    dispatch(setMarkingScheme({ file, fileName: file.name }));
+    const checksum = await computeSha256(file);
+    dispatch(setMarkingSchemePdf_and_metadata({
+      file,
+      file_name: file.name,
+      file_size: file.size,
+      content_type: file.type || 'application/pdf',
+      checksum,
+    }));
   };
 
   // Update isUploadDisabled whenever level or subject changes
@@ -44,27 +54,18 @@ export function HomeworkCriteria_OnetimeUpload({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Level Selection */}
+        {/* Row 1: Homework Name + Subject */}
         <div>
-          <p className="text-sm text-gray-600 mb-2">Level</p>
-          <Select
-            value={selectedLevel}
-            onValueChange={(value) => dispatch(setSelectedLevel(value))}
-          >
-            <SelectTrigger className="w-full rounded-xl border-white/30 bg-white/10 shadow-[0_8px_32px_rgba(31,38,135,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-500 focus-visible:ring-purple-500 focus-visible:border-purple-500">
-              <SelectValue placeholder="Select level" />
-            </SelectTrigger>
-            <SelectContent>
-              {LEVELS.map(level => (
-                <SelectItem key={level} value={level}>
-                  {level}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <label className="block text-sm text-gray-600 mb-2">Homework Name</label>
+          <input
+            type="text"
+            value={homeworkName}
+            onChange={(e) => dispatch(setHomeworkName(e.target.value))}
+            placeholder="Enter homework name"
+            className="w-full px-4 py-2 rounded-xl bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          />
         </div>
 
-        {/* Subject Selection */}
         <div>
           <p className="text-sm text-gray-600 mb-2">Subject</p>
           <div className="flex flex-wrap gap-2">
@@ -85,6 +86,26 @@ export function HomeworkCriteria_OnetimeUpload({
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Row 2: Level + Marking Scheme */}
+        <div>
+          <p className="text-sm text-gray-600 mb-2">Level</p>
+          <Select
+            value={selectedLevel}
+            onValueChange={(value) => dispatch(setSelectedLevel(value))}
+          >
+            <SelectTrigger className="w-full rounded-xl border-white/30 bg-white/10 shadow-[0_8px_32px_rgba(31,38,135,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-500 focus-visible:ring-purple-500 focus-visible:border-purple-500">
+              <SelectValue placeholder="Select level" />
+            </SelectTrigger>
+            <SelectContent>
+              {LEVELS.map(level => (
+                <SelectItem key={level} value={level}>
+                  {level}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Marking Scheme Upload */}
@@ -111,7 +132,7 @@ export function HomeworkCriteria_OnetimeUpload({
             </span>
             {markingSchemeFileName && (
               <button
-                onClick={(e) => { e.stopPropagation(); dispatch(clearMarkingScheme()); }}
+                onClick={(e) => { e.stopPropagation(); dispatch(clearMarkingSchemePdf_and_metadata()); }}
                 className="shrink-0 text-gray-400 hover:text-red-500 transition-colors"
               >
                 <X className="w-4 h-4" />

@@ -198,6 +198,19 @@ export interface ProfileWithModulesResponse {
   modules: ModuleWithPermissions[];
 }
 
+export interface HomeworkPdfMetadata {
+  file_name: string;
+  content_type: string;
+  file_size: number;
+  checksum: string;
+  student_name: string;
+}
+
+export interface UploadForSignedUrlRequest {
+  homework_pdf_entries: HomeworkPdfMetadata[];
+  homework_criteria: ['onetime' | 'class', Record<string, unknown>];
+}
+
 // API Error Class
 export class ApiError extends Error {
   constructor(
@@ -451,6 +464,16 @@ export const api = {
     return apiRequest<ClassResponse>('/class', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Send homework PDF metadata for signed URL generation
+   */
+  async uploadForSignedUrl(payload: UploadForSignedUrlRequest): Promise<{ received: number }> {
+    return apiRequest<{ received: number }>('/scan-and-mark/upload-for-signed-url', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
   },
 };

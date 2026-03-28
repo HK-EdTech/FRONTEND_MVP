@@ -1,12 +1,26 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { ScanHomework } from '@/components/Scan_and_mark/Scan_and_upload/scanHomework';
 import { HomeworkCriteria_OnetimeUpload } from '@/components/Scan_and_mark/Scan_and_upload/homeworkCriteria/HomeworkCriteria_OnetimeUpload';
 import { OcrAndAdjustDummy } from '@/components/Scan_and_mark/OCR_and_adjust/OcrAndAdjustDummy';
 import { ResultDummy } from '@/components/Scan_and_mark/Result/ResultDummy';
 import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
 import { motion } from 'framer-motion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { convertHomeworkToPdfs } from '@/store/slices/uploadHomework_ScanAndMark_slice';
+import { api, HomeworkPdfMetadata } from '@/lib/api';
+import { RootState, AppDispatch } from '@/store/store';
 
 const STAGES = [
   { key: 'scan', label: 'Scan & Upload' },
@@ -14,8 +28,55 @@ const STAGES = [
   { key: 'result', label: 'Result' },
 ] as const;
 
-export function ScanAndMarkWrapper() {
+interface ScanAndMarkWrapperProps {
+  homework_type: 'onetime' | 'class';
+}
+
+export function ScanAndMarkWrapper({ homework_type }: ScanAndMarkWrapperProps) {
   const [stageIndex, setStageIndex] = React.useState(0);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const onetimeCriteria = useSelector((state: RootState) => state.Homeworkcriteria_onetimeUpload);
+
+  async function handleConfirmUpload(homework_type: 'onetime' | 'class') {
+    setShowConfirmDialog(false);
+    setIsProcessing(true);
+    try {
+      let homework_pdf_entries: HomeworkPdfMetadata[] = [];
+      let criteria: Record<string, unknown> = {};
+
+      switch (homework_type) {
+        case 'onetime': {
+          const pdfs = await dispatch(convertHomeworkToPdfs('onetime')).unwrap();
+          homework_pdf_entries = pdfs.map(({ file: _file, ...meta }) => meta);
+          criteria = {
+            homeworkName: onetimeCriteria.homeworkName,
+            selectedLevel: onetimeCriteria.selectedLevel,
+            selectedOneTimeSubject: onetimeCriteria.selectedOneTimeSubject,
+            markingScheme: {
+              file_name: onetimeCriteria.markingSchemePdf_and_metadata.file_name,
+              file_size: onetimeCriteria.markingSchemePdf_and_metadata.file_size,
+              content_type: onetimeCriteria.markingSchemePdf_and_metadata.content_type,
+              checksum: onetimeCriteria.markingSchemePdf_and_metadata.checksum,
+            },
+          };
+          break;
+        }
+        case 'class':
+          // TODO: implement class upload flow
+          break;
+      }
+
+      await api.uploadForSignedUrl({
+        homework_pdf_entries,
+        homework_criteria: [homework_type, criteria],
+      });
+      setStageIndex(1);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
 
   const CurrentStage = React.useMemo(() => {
     switch (stageIndex) {
@@ -30,6 +91,30 @@ export function ScanAndMarkWrapper() {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-7rem)]">
+      {isProcessing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl px-8 py-6 flex flex-col items-center gap-3 shadow-xl">
+            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-gray-600 font-medium">Processing homework...</span>
+          </div>
+        </div>
+      )}
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Upload</AlertDialogTitle>
+            <AlertDialogDescription>
+              After uploading, you cannot add new homework sheets for a student&apos;s homework. Do you confirm?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowConfirmDialog(false)}>No</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleConfirmUpload(homework_type)}>Yes</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div>
         <CurrentStage />
         <div className="flex justify-end mt-4 gap-4">
@@ -43,7 +128,7 @@ export function ScanAndMarkWrapper() {
           )}
           {stageIndex === 0 && (
             <button
-              onClick={() => setStageIndex(1)}
+              onClick={() => setShowConfirmDialog(true)}
               className="px-4 py-2 text-sm font-semibold rounded-xl text-gray-600 hover:text-gray-800 transition-colors"
               style={glassStyle}
             >
