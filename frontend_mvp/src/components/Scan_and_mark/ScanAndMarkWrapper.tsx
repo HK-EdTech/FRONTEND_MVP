@@ -38,6 +38,8 @@ export function ScanAndMarkWrapper({ homework_type }: ScanAndMarkWrapperProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
   const onetimeCriteria = useSelector((state: RootState) => state.Homeworkcriteria_onetimeUpload);
+  const homeworkList = useSelector((state: RootState) => state.uploadHomework_ScanAndMark.homeworkList);
+  const isUploadDisabled = !onetimeCriteria.homeworkTitle || !onetimeCriteria.selectedLevel || !onetimeCriteria.selectedOneTimeSubject || homeworkList.length === 0;
 
   async function handleConfirmUpload(homework_type: 'onetime' | 'class') {
     setShowConfirmDialog(false);
@@ -51,7 +53,7 @@ export function ScanAndMarkWrapper({ homework_type }: ScanAndMarkWrapperProps) {
           const pdfs = await dispatch(convertHomeworkToPdfs('onetime')).unwrap();
           homework_pdf_entries = pdfs.map(({ file: _file, ...meta }) => meta);
           criteria = {
-            homeworkName: onetimeCriteria.homeworkName,
+            homeworkTitle: onetimeCriteria.homeworkTitle,
             selectedLevel: onetimeCriteria.selectedLevel,
             selectedOneTimeSubject: onetimeCriteria.selectedOneTimeSubject,
             markingScheme: {
@@ -129,7 +131,8 @@ export function ScanAndMarkWrapper({ homework_type }: ScanAndMarkWrapperProps) {
           {stageIndex === 0 && (
             <button
               onClick={() => setShowConfirmDialog(true)}
-              className="px-4 py-2 text-sm font-semibold rounded-xl text-gray-600 hover:text-gray-800 transition-colors"
+              disabled={isUploadDisabled}
+              className="px-4 py-2 text-sm font-semibold rounded-xl text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               style={glassStyle}
             >
               Upload

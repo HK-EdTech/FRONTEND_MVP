@@ -20,7 +20,7 @@ export type MarkingSchemePdfEntry = {
 const initialState = {
   selectedLevel: '',
   selectedOneTimeSubject: '',
-  homeworkName: '',
+  homeworkTitle: '',
   markingSchemePdf_and_metadata: {
     file: null as File | null,
     file_name: '',
@@ -35,8 +35,8 @@ const homeworkCriteria_OnetimeUpload_slice = createSlice({
   name: 'Homeworkcriteria_onetimeUpload',
   initialState,
   reducers: {
-    setHomeworkName(state, action: PayloadAction<string>) {
-      state.homeworkName = action.payload;
+    setHomeworkTitle(state, action: PayloadAction<string>) {
+      state.homeworkTitle = action.payload;
     },
     setSelectedLevel(state, action: PayloadAction<string>) {
       state.selectedLevel = action.payload;
@@ -60,7 +60,7 @@ const homeworkCriteria_OnetimeUpload_slice = createSlice({
 });
 
 export const {
-  setHomeworkName,
+  setHomeworkTitle,
   setSelectedLevel,
   setSelectedOneTimeSubject,
   setMarkingSchemePdf_and_metadata,

@@ -28,7 +28,7 @@ export function HomeworkCriteria_OnetimeUpload({
   setIsUploadDisabled,
 }: HomeworkCriteria_OnetimeUploadProps) {
   const dispatch = useDispatch();
-  const { homeworkName, selectedLevel, selectedOneTimeSubject, markingSchemePdf_and_metadata } = useSelector(
+  const { homeworkTitle, selectedLevel, selectedOneTimeSubject, markingSchemePdf_and_metadata } = useSelector(
     (state: RootState) => state.Homeworkcriteria_onetimeUpload
   );
   const markingSchemeFileName = markingSchemePdf_and_metadata.file_name;
@@ -49,19 +49,19 @@ export function HomeworkCriteria_OnetimeUpload({
 
   // Update isUploadDisabled whenever level or subject changes
   useEffect(() => {
-    setIsUploadDisabled(!selectedLevel || !selectedOneTimeSubject);
-  }, [selectedLevel, selectedOneTimeSubject, setIsUploadDisabled]);
+    setIsUploadDisabled(!homeworkTitle || !selectedLevel || !selectedOneTimeSubject);
+  }, [homeworkTitle, selectedLevel, selectedOneTimeSubject, setIsUploadDisabled]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Row 1: Homework Name + Subject */}
+        {/* Row 1: Homework Title + Subject */}
         <div>
-          <label className="block text-sm text-gray-600 mb-2">Homework Name</label>
+          <label className="block text-sm text-gray-600 mb-2">Homework Title</label>
           <input
             type="text"
-            value={homeworkName}
-            onChange={(e) => dispatch(setHomeworkName(e.target.value))}
-            placeholder="Enter homework name"
+            value={homeworkTitle}
+            onChange={(e) => dispatch(setHomeworkTitle(e.target.value))}
+            placeholder="Enter homework title"
             className="w-full px-4 py-2 rounded-xl bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
