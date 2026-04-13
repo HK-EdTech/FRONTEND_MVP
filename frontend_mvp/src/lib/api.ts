@@ -57,6 +57,8 @@ export interface TeacherHomeworkResponse {
   class_name: string | null;
   due_date: string | null;
   full_score: number | null;
+  homework_type: string | null;
+  homework_type_value: string | null;
   assigned_classes: number;
   assigned_class_ids: string[];
   assigned_students: number;
@@ -68,6 +70,7 @@ export interface CreateTeacherHomeworkRequest {
   subject?: string;
   due_date?: string;
   full_score?: number;
+  homework_type?: string;
   class_ids: string[];
 }
 
