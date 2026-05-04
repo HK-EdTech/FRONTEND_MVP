@@ -34,10 +34,25 @@ interface RecentHomeworkItem {
   classIds: string[];
   dueDateRaw: string | null;
   fullScore: number | null;
+  homeworkType: string;
   assignedClasses: number;
   assignedStudents: number;
   dueDate: string;
 }
+
+const CLASS_HOMEWORK_TYPE = 'class';
+const ONETIME_HOMEWORK_TYPE = 'onetime';
+
+const normalizeHomeworkType = (value?: string | null): string => {
+  const normalized = (value || '').trim().toLowerCase();
+  if (normalized === 'assignable') {
+    return CLASS_HOMEWORK_TYPE;
+  }
+  if (normalized === 'one_time') {
+    return ONETIME_HOMEWORK_TYPE;
+  }
+  return normalized;
+};
 
 const toRecentHomeworkItem = (item: TeacherHomeworkResponse): RecentHomeworkItem => {
   const dueDateLabel = item.due_date
@@ -55,10 +70,18 @@ const toRecentHomeworkItem = (item: TeacherHomeworkResponse): RecentHomeworkItem
     classIds: item.assigned_class_ids ?? [],
     dueDateRaw: item.due_date,
     fullScore: item.full_score,
+    homeworkType: normalizeHomeworkType(item.homework_type || item.homework_type_value),
     assignedClasses: item.assigned_classes ?? 0,
     assignedStudents: item.assigned_students ?? 0,
     dueDate: dueDateLabel,
   };
+};
+
+const matchesHomeworkType = (
+  item: RecentHomeworkItem,
+  expectedType: string
+) => {
+  return item.homeworkType === expectedType;
 };
 
 export function AssignHomework() {
@@ -91,6 +114,7 @@ export function AssignHomework() {
     subject: '',
     dueDate: '',
     fullScore: '',
+    homeworkType: null,
     classIds: [],
   });
   const [createClassForm, setCreateClassForm] = useState<CreateClassDialogFormState>({
@@ -108,19 +132,33 @@ export function AssignHomework() {
     }
   }, [classesStatus, dispatch, homeworkStatus]);
 
+  const assignableHomeworkTypeCode = CLASS_HOMEWORK_TYPE;
+  const oneTimeHomeworkTypeCode = ONETIME_HOMEWORK_TYPE;
+
   const recentHomeworkItems = useMemo(
     () => (homework || []).map(toRecentHomeworkItem),
     [homework]
   );
 
   const unassignedHomeworkItems = useMemo(
-    () => recentHomeworkItems.filter((item) => item.assignedClasses === 0),
-    [recentHomeworkItems]
+    () =>
+      recentHomeworkItems.filter(
+        (item) => matchesHomeworkType(item, assignableHomeworkTypeCode) && item.assignedClasses === 0
+      ),
+    [recentHomeworkItems, assignableHomeworkTypeCode]
+  );
+
+  const oneTimeHomeworkItems = useMemo(
+    () => recentHomeworkItems.filter((item) => matchesHomeworkType(item, oneTimeHomeworkTypeCode)),
+    [recentHomeworkItems, oneTimeHomeworkTypeCode]
   );
 
   const activeHomeworkItems = useMemo(
-    () => recentHomeworkItems.filter((item) => item.assignedClasses > 0),
-    [recentHomeworkItems]
+    () =>
+      recentHomeworkItems.filter(
+        (item) => matchesHomeworkType(item, assignableHomeworkTypeCode) && item.assignedClasses > 0
+      ),
+    [recentHomeworkItems, assignableHomeworkTypeCode]
   );
 
   const filteredClasses = useMemo(() => {
@@ -164,6 +202,7 @@ export function AssignHomework() {
       subject: '',
       dueDate: '',
       fullScore: '',
+      homeworkType: CLASS_HOMEWORK_TYPE,
       classIds: [],
     });
     setActiveHomeworkId(null);
@@ -185,6 +224,7 @@ export function AssignHomework() {
       subject: item.subject,
       dueDate: item.dueDateRaw ? new Date(item.dueDateRaw).toISOString().slice(0, 10) : '',
       fullScore: item.fullScore !== null ? String(item.fullScore) : '',
+      homeworkType: item.homeworkType || CLASS_HOMEWORK_TYPE,
       classIds: item.classIds || [],
     });
     setIsHomeworkDialogOpen(true);
@@ -262,12 +302,15 @@ export function AssignHomework() {
       setHomeworkActionError('');
 
       if (homeworkDialogMode === 'create') {
+        const homeworkTypeCode = homeworkForm.homeworkType ?? CLASS_HOMEWORK_TYPE;
+
         await dispatch(
           createTeacherHomework({
             title,
             subject: subject || undefined,
             due_date: homeworkForm.dueDate ? new Date(homeworkForm.dueDate).toISOString() : undefined,
             full_score: homeworkForm.fullScore !== '' ? Number(homeworkForm.fullScore) : undefined,
+            homework_type: homeworkTypeCode,
             class_ids: homeworkForm.classIds,
           })
         ).unwrap();
@@ -287,6 +330,7 @@ export function AssignHomework() {
   };
 
   const classErrorMessage = classActionError || createClassError || classesError || '';
+  const homeworkSectionError = homeworkError || '';
   const homeworkRequestError = homeworkDialogMode === 'create' ? createHomeworkError : assignHomeworkError;
   const homeworkDialogError = homeworkActionError || homeworkRequestError || '';
   const isSubmittingHomework = homeworkDialogMode === 'create'
@@ -295,6 +339,38 @@ export function AssignHomework() {
 
   return (
     <div className="space-y-6">
+      <GlassPanel>
+        <SectionHeaderBar
+          title="One-time Homework"
+          actions={(
+            <Button variant="outline" size="sm">
+              Show more
+            </Button>
+          )}
+        />
+
+        <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap gap-4 pb-1 w-full">
+          {isLoadingHomework && <StatusMessage variant="loading" text="Loading homework..." />}
+
+          {!isLoadingHomework && oneTimeHomeworkItems.length === 0 && !homeworkSectionError && (
+            <StatusMessage variant="empty" text="No one-time homework found." />
+          )}
+
+          {!isLoadingHomework &&
+            oneTimeHomeworkItems.map((item) => (
+              <HomeworkSummaryCard
+                key={item.id}
+                className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.666rem)] lg:w-[calc(20%-0.8rem)]"
+                title={item.title}
+                assignedText={`Assigned to ${item.assignedClasses} classes • ${item.assignedStudents} students`}
+                dueText={item.dueDate}
+              />
+            ))}
+        </div>
+
+        {homeworkSectionError && <StatusMessage variant="error" text={homeworkSectionError} className="mt-4" />}
+      </GlassPanel>
+
       <GlassPanel>
         <SectionHeaderBar
           title="Unassigned Homework"
@@ -317,7 +393,7 @@ export function AssignHomework() {
         <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap gap-4 pb-1 w-full">
           {isLoadingHomework && <StatusMessage variant="loading" text="Loading homework..." />}
 
-          {!isLoadingHomework && unassignedHomeworkItems.length === 0 && !homeworkError && (
+          {!isLoadingHomework && unassignedHomeworkItems.length === 0 && !homeworkSectionError && (
             <StatusMessage variant="empty" text="No unassigned homework found." />
           )}
 
@@ -335,7 +411,7 @@ export function AssignHomework() {
             ))}
         </div>
 
-        {homeworkError && <StatusMessage variant="error" text={homeworkError} className="mt-4" />}
+        {homeworkSectionError && <StatusMessage variant="error" text={homeworkSectionError} className="mt-4" />}
       </GlassPanel>
 
       <GlassPanel>
@@ -360,7 +436,7 @@ export function AssignHomework() {
         <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap gap-4 pb-1 w-full">
           {isLoadingHomework && <StatusMessage variant="loading" text="Loading homework..." />}
 
-          {!isLoadingHomework && activeHomeworkItems.length === 0 && !homeworkError && (
+          {!isLoadingHomework && activeHomeworkItems.length === 0 && !homeworkSectionError && (
             <StatusMessage variant="empty" text="No active homework found." />
           )}
 
@@ -378,7 +454,7 @@ export function AssignHomework() {
             ))}
         </div>
 
-        {homeworkError && <StatusMessage variant="error" text={homeworkError} className="mt-4" />}
+        {homeworkSectionError && <StatusMessage variant="error" text={homeworkSectionError} className="mt-4" />}
       </GlassPanel>
 
       {/* <GlassPanel>
@@ -452,6 +528,8 @@ export function AssignHomework() {
         onFormChange={setHomeworkForm}
         onToggleClass={toggleHomeworkClassSelection}
         getClassSelectionLabel={getClassSelectionLabel}
+        assignableHomeworkTypeCode={assignableHomeworkTypeCode}
+        oneTimeHomeworkTypeCode={oneTimeHomeworkTypeCode}
       />
     </div>
   );

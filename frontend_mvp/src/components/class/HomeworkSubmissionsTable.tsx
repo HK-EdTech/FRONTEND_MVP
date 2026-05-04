@@ -20,6 +20,7 @@ type SortKey = 'name' | 'score' | 'submission_date' | 'isMarked';
 interface HomeworkSubmissionsTableProps {
   classId: string;
   homeworkId: string;
+  onMarkByAI?: (row: ClassHomeworkSubmissionResponse) => void;
 }
 
 const formatDate = (value: string | null) => {
@@ -49,76 +50,7 @@ const compareNullableDate = (a: string | null, b: string | null) => {
   return new Date(a).getTime() - new Date(b).getTime();
 };
 
-const columns = [
-  {
-    header: 'Student Name',
-    width: '40%',
-    sortableKey: 'name' as SortKey,
-    cell: (row: ClassHomeworkSubmissionResponse) => row.full_name,
-  },
-  {
-    header: 'Score',
-    width: '15%',
-    sortableKey: 'score' as SortKey,
-    cell: (row: ClassHomeworkSubmissionResponse) => {
-      const score = normalizeScore(row.score);
-      return score === null ? '-' : score;
-    },
-  },
-  {
-    header: 'Submission Status',
-    width: '20%',
-    sortableKey: null,
-    cell: (row: ClassHomeworkSubmissionResponse) => (
-      row.has_submission ? (
-        <Badge className="border border-emerald-200 bg-emerald-100 text-emerald-700">
-          Submitted
-        </Badge>
-      ) : (
-        <Badge className="border border-gray-200 bg-gray-100 text-gray-600">
-          Not submitted
-        </Badge>
-      )
-    ),
-  },
-  {
-    header: 'Submission Date',
-    width: '25%',
-    sortableKey: 'submission_date' as SortKey,
-    cell: (row: ClassHomeworkSubmissionResponse) => formatDate(row.submission_datetime),
-  },
-  {
-    header: 'Marked',
-    width: '20%',
-    sortableKey: 'isMarked' as SortKey,
-    cell: (row: ClassHomeworkSubmissionResponse) => (
-      row.is_marked ? (
-        <Badge className="border border-emerald-200 bg-emerald-100 text-emerald-700">
-          Marked
-        </Badge>
-      ) : (
-        <Badge className="border border-gray-200 bg-gray-100 text-gray-600">
-          Not marked
-        </Badge>
-      )
-    ),
-  },
-  {
-    header: 'Actions',
-    width: '20%',
-    sortableKey: null,
-    cell: () => (
-      <Button
-        size="sm"
-        className="bg-gradient-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg"
-      >
-        AI Analyze
-      </Button>
-    ),
-  },
-];
-
-export function HomeworkSubmissionsTable({ classId, homeworkId }: HomeworkSubmissionsTableProps) {
+export function HomeworkSubmissionsTable({ classId, homeworkId, onMarkByAI }: HomeworkSubmissionsTableProps) {
   const dispatch = useAppDispatch();
   const key = `${classId}:${homeworkId}`;
   const rows = useAppSelector((state) => state.homeworkSubmissions.rowsByKey[key] || []);
@@ -180,6 +112,79 @@ export function HomeworkSubmissionsTable({ classId, homeworkId }: HomeworkSubmis
       setSortDirection('asc');
     }
   };
+
+  const columns = useMemo(
+    () => [
+      {
+        header: 'Student Name',
+        width: '40%',
+        sortableKey: 'name' as SortKey,
+        cell: (row: ClassHomeworkSubmissionResponse) => row.full_name,
+      },
+      {
+        header: 'Score',
+        width: '15%',
+        sortableKey: 'score' as SortKey,
+        cell: (row: ClassHomeworkSubmissionResponse) => {
+          const score = normalizeScore(row.score);
+          return score === null ? '-' : score;
+        },
+      },
+      {
+        header: 'Submission Status',
+        width: '20%',
+        sortableKey: null,
+        cell: (row: ClassHomeworkSubmissionResponse) => (
+          row.has_submission ? (
+            <Badge className="border border-emerald-200 bg-emerald-100 text-emerald-700">
+              Submitted
+            </Badge>
+          ) : (
+            <Badge className="border border-gray-200 bg-gray-100 text-gray-600">
+              Not submitted
+            </Badge>
+          )
+        ),
+      },
+      {
+        header: 'Submission Date',
+        width: '25%',
+        sortableKey: 'submission_date' as SortKey,
+        cell: (row: ClassHomeworkSubmissionResponse) => formatDate(row.submission_datetime),
+      },
+      {
+        header: 'Marked',
+        width: '20%',
+        sortableKey: 'isMarked' as SortKey,
+        cell: (row: ClassHomeworkSubmissionResponse) => (
+          row.is_marked ? (
+            <Badge className="border border-emerald-200 bg-emerald-100 text-emerald-700">
+              Marked
+            </Badge>
+          ) : (
+            <Badge className="border border-gray-200 bg-gray-100 text-gray-600">
+              Not marked
+            </Badge>
+          )
+        ),
+      },
+      {
+        header: 'Actions',
+        width: '20%',
+        sortableKey: null,
+        cell: (row: ClassHomeworkSubmissionResponse) => (
+          <Button
+            size="sm"
+            className="bg-gradient-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg"
+            onClick={() => onMarkByAI?.(row)}
+          >
+            Mark by AI
+          </Button>
+        ),
+      },
+    ],
+    [onMarkByAI]
+  );
 
   return (
     <div className="space-y-4">
