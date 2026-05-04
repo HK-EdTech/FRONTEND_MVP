@@ -32,23 +32,6 @@ export interface ProfileUpdateRequest {
   avatar_url?: string;
 }
 
-export interface MarkingSchemeResponse {
-  id: string;
-  doc_path: string | null;
-}
-
-export interface HomeworkResponse {
-  id: string;
-  title: string | null;
-  subject: string | null;
-  class_id: string | null;
-  due_date: string | null;
-  full_score: number | null;
-  marking_scheme_id: string | null;
-  marking_scheme: MarkingSchemeResponse | null;
-  created_at: string;
-}
-
 export interface TeacherHomeworkResponse {
   id: string;
   title: string | null;
@@ -83,10 +66,6 @@ export interface ClassResponse {
   teacher_id: string;
   organization_id: string | null;
   created_at: string;
-}
-
-export interface ClassWithHomeworkResponse extends ClassResponse {
-  homework: HomeworkResponse[];
 }
 
 export interface ClassroomDetailResponse {
@@ -219,6 +198,34 @@ export interface ProfileWithModulesResponse {
   modules: ModuleWithPermissions[];
 }
 
+export interface HomeworkPdfMetadata {
+  file_name: string;
+  content_type: string;
+  file_size: number;
+  checksum: string;
+  student_name: string;
+}
+
+export interface UploadForSignedUrlRequest {
+  homework_pdf_entries: HomeworkPdfMetadata[];
+  homework_criteria: ['onetime' | 'class', Record<string, unknown>];
+}
+
+export interface SubmissionUpload {
+  student_name: string;
+  file_name: string;
+  signed_url: string;
+}
+
+export interface UploadForSignedUrlResponse {
+  homework_id: string;
+  marking_scheme_upload: {
+    file_name: string;
+    signed_url: string;
+  };
+  submission_uploads: SubmissionUpload[];
+}
+
 // API Error Class
 export class ApiError extends Error {
   constructor(
@@ -303,15 +310,6 @@ export const api = {
    */
   async getMyTeacherProfile(): Promise<TeacherProfileResponse> {
     return apiRequest<TeacherProfileResponse>('/profile/me/teacher', {
-      method: 'GET',
-    });
-  },
-
-  /**
-   * Get teacher's classes with homework (single call for scan & upload)
-   */
-  async getClassesSubjectHomework(): Promise<ClassWithHomeworkResponse[]> {
-    return apiRequest<ClassWithHomeworkResponse[]>('/scan-and-mark/classes_subject_homework', {
       method: 'GET',
     });
   },
@@ -482,5 +480,26 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  },
+
+  /**
+   * Send homework PDF metadata for signed URL generation
+   */
+  async uploadForSignedUrl(payload: UploadForSignedUrlRequest): Promise<UploadForSignedUrlResponse> {
+    return apiRequest<UploadForSignedUrlResponse>('/scan-and-mark/upload-for-signed-url', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async uploadFileToSignedUrl(signedUrl: string, file: File, contentType: string): Promise<void> {
+    const response = await fetch(signedUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: file,
+    });
+    if (!response.ok) {
+      throw new ApiError(response.status, `Failed to upload file: ${file.name}`);
+    }
   },
 };
