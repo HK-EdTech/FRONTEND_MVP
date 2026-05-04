@@ -211,6 +211,21 @@ export interface UploadForSignedUrlRequest {
   homework_criteria: ['onetime' | 'class', Record<string, unknown>];
 }
 
+export interface SubmissionUpload {
+  student_name: string;
+  file_name: string;
+  signed_url: string;
+}
+
+export interface UploadForSignedUrlResponse {
+  homework_id: string;
+  marking_scheme_upload: {
+    file_name: string;
+    signed_url: string;
+  };
+  submission_uploads: SubmissionUpload[];
+}
+
 // API Error Class
 export class ApiError extends Error {
   constructor(
@@ -470,10 +485,21 @@ export const api = {
   /**
    * Send homework PDF metadata for signed URL generation
    */
-  async uploadForSignedUrl(payload: UploadForSignedUrlRequest): Promise<{ received: number }> {
-    return apiRequest<{ received: number }>('/scan-and-mark/upload-for-signed-url', {
+  async uploadForSignedUrl(payload: UploadForSignedUrlRequest): Promise<UploadForSignedUrlResponse> {
+    return apiRequest<UploadForSignedUrlResponse>('/scan-and-mark/upload-for-signed-url', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+  },
+
+  async uploadFileToSignedUrl(signedUrl: string, file: File, contentType: string): Promise<void> {
+    const response = await fetch(signedUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: file,
+    });
+    if (!response.ok) {
+      throw new ApiError(response.status, `Failed to upload file: ${file.name}`);
+    }
   },
 };
