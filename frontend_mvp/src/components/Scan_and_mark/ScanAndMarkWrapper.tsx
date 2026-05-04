@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ScanHomework } from '@/components/Scan_and_mark/Scan_and_upload/scanHomework';
 import { HomeworkCriteria_OnetimeUpload } from '@/components/Scan_and_mark/Scan_and_upload/homeworkCriteria/HomeworkCriteria_OnetimeUpload';
 import { OcrAndAdjustDummy } from '@/components/Scan_and_mark/OCR_and_adjust/OcrAndAdjustDummy';
 import { ResultDummy } from '@/components/Scan_and_mark/Result/ResultDummy';
 import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
 import { motion } from 'framer-motion';
+import { UploadButton } from '@/components/Scan_and_mark/ScanAndWrapper_component';
 
 const STAGES = [
   { key: 'scan', label: 'Scan & Upload' },
@@ -14,8 +15,13 @@ const STAGES = [
   { key: 'result', label: 'Result' },
 ] as const;
 
-export function ScanAndMarkWrapper() {
+interface ScanAndMarkWrapperProps {
+  homework_type: 'onetime' | 'class';
+}
+
+export function ScanAndMarkWrapper({ homework_type }: ScanAndMarkWrapperProps) {
   const [stageIndex, setStageIndex] = React.useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const CurrentStage = React.useMemo(() => {
     switch (stageIndex) {
@@ -30,6 +36,15 @@ export function ScanAndMarkWrapper() {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-7rem)]">
+      {isProcessing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl px-8 py-6 flex flex-col items-center gap-3 shadow-xl">
+            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-gray-600 font-medium">Processing homework...</span>
+          </div>
+        </div>
+      )}
+
       <div>
         <CurrentStage />
         <div className="flex justify-end mt-4 gap-4">
@@ -42,13 +57,11 @@ export function ScanAndMarkWrapper() {
             </button>
           )}
           {stageIndex === 0 && (
-            <button
-              onClick={() => setStageIndex(1)}
-              className="px-4 py-2 text-sm font-semibold rounded-xl text-gray-600 hover:text-gray-800 transition-colors"
-              style={glassStyle}
-            >
-              Next
-            </button>
+            <UploadButton
+              homework_type={homework_type}
+              setStageIndex={setStageIndex}
+              onProcessingChange={setIsProcessing}
+            />
           )}
           {stageIndex === 1 && (
             <button
@@ -65,7 +78,6 @@ export function ScanAndMarkWrapper() {
         <div className="flex items-center justify-between w-full max-w-2xl mx-auto px-4">
           {STAGES.map((stage, idx) => (
             <React.Fragment key={stage.key}>
-              {/* Circle and Label Container */}
               <div className="flex flex-col items-center gap-2">
                 <motion.div
                   animate={{
@@ -85,8 +97,7 @@ export function ScanAndMarkWrapper() {
                   <span className={`text-sm font-bold ${idx === stageIndex ? 'text-white' : 'text-gray-400'}`}>
                     {idx + 1}
                   </span>
-                  
-                  {/* Active Glow Effect */}
+
                   {idx === stageIndex && (
                     <motion.div
                       layoutId="glow"
@@ -94,13 +105,12 @@ export function ScanAndMarkWrapper() {
                     />
                   )}
                 </motion.div>
-                
+
                 <span className={`text-[10px] uppercase tracking-wider font-semibold ${idx === stageIndex ? 'text-gray-900' : 'text-gray-400'}`}>
                   {stage.label}
                 </span>
               </div>
 
-              {/* Animated Connector Line */}
               {idx < STAGES.length - 1 && (
                 <div className="relative flex-1 h-[2px] bg-gray-300 self-center mb-6 -mx-7 overflow-hidden">
                   <motion.div
@@ -114,7 +124,6 @@ export function ScanAndMarkWrapper() {
             </React.Fragment>
           ))}
         </div>
-
       </div>
     </div>
   );
