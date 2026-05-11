@@ -66,7 +66,7 @@ export function ScanAndMarkWrapper({ homework_type }: ScanAndMarkWrapperProps) {
           {stageIndex === 1 && (
             <button
               onClick={() => setStageIndex(2)}
-              className="px-4 py-2 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-purple-500 to-teal-500 hover:from-purple-600 hover:to-teal-600 transition-colors"
+              className="px-4 py-2 text-sm font-semibold rounded-xl text-slate-900 bg-gradient-to-r from-purple-500 to-teal-500 hover:from-purple-600 hover:to-teal-600 transition-colors"
             >
               Submit
             </button>
@@ -82,13 +82,13 @@ export function ScanAndMarkWrapper({ homework_type }: ScanAndMarkWrapperProps) {
                 <motion.div
                   animate={{
                     scale: idx === stageIndex ? 1.1 : 1,
-                    borderColor: idx === stageIndex ? 'rgba(255, 255, 255, 0.5)' : 'rgba(216, 180, 254, 0.5)',
+                    borderColor: idx === stageIndex ? 'rgba(255, 255, 255, 0.5)' : 'rgba(91, 220, 229, 0.5)',
                   }}
                   className="relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 z-10"
                   style={{
                     ...glassStyle,
                     background: idx === stageIndex
-                      ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(20, 184, 166, 0.8))'
+                      ? 'linear-gradient(135deg, rgba(91, 220, 229, 0.8), rgba(5, 82, 176, 0.8))'
                       : 'rgba(255, 255, 255, 0.1)',
                     border: idx === stageIndex ? glassStyle.border : 'none',
                     boxShadow: idx === stageIndex ? glassStyle.boxShadow : '0 8px 32px rgba(0, 0, 0, 0.3)',
