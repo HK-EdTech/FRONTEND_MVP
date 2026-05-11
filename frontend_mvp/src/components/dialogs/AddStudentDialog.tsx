@@ -184,7 +184,7 @@ export function AddStudentDialog({
             </Button>
             <Button
               type="submit"
-              className="bg-linear-to-r from-purple-500 to-teal-500 text-white"
+              className="bg-linear-to-r from-[#5BDCE5] to-[#0552B0] text-white"
               disabled={isSubmitting || isLoading || selectedIds.size === 0}
             >
               {isSubmitting ? 'Adding...' : `Add Selected (${selectedIds.size})`}

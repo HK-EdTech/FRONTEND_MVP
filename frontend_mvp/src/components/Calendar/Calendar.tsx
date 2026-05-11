@@ -16,7 +16,7 @@ export function CalendarModule() {
       {/* Content */}
       <div className="rounded-2xl p-6 shadow-xl" style={glassStyle}>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-teal-500 rounded-xl flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center">
             <CalendarIcon className="w-6 h-6 text-white" />
           </div>
           <div>

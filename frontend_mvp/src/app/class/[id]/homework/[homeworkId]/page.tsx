@@ -53,7 +53,7 @@ export default function HomeworkSubmissionsStubPage() {
           <Button
           size="sm"
           onClick={openMarkAllDialog}
-          className="bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg"
+          className="bg-linear-to-r from-[#5BDCE5] to-[#0552B0] text-white hover:shadow-lg"
         >
           Mark all by AI
         </Button>

@@ -125,7 +125,7 @@ export function Analytics() {
       skill,
       candidates: Math.floor(Math.random() * 20) + 5,
       avgScore: 70 + Math.random() * 25,
-      color: ['#8B5CF6', '#14B8A6', '#3B82F6', '#F59E0B', '#EF4444', '#06B6D4'][index]
+      color: ['#84c0d8', '#f5f5db', '#84c0d8', '#F59E0B', '#EF4444', '#b8b66d'][index]
     }));
   };
 
@@ -153,7 +153,7 @@ export function Analytics() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h1 className="text-3xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] bg-clip-text text-transparent">
             Analytics & Reports
           </h1>
           <p className="text-gray-600 mt-1">Comprehensive insights into your recruitment process.</p>
@@ -172,7 +172,7 @@ export function Analytics() {
           </select>
           <button 
             onClick={loadAnalyticsData}
-            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white rounded-xl hover:shadow-lg transition-all duration-200 flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
             Export Report
@@ -184,7 +184,7 @@ export function Analytics() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="rounded-2xl p-6 shadow-xl" style={glassStyle}>
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center">
               <FileText className="w-6 h-6 text-white" />
             </div>
             <span className="text-sm text-green-600 flex items-center gap-1">
@@ -198,7 +198,7 @@ export function Analytics() {
 
         <div className="rounded-2xl p-6 shadow-xl" style={glassStyle}>
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-500 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center">
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
             <span className="text-sm text-green-600 flex items-center gap-1">
@@ -212,7 +212,7 @@ export function Analytics() {
 
         <div className="rounded-2xl p-6 shadow-xl" style={glassStyle}>
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center">
               <Users className="w-6 h-6 text-white" />
             </div>
             <span className="text-sm text-green-600 flex items-center gap-1">
@@ -226,7 +226,7 @@ export function Analytics() {
 
         <div className="rounded-2xl p-6 shadow-xl" style={glassStyle}>
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center">
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <span className="text-sm text-red-600 flex items-center gap-1">
@@ -252,9 +252,9 @@ export function Analytics() {
               <Line 
                 type="monotone" 
                 dataKey="avgScore" 
-                stroke="#8B5CF6" 
+                stroke="#84c0d8" 
                 strokeWidth={3}
-                dot={{ fill: '#8B5CF6' }}
+                dot={{ fill: '#84c0d8' }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -271,8 +271,8 @@ export function Analytics() {
               <Bar dataKey="candidates" fill="url(#skillsGradient)" radius={4} />
               <defs>
                 <linearGradient id="skillsGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#8B5CF6" />
-                  <stop offset="100%" stopColor="#14B8A6" />
+                  <stop offset="0%" stopColor="#84c0d8" />
+                  <stop offset="100%" stopColor="#f5f5db" />
                 </linearGradient>
               </defs>
             </BarChart>
@@ -292,24 +292,24 @@ export function Analytics() {
               type="monotone" 
               dataKey="applications" 
               stackId="1"
-              stroke="#8B5CF6" 
+              stroke="#84c0d8" 
               fill="url(#volumeGradient1)" 
             />
             <Area 
               type="monotone" 
               dataKey="completed" 
               stackId="1"
-              stroke="#14B8A6" 
+              stroke="#f5f5db" 
               fill="url(#volumeGradient2)" 
             />
             <defs>
               <linearGradient id="volumeGradient1" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.2} />
+                <stop offset="0%" stopColor="#84c0d8" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#84c0d8" stopOpacity={0.2} />
               </linearGradient>
               <linearGradient id="volumeGradient2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#14B8A6" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="#14B8A6" stopOpacity={0.2} />
+                <stop offset="0%" stopColor="#f5f5db" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#f5f5db" stopOpacity={0.2} />
               </linearGradient>
             </defs>
           </AreaChart>
@@ -327,16 +327,16 @@ export function Analytics() {
             <Radar 
               name="Current" 
               dataKey="current" 
-              stroke="#8B5CF6" 
-              fill="#8B5CF6" 
+              stroke="#84c0d8" 
+              fill="#84c0d8" 
               fillOpacity={0.3}
               strokeWidth={2}
             />
             <Radar 
               name="Benchmark" 
               dataKey="benchmark" 
-              stroke="#14B8A6" 
-              fill="#14B8A6" 
+              stroke="#f5f5db" 
+              fill="#f5f5db" 
               fillOpacity={0.1}
               strokeWidth={2}
               strokeDasharray="5 5"

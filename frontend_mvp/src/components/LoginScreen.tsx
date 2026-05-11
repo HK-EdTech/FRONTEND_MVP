@@ -93,7 +93,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#5BDCE5] via-white to-[#0552B0] flex items-center justify-center p-4">
       {/* Background illustration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
@@ -106,7 +106,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
         <div className="hidden lg:block space-y-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center">
                 <FileText className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-3xl text-gray-900">ATS Resume Analyzer</h1>
@@ -195,7 +195,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                   <div className="relative flex gap-2 p-1.5">
                     {/* Sliding pill */}
                     <div
-                      className="absolute top-1.5 bottom-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg transition-all duration-300 ease-out"
+                      className="absolute top-1.5 bottom-1.5 rounded-lg bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] shadow-lg transition-all duration-300 ease-out"
                       style={{
                         width: 'calc(50% - 0.25rem)',
                         left: role === 'student'
@@ -366,7 +366,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="w-full bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white hover:from-[#5BDCE5] hover:to-[#0552B0]"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}

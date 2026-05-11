@@ -145,7 +145,7 @@ export function OCRAdjust() {
                 alt="Handwritten math homework"
                 className="h-auto w-full rounded-lg object-contain shadow-sm"
               />
-              <div className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-b from-cyan-100/5 via-transparent to-indigo-100/5" />
+              <div className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-b from-[#5BDCE5]/5 via-transparent to-indigo-100/5" />
               {mappedTargets.map((target) => {
                 const isActive = activeId === target.id;
                 const isSelected = selectedId === target.id;

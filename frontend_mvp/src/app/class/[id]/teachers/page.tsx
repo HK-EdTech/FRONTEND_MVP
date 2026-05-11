@@ -45,7 +45,7 @@ export default function ClassroomTeachersPage() {
         actions={(
           <Button
             size="sm"
-            className="w-9 h-9 p-0 rounded-lg bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
+            className="w-9 h-9 p-0 rounded-lg bg-linear-to-r from-[#5BDCE5] to-[#0552B0] text-white hover:shadow-lg cursor-pointer"
             onClick={() => setIsAddDialogOpen(true)}
           >
             <Plus className="w-4 h-4" />

@@ -312,7 +312,7 @@ export function Settings() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
+        <h1 className="text-3xl bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] bg-clip-text text-transparent">
           Settings
         </h1>
         <p className="text-gray-600 mt-1">Manage your account preferences and application settings.</p>
@@ -331,7 +331,7 @@ export function Settings() {
                     onClick={() => setActiveSection(section.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-300 ${
                       activeSection === section.id
-                        ? 'bg-gradient-to-r from-purple-500 to-teal-500 text-white'
+                        ? 'bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white'
                         : 'text-gray-700 hover:bg-white/20'
                     }`}
                   >
@@ -351,7 +351,7 @@ export function Settings() {
               <h2 className="text-xl text-gray-800">
                 {sections.find(s => s.id === activeSection)?.label}
               </h2>
-              <button className="px-4 py-2 bg-gradient-to-r from-purple-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 flex items-center gap-2">
+              <button className="px-4 py-2 bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white rounded-xl hover:shadow-lg transition-all duration-200 flex items-center gap-2">
                 <Save className="w-4 h-4" />
                 Save Changes
               </button>

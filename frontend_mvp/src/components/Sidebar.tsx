@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import {
@@ -51,8 +52,9 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       {/* Header */}
       <div className="p-6 border-b border-white/20">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-teal-500 rounded-xl flex items-center justify-center">
-            <BrainCircuit className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+            {/* <BrainCircuit className="w-6 h-6 text-white" /> */}
+            <Image src={'/logo.png'} alt="Logo" width={40} height={40} className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-lg text-gray-800">Company Name</h1>
@@ -73,7 +75,7 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-300 ${
                 isActive
-                  ? 'bg-gradient-to-r from-purple-500 to-teal-500 text-white transform translate-x-1'
+                  ? 'bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white transform translate-x-1'
                   : 'text-gray-700 hover:bg-white/20 hover:translate-x-1'
               }`}
             >

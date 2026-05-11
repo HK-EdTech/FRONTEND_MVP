@@ -77,7 +77,7 @@ export function HomeworkCriteria_OnetimeUpload({
                 }
                 className={`px-4 py-2 text-sm font-semibold rounded-xl transition-colors ${
                   subject === selectedOneTimeSubject
-                    ? 'text-white bg-gradient-to-r from-purple-500 to-teal-500'
+                    ? 'text-white bg-gradient-to-r from-[#5BDCE5] to-[#0552B0]'
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
                 style={subject === selectedOneTimeSubject ? undefined : glassStyle}
@@ -122,7 +122,7 @@ export function HomeworkCriteria_OnetimeUpload({
             onClick={() => markingSchemeInputRef.current?.click()}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-xl cursor-pointer transition-all"
             style={markingSchemeFileName
-              ? { ...glassStyle, border: '2px solid rgba(139, 92, 246, 1)' }
+              ? { ...glassStyle, border: '2px solid rgba(91, 220, 229, 1)' }
               : glassStyle
             }
           >

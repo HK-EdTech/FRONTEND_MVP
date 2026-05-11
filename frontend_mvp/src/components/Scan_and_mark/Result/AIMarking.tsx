@@ -112,7 +112,7 @@ export function AIMarking({ student, mode = 'single', totalStudents = 0 }: AIMar
           <div className="flex items-center gap-3 rounded-xl border border-white/30 bg-white p-3 shadow-lg">
             <Avatar className="h-11 w-11 border border-white/50">
               <AvatarImage src={student?.avatarUrl || undefined} />
-              <AvatarFallback className="bg-gradient-to-r from-purple-500 to-cyan-400 text-white">
+              <AvatarFallback className="bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white">
                 {initialsFromName(targetName)}
               </AvatarFallback>
             </Avatar>
@@ -144,8 +144,8 @@ export function AIMarking({ student, mode = 'single', totalStudents = 0 }: AIMar
                 />
                 <defs>
                   <linearGradient id="ai-marking-ring" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#8b5cf6" />
-                    <stop offset="100%" stopColor="#14b8a6" />
+                    <stop offset="0%" stopColor="#5BDCE5" />
+                    <stop offset="100%" stopColor="#0552B0" />
                   </linearGradient>
                 </defs>
               </svg>

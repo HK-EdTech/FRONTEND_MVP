@@ -166,7 +166,7 @@ export function Dashboard() {
 
   const generateSkillsDistribution = (resumes) => {
     const skillCount = {};
-    const colors = ['#8B5CF6', '#14B8A6', '#3B82F6', '#F59E0B', '#EF4444'];
+    const colors = ['#84c0d8', '#f5f5db', '#84c0d8', '#F59E0B', '#EF4444'];
     
     resumes.forEach(resume => {
       if (resume.analysis?.skills) {
@@ -353,7 +353,7 @@ export function Dashboard() {
           </div>
           <button 
             onClick={refreshData}
-            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-200"
+            className="px-4 py-2 bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white rounded-xl hover:shadow-lg transition-all duration-200"
           >
             Try Again
           </button>
@@ -367,7 +367,7 @@ export function Dashboard() {
       {/* Header with Backend Status */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h1 className="text-3xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] bg-clip-text text-transparent">
             ATS Resume Analyzer
           </h1>
           <p className="text-gray-600 mt-1">AI-powered recruitment insights and candidate analysis.</p>
@@ -397,7 +397,7 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105" style={glassStyle}>
           <div className="flex items-center justify-between">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center shadow-lg">
               <FileText className="w-6 h-6 text-white" />
             </div>
             <div className="flex items-center text-green-600">
@@ -413,7 +413,7 @@ export function Dashboard() {
 
         <div className="rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105" style={glassStyle}>
           <div className="flex items-center justify-between">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center shadow-lg">
               <Users className="w-6 h-6 text-white" />
             </div>
             <div className="flex items-center text-green-600">
@@ -429,7 +429,7 @@ export function Dashboard() {
 
         <div className="rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105" style={glassStyle}>
           <div className="flex items-center justify-between">
-            <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center shadow-lg">
               <Star className="w-6 h-6 text-white" />
             </div>
             <div className="flex items-center text-green-600">
@@ -445,7 +445,7 @@ export function Dashboard() {
 
         <div className="rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105" style={glassStyle}>
           <div className="flex items-center justify-between">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center shadow-lg">
               <Clock className="w-6 h-6 text-white" />
             </div>
             <div className="flex items-center text-red-600">
@@ -478,14 +478,14 @@ export function Dashboard() {
               <Area 
                 type="monotone" 
                 dataKey="applications" 
-                stroke="#8B5CF6" 
+                stroke="#84c0d8" 
                 fill="url(#gradient1)" 
                 strokeWidth={2}
               />
               <defs>
                 <linearGradient id="gradient1" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.8} />
-                  <stop offset="100%" stopColor="#14B8A6" stopOpacity={0.1} />
+                  <stop offset="0%" stopColor="#84c0d8" stopOpacity={0.8} />
+                  <stop offset="100%" stopColor="#f5f5db" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
             </AreaChart>
@@ -546,7 +546,7 @@ export function Dashboard() {
                   <div className="flex items-center gap-2">
                     <div className="w-16 h-2 bg-gray-200 rounded-full">
                       <div 
-                        className="h-2 bg-gradient-to-r from-purple-500 to-teal-500 rounded-full transition-all duration-300"
+                        className="h-2 bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] rounded-full transition-all duration-300"
                         style={{ width: `${item.progress}%` }}
                       ></div>
                     </div>
@@ -578,7 +578,7 @@ export function Dashboard() {
               return (
                 <div key={index} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center">
                       <span className="text-white text-sm">
                         {resume.filename?.substring(0, 2).toUpperCase() || 'R'}
                       </span>
@@ -630,8 +630,8 @@ export function Dashboard() {
               <Bar dataKey="value" fill="url(#scoreGradient)" radius={8} />
               <defs>
                 <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#8B5CF6" />
-                  <stop offset="100%" stopColor="#14B8A6" />
+                  <stop offset="0%" stopColor="#84c0d8" />
+                  <stop offset="100%" stopColor="#f5f5db" />
                 </linearGradient>
               </defs>
             </BarChart>

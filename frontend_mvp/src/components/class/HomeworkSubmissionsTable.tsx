@@ -175,7 +175,7 @@ export function HomeworkSubmissionsTable({ classId, homeworkId, onMarkByAI }: Ho
         cell: (row: ClassHomeworkSubmissionResponse) => (
           <Button
             size="sm"
-            className="bg-gradient-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg"
+            className="bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white hover:shadow-lg"
             onClick={() => onMarkByAI?.(row)}
           >
             Mark by AI

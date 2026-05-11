@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { ModuleWithPermissions, ProfileResponse } from '@/lib/api';
@@ -97,11 +98,12 @@ export function AppSidebar({ modules, profile }: AppSidebarProps) {
       {/* Header */}
       <SidebarHeader className="p-6 border-b border-white/20">
         <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-teal-500 rounded-xl flex items-center justify-center shrink-0 group-data-[collapsible=icon]:hidden">
-            <BrainCircuit className="w-6 h-6 text-white" />
+          <div className="w-10 h-10  rounded-xl flex items-center justify-center shrink-0 group-data-[collapsible=icon]:hidden">
+            {/* <BrainCircuit className="w-6 h-6 text-white" /> */}
+             <Image src={'/logo.png'} alt="Logo" width={40} height={40} className="w-full h-full object-contain" />
           </div>
           <div className="flex-1 transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">
-            <h1 className="text-lg text-gray-800 whitespace-nowrap">ATS Analyzer</h1>
+            <h1 className="text-lg whitespace-nowrap font-bold bg-gradient-to-r from-[#5BDCE5] via-[#3ab8d1] to-[#0552B0] bg-clip-text text-transparent">Markflow</h1>
             {profile && (
               <p className="text-xs text-gray-600 whitespace-nowrap">{profile.full_name}</p>
             )}
@@ -127,7 +129,7 @@ export function AppSidebar({ modules, profile }: AppSidebarProps) {
                 className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-300
                   group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:gap-0
                   ${isActive
-                    ? 'bg-gradient-to-r from-purple-500 to-teal-500 text-white transform translate-x-1 group-data-[collapsible=icon]:translate-x-0'
+                    ? 'bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white transform translate-x-1 group-data-[collapsible=icon]:translate-x-0'
                     : 'text-gray-700 hover:bg-white/20 hover:translate-x-1 group-data-[collapsible=icon]:hover:translate-x-0'
                   }`}
                 title={item.label}

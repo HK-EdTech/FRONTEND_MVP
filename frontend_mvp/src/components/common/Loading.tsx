@@ -15,7 +15,7 @@ export function Loading({ isProcessing }: LoadingProps) {
   return (
     <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
       <div className="rounded-xl p-6" style={glassStyle}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5BDCE5] mx-auto"></div>
         <p className="mt-4 text-gray-700">Processing images...</p>
       </div>
     </div>

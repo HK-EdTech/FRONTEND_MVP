@@ -177,12 +177,12 @@ export function ResumeAnalyzer() {
 
   const fileUploadAreaStyle = {
     background: dragActive 
-      ? 'linear-gradient(145deg, rgba(139, 92, 246, 0.15), rgba(20, 184, 166, 0.15))'
-      : 'linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(20, 184, 166, 0.1))',
-    border: `2px dashed ${dragActive ? 'rgba(139, 92, 246, 0.6)' : 'rgba(139, 92, 246, 0.3)'}`,
+      ? 'linear-gradient(145deg, rgba(91, 220, 229, 0.15), rgba(5, 82, 176, 0.15))'
+      : 'linear-gradient(145deg, rgba(91, 220, 229, 0.1), rgba(5, 82, 176, 0.1))',
+    border: `2px dashed ${dragActive ? 'rgba(91, 220, 229, 0.6)' : 'rgba(91, 220, 229, 0.3)'}`,
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     transform: dragActive ? 'scale(1.02)' : 'scale(1)',
-    boxShadow: dragActive ? '0 16px 48px rgba(139, 92, 246, 0.2)' : '0 8px 24px rgba(139, 92, 246, 0.1)'
+    boxShadow: dragActive ? '0 16px 48px rgba(91, 220, 229, 0.2)' : '0 8px 24px rgba(91, 220, 229, 0.1)'
   };
 
   return (
@@ -190,7 +190,7 @@ export function ResumeAnalyzer() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h1 className="text-3xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] bg-clip-text text-transparent">
             Resume Analyzer
           </h1>
           <p className="text-gray-600 mt-1">Upload and analyze resumes with AI-powered insights.</p>
@@ -237,7 +237,7 @@ export function ResumeAnalyzer() {
         />
         
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-2xl flex items-center justify-center shadow-lg">
             <Upload className="w-8 h-8 text-white" />
           </div>
           
@@ -253,7 +253,7 @@ export function ResumeAnalyzer() {
             </p>
           </div>
           
-          <button className="px-6 py-3 bg-gradient-to-r from-purple-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
+          <button className="px-6 py-3 bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
             Choose Files
           </button>
         </div>
@@ -281,7 +281,7 @@ export function ResumeAnalyzer() {
             {uploadedFiles.map((file, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-lg flex items-center justify-center">
                     <FileText className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -322,7 +322,7 @@ export function ResumeAnalyzer() {
             <div key={result.id} className="rounded-2xl p-6 shadow-xl" style={glassStyle}>
               <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center">
                     <FileText className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -391,7 +391,7 @@ export function ResumeAnalyzer() {
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                       <div 
-                        className="bg-gradient-to-r from-purple-500 to-teal-500 h-2 rounded-full transition-all duration-300"
+                        className="bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] h-2 rounded-full transition-all duration-300"
                         style={{ width: `${section.score}%` }}
                       ></div>
                     </div>
@@ -419,7 +419,7 @@ export function ResumeAnalyzer() {
               </div>
 
               {/* Job Match */}
-              <div className="bg-gradient-to-r from-purple-50 to-teal-50 border border-purple-200 rounded-xl p-4">
+              <div className="bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] border border-purple-200 rounded-xl p-4">
                 <h4 className="text-lg text-gray-800 mb-3">Job Match Analysis</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -449,7 +449,7 @@ export function ResumeAnalyzer() {
       {/* Empty State */}
       {uploadedFiles.length === 0 && analysisResults.length === 0 && (
         <div className="text-center py-12">
-          <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-24 h-24 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-full flex items-center justify-center mx-auto mb-4">
             <FileSearch className="w-12 h-12 text-purple-500" />
           </div>
           <h3 className="text-xl text-gray-800 mb-2">No Resumes Uploaded</h3>

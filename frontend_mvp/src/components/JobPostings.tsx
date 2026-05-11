@@ -69,14 +69,14 @@ export function JobPostings() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h1 className="text-3xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] bg-clip-text text-transparent">
             Job Postings
           </h1>
           <p className="text-gray-600 mt-1">Manage job profiles and requirements for resume analysis.</p>
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+          className="px-6 py-3 bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white rounded-xl hover:shadow-lg transition-all duration-200 flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Create Job Profile
@@ -104,7 +104,7 @@ export function JobPostings() {
             <div key={job.id} className="rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300" style={glassStyle}>
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-teal-500 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center">
                     <Briefcase className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -193,7 +193,7 @@ export function JobPostings() {
         </div>
       ) : (
         <div className="text-center py-12">
-          <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-24 h-24 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-full flex items-center justify-center mx-auto mb-4">
             <Briefcase className="w-12 h-12 text-purple-500" />
           </div>
           <h3 className="text-xl text-gray-800 mb-2">No Job Profiles Found</h3>

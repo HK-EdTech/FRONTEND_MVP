@@ -274,13 +274,13 @@ export const InitialUploadArea = ({
         className="rounded-2xl p-8 text-center transition-all duration-300"
         style={{
           background: dragActive && !isMobile
-            ? 'linear-gradient(145deg, rgba(139, 92, 246, 0.15), rgba(20, 184, 166, 0.15))'
-            : 'linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(20, 184, 166, 0.1))',
-          border: `2px dashed ${dragActive && !isMobile ? 'rgba(139, 92, 246, 0.6)' : 'rgba(139, 92, 246, 0.3)'}`,
+            ? 'linear-gradient(145deg, rgba(91, 220, 229, 0.15), rgba(5, 82, 176, 0.15))'
+            : 'linear-gradient(145deg, rgba(91, 220, 229, 0.1), rgba(5, 82, 176, 0.1))',
+          border: `2px dashed ${dragActive && !isMobile ? 'rgba(91, 220, 229, 0.6)' : 'rgba(91, 220, 229, 0.3)'}`,
           transform: dragActive && !isMobile ? 'scale(1.02)' : 'scale(1)',
         }}
       >
-        <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Upload className="w-8 h-8 text-white" />
         </div>
         <h3 className="text-lg text-gray-800 mb-2">Scan or upload photos for one or more students&apos; homework</h3>
@@ -305,7 +305,7 @@ export const InitialUploadArea = ({
           {!isMobile ? (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:-translate-y-1 flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:-translate-y-1 flex items-center gap-2"
             >
               <Upload className="w-5 h-5" />
               Upload Picture
@@ -390,7 +390,7 @@ export const HomeworkListDisplay = ({
         <div
           className="rounded-xl p-2 border-2 border-dashed border-purple-300 hover:border-purple-500 transition-colors w-full aspect-[3/4]"
           style={{
-            background: 'rgba(139, 92, 246, 0.05)',
+            background: 'rgba(91, 220, 229, 0.05)',
           }}
         >
           {isMobile ? (
@@ -486,7 +486,7 @@ export const HomeworkDialog = ({
         className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[85vh] overflow-y-auto dialog-glass-white"
       >
         <DialogHeader>
-          <DialogTitle className="text-2xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
+          <DialogTitle className="text-2xl bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] bg-clip-text text-transparent">
             Uploaded Homework
           </DialogTitle>
         </DialogHeader>
@@ -563,7 +563,7 @@ export const HomeworkDialog = ({
           {/* Add More Sheets Box */}
           <div
             className="rounded-xl p-2 border-2 border-dashed border-purple-300 hover:border-purple-500 transition-colors aspect-[3/4]"
-            style={{ background: 'rgba(139, 92, 246, 0.05)' }}
+            style={{ background: 'rgba(91, 220, 229, 0.05)' }}
           >
             {isMobile ? (
               // Mobile: Two boxes stacked vertically

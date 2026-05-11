@@ -193,7 +193,7 @@ export function CandidateManagement() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h1 className="text-3xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] bg-clip-text text-transparent">
             Candidate Management
           </h1>
           <p className="text-gray-600 mt-1">
@@ -203,7 +203,7 @@ export function CandidateManagement() {
         <div className="flex items-center gap-4">
           <button
             onClick={exportSelected}
-            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] text-white rounded-xl hover:shadow-lg transition-all duration-200 flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
             Export
@@ -305,7 +305,7 @@ export function CandidateManagement() {
                     {/* Header */}
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-teal-500 rounded-xl flex items-center justify-center">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center">
                           <span className="text-white text-sm">
                             {candidate.analysis?.personalInfo?.name?.substring(0, 2).toUpperCase() || 
                              candidate.filename.substring(0, 2).toUpperCase()}
@@ -397,7 +397,7 @@ export function CandidateManagement() {
         </div>
       ) : (
         <div className="text-center py-12">
-          <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-24 h-24 bg-gradient-to-br from-[#5BDCE5] to-[#0552B0] rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="w-12 h-12 text-purple-500" />
           </div>
           <h3 className="text-xl text-gray-800 mb-2">

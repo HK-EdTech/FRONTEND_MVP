@@ -83,7 +83,7 @@ export function HomeworkSummaryCard({
       {actionLabel && onActionClick && (
         <Button
           type="button"
-          className="w-full mt-4 bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
+          className="w-full mt-4 bg-linear-to-r from-[#5BDCE5] to-[#0552B0] text-white hover:shadow-lg cursor-pointer"
           onClick={(event) => {
             event.stopPropagation();
             onActionClick();

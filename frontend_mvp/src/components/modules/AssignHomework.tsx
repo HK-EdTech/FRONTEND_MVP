@@ -381,7 +381,7 @@ export function AssignHomework() {
               </Button>
               <Button
                 size="sm"
-                className="p-0 rounded-lg bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
+                className="p-0 rounded-lg bg-linear-to-r from-[#5BDCE5] to-[#0552B0] text-white hover:shadow-lg cursor-pointer"
                 onClick={openCreateHomeworkDialog}
               >
                 <Plus className="w-4 h-4" /> Create Homework
@@ -424,7 +424,7 @@ export function AssignHomework() {
               </Button>
               <Button
                 size="sm"
-                className="p-0 rounded-lg bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
+                className="p-0 rounded-lg bg-linear-to-r from-[#5BDCE5] to-[#0552B0] text-white hover:shadow-lg cursor-pointer"
                 onClick={openCreateHomeworkDialog}
               >
                 <Plus className="w-4 h-4" /> Create Homework
@@ -473,7 +473,7 @@ export function AssignHomework() {
               </div>
               <Button
                 size="sm"
-                className="bg-linear-to-r from-purple-500 to-teal-500 text-white hover:shadow-lg cursor-pointer"
+                className="bg-linear-to-r from-[#5BDCE5] to-[#0552B0] text-white hover:shadow-lg cursor-pointer"
                 onClick={() => handleDialogOpenChange(true)}
               >
                 <Plus className="w-4 h-4 mr-1" />
