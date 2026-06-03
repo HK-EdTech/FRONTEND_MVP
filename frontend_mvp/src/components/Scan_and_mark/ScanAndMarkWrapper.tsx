@@ -66,7 +66,7 @@ export function ScanAndMarkWrapper({ homework_type }: ScanAndMarkWrapperProps) {
           {stageIndex === 1 && (
             <button
               onClick={() => setStageIndex(2)}
-              className="px-4 py-2 text-sm font-semibold rounded-xl text-slate-900 bg-gradient-to-r from-purple-500 to-teal-500 hover:from-purple-600 hover:to-teal-600 transition-colors"
+              className="px-4 py-2 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] hover:opacity-90 transition-opacity"
             >
               Submit
             </button>

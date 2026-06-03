@@ -67,30 +67,32 @@ export function UploadButton({ homework_type, setStageIndex, onProcessingChange 
           break;
       }
 
-      const uploadResult = await api.uploadForSignedUrl({
-        homework_pdf_entries,
-        homework_criteria: [homework_type, criteria],
-      });
+      // const uploadResult = await api.uploadForSignedUrl({
+      //   homework_pdf_entries,
+      //   homework_criteria: [homework_type, criteria],
+      // });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const uploadResult = { marking_scheme_upload: { file_name: '', signed_url: '' }, submission_uploads: [] };
 
-      try {
-        await api.uploadFileToSignedUrl(
-          uploadResult.marking_scheme_upload.signed_url,
-          onetimeCriteria.markingSchemePdf_and_metadata.file!,
-          onetimeCriteria.markingSchemePdf_and_metadata.content_type,
-        );
-      } catch {
-        throw new Error(`Marking scheme ${uploadResult.marking_scheme_upload.file_name} failed to upload`);
-      }
+      // try {
+      //   await api.uploadFileToSignedUrl(
+      //     uploadResult.marking_scheme_upload.signed_url,
+      //     onetimeCriteria.markingSchemePdf_and_metadata.file!,
+      //     onetimeCriteria.markingSchemePdf_and_metadata.content_type,
+      //   );
+      // } catch {
+      //   throw new Error(`Marking scheme ${uploadResult.marking_scheme_upload.file_name} failed to upload`);
+      // }
 
-      await Promise.all(
-        uploadResult.submission_uploads.map(async (sub, i) => {
-          try {
-            await api.uploadFileToSignedUrl(sub.signed_url, pdfs[i].file, 'application/pdf');
-          } catch {
-            throw new Error(`${sub.student_name}'s homework failed to upload`);
-          }
-        })
-      );
+      // await Promise.all(
+      //   uploadResult.submission_uploads.map(async (sub, i) => {
+      //     try {
+      //       await api.uploadFileToSignedUrl(sub.signed_url, pdfs[i].file, 'application/pdf');
+      //     } catch {
+      //       throw new Error(`${sub.student_name}'s homework failed to upload`);
+      //     }
+      //   })
+      // );
 
       setStageIndex(1);
     } catch (err) {
@@ -123,8 +125,7 @@ export function UploadButton({ homework_type, setStageIndex, onProcessingChange 
       <button
         onClick={() => setShowConfirmDialog(true)}
         disabled={isUploadDisabled}
-        className="px-4 py-2 text-sm font-semibold rounded-xl text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        style={glassStyle}
+        className="px-4 py-2 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
       >
         Upload
       </button>

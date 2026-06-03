@@ -64,11 +64,11 @@ export function AppSidebar({ modules, profile }: AppSidebarProps) {
 
     // SECOND: Hardcoded items
     items.push(
-      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, route: '/' },
-      { id: 'analyzer', label: 'Resume Analyzer', icon: FileSearch, route: '/analyzer' },
-      { id: 'candidates', label: 'Candidates', icon: Users, route: '/candidates' },
-      { id: 'jobs', label: 'Job Postings', icon: Briefcase, route: '/jobs' },
-      { id: 'analytics', label: 'Analytics', icon: BarChart3, route: '/analytics' },
+      // { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, route: '/' },
+      // { id: 'analyzer', label: 'Resume Analyzer', icon: FileSearch, route: '/analyzer' },
+      // { id: 'candidates', label: 'Candidates', icon: Users, route: '/candidates' },
+      // { id: 'jobs', label: 'Job Postings', icon: Briefcase, route: '/jobs' },
+      // { id: 'analytics', label: 'Analytics', icon: BarChart3, route: '/analytics' },
       { id: 'settings', label: 'Settings', icon: Settings, route: '/settings' }
     );
 
@@ -98,9 +98,8 @@ export function AppSidebar({ modules, profile }: AppSidebarProps) {
       {/* Header */}
       <SidebarHeader className="p-6 border-b border-white/20">
         <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0">
-          <div className="w-10 h-10  rounded-xl flex items-center justify-center shrink-0 group-data-[collapsible=icon]:hidden">
-            {/* <BrainCircuit className="w-6 h-6 text-white" /> */}
-             <Image src={'/logo.png'} alt="Logo" width={40} height={40} className="w-full h-full object-contain" />
+          <div className="w-10 h-10 bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center shrink-0 group-data-[collapsible=icon]:hidden">
+            <Image src={'/logo.png'} alt="Logo" width={28} height={28} className="w-7 h-7 object-contain" />
           </div>
           <div className="flex-1 transition-[opacity,visibility] duration-200 delay-[225ms] group-data-[collapsible=icon]:invisible group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:delay-0">
             <h1 className="text-lg whitespace-nowrap font-bold bg-gradient-to-r from-[#5BDCE5] via-[#3ab8d1] to-[#0552B0] bg-clip-text text-transparent">Markflow</h1>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -107,9 +108,9 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-gradient-to-r from-[#5BDCE5] to-[#0552B0] rounded-xl flex items-center justify-center">
-                <FileText className="w-6 h-6 text-white" />
+                <Image src="/logo.png" alt="Markflow Logo" width={32} height={32} className="w-8 h-8 object-contain" />
               </div>
-              <h1 className="text-3xl text-gray-900">ATS Resume Analyzer</h1>
+              <h1 className="text-3xl text-gray-900">Markflow</h1>
             </div>
             <p className="text-xl text-gray-600">
               Streamline your hiring process with intelligent resume analysis
@@ -122,8 +123,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <BarChart3 className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-lg text-gray-900">Advanced Analytics</h3>
-                <p className="text-gray-600">Get detailed insights into resume quality and ATS compatibility scores</p>
+                <h3 className="text-lg text-gray-900">In-depth Analysis</h3>
+                <p className="text-gray-600">Our AI delivers deep evaluation with detailed insights into student thinking process</p>
               </div>
             </div>
 
@@ -132,8 +133,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <Users className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <h3 className="text-lg text-gray-900">Bulk Processing</h3>
-                <p className="text-gray-600">Upload and analyze multiple resumes simultaneously for efficient screening</p>
+                <h3 className="text-lg text-gray-900">Intelligent Tracking</h3>
+                <p className="text-gray-600">Offer personalized concept mastery profile built from actual syllabus</p>
               </div>
             </div>
 
@@ -142,8 +143,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <FileText className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <h3 className="text-lg text-gray-900">Smart Recommendations</h3>
-                <p className="text-gray-600">Receive actionable feedback to improve resume quality and matching</p>
+                <h3 className="text-lg text-gray-900">OCR Accuracy</h3>
+                <p className="text-gray-600">Exceptional precise OCR scans dedicated for handwritten homework</p>
               </div>
             </div>
           </div>
@@ -159,7 +160,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               <CardDescription className="text-center transition-all duration-300">
                 {isSignUp
                   ? 'Sign up to start analyzing resumes'
-                  : 'Sign in to your ATS dashboard'
+                  : 'Sign in to your Markflow account'
                 }
               </CardDescription>
             </CardHeader>
