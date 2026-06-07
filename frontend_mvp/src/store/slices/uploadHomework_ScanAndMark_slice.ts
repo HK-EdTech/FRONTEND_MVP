@@ -71,6 +71,8 @@ export const convertHomeworkToPdfs = createAsyncThunk(
   async (homework_type: 'onetime' | 'class', { getState, dispatch }) => {
     const state = getState() as { uploadHomework_ScanAndMark: { homeworkList: UploadHomework[] } };
     const homeworkList = state.uploadHomework_ScanAndMark.homeworkList;
+    // CPU-bound work — Promise.all gives no speed benefit here (single-threaded).
+    // For large batches (100+ pages), consider Web Worker pool for true parallelism.
     const pdfs = await Promise.all(
       homeworkList.map(async (hw, i) => {
         const name = hw.studentName || `Student ${i + 1}`;

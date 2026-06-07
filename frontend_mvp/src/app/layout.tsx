@@ -63,7 +63,7 @@ export default function RootLayout({
         console.log(`[⏱ Layout] Cache MISS — calling supabase.auth.getSession()...`);
         const t1 = performance.now();
 
-        // No cache - check authentication and fetch profile
+        // No cache - use supabase package method to check localStorage to retrieve the JWT token
         const { data: { session }, error } = await supabase.auth.getSession();
 
         console.log(`[⏱ Layout] supabase.auth.getSession() done — ${(performance.now() - t1).toFixed(0)}ms (total +${(performance.now() - t0).toFixed(0)}ms)`);
@@ -83,12 +83,12 @@ export default function RootLayout({
         }
 
         // Fetch profile + modules from API
-        console.log(`[⏱ Layout] Calling api.getMyProfile(true)...`);
+        console.log(`[⏱ Layout] Calling api.get_my_profile(true)...`);
         const t2 = performance.now();
 
-        const response = await api.getMyProfile(true) as ProfileWithModulesResponse;
+        const response = await api.get_my_profile(true) as ProfileWithModulesResponse;
 
-        console.log(`[⏱ Layout] api.getMyProfile() done — ${(performance.now() - t2).toFixed(0)}ms (total +${(performance.now() - t0).toFixed(0)}ms)`);
+        console.log(`[⏱ Layout] api.get_my_profile() done — ${(performance.now() - t2).toFixed(0)}ms (total +${(performance.now() - t0).toFixed(0)}ms)`);
 
         setProfile(response.profile);
         setModules(response.modules || []);

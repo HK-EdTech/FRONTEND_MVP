@@ -291,8 +291,8 @@ export const api = {
    * Get current user's profile
    * @param includeModules - If true, returns profile + accessible modules in single response
    */
-  async getMyProfile(includeModules = false): Promise<ProfileResponse | ProfileWithModulesResponse> {
-    const endpoint = includeModules ? '/profile/me?include=modules' : '/profile/me';
+  async get_my_profile(includeModules = false): Promise<ProfileResponse | ProfileWithModulesResponse> {
+    const endpoint = includeModules ? '/profile/my_profile?include=modules' : '/profile/my_profile';
     return apiRequest<ProfileResponse | ProfileWithModulesResponse>(endpoint, {
       method: 'GET',
     });
@@ -302,7 +302,7 @@ export const api = {
    * Update current user's profile
    */
   async updateMyProfile(data: ProfileUpdateRequest): Promise<ProfileResponse> {
-    return apiRequest<ProfileResponse>('/profile/me', {
+    return apiRequest<ProfileResponse>('/profile/my_profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -312,7 +312,7 @@ export const api = {
    * Get current teacher's profile with classes
    */
   async getMyTeacherProfile(): Promise<TeacherProfileResponse> {
-    return apiRequest<TeacherProfileResponse>('/profile/me/teacher', {
+    return apiRequest<TeacherProfileResponse>('/profile/my_profile/teacher', {
       method: 'GET',
     });
   },

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ScanHomework } from '@/components/Scan_and_mark/Scan_and_upload/scanHomework';
 import { HomeworkCriteria_OnetimeUpload } from '@/components/Scan_and_mark/Scan_and_upload/homeworkCriteria/HomeworkCriteria_OnetimeUpload';
+import { HomeworkCriteria_Class } from '@/components/Scan_and_mark/Scan_and_upload/homeworkCriteria/HomeworkCriteria_Class';
 import { OcrAndAdjustDummy } from '@/components/Scan_and_mark/OCR_and_adjust/OcrAndAdjustDummy';
 import { ResultDummy } from '@/components/Scan_and_mark/Result/ResultDummy';
 import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
@@ -26,7 +27,12 @@ export function ScanAndMarkWrapper({ homework_type }: ScanAndMarkWrapperProps) {
   const CurrentStage = React.useMemo(() => {
     switch (stageIndex) {
       case 0:
-        return () => <ScanHomework HomeworkCriteria={HomeworkCriteria_OnetimeUpload} />;
+        switch (homework_type) {
+          case 'onetime':
+            return () => <ScanHomework HomeworkCriteria={HomeworkCriteria_OnetimeUpload} />;
+          case 'class':
+            // return () => <ScanHomework HomeworkCriteria={HomeworkCriteria_Class} />;
+        }
       case 1:
         return OcrAndAdjustDummy;
       default:

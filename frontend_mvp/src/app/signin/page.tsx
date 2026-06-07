@@ -74,7 +74,7 @@ export default function SignInPage() {
       // Successfully signed in - fetch profile and redirect based on default_route
       try {
         // Fetch profile with modules (single API call)
-        const response = await api.getMyProfile(true);
+        const response = await api.get_my_profile(true);
 
         // Cache profile data for layout to use (avoids duplicate API call)
         sessionStorage.setItem('cached_profile', JSON.stringify(response));
