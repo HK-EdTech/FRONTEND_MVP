@@ -67,13 +67,13 @@ export function UploadButton({ homework_type, setStageIndex, onProcessingChange 
           break;
       }
 
-      const uploadResult = await api.uploadForSignedUrl({
+      const uploadResult = await api.upload_for_signed_url({
         homework_pdf_entries,
         homework_criteria: [homework_type, criteria],
       });
 
       try {
-        await api.uploadFileToSignedUrl(
+        await api.upload_file_to_signed_url(
           uploadResult.marking_scheme_upload.signed_url,
           onetimeCriteria.markingSchemePdf_and_metadata.file!,
           onetimeCriteria.markingSchemePdf_and_metadata.content_type,
@@ -85,7 +85,7 @@ export function UploadButton({ homework_type, setStageIndex, onProcessingChange 
       await Promise.all(
         uploadResult.submission_uploads.map(async (sub, i) => {
           try {
-            await api.uploadFileToSignedUrl(sub.signed_url, pdfs[i].file, 'application/pdf');
+            await api.upload_file_to_signed_url(sub.signed_url, pdfs[i].file, 'application/pdf');
           } catch {
             throw new Error(`${sub.student_name}'s homework failed to upload`);
           }

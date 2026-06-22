@@ -488,14 +488,14 @@ export const api = {
   /**
    * Send homework PDF metadata for signed URL generation
    */
-  async uploadForSignedUrl(payload: UploadForSignedUrlRequest): Promise<UploadForSignedUrlResponse> {
+  async upload_for_signed_url(payload: UploadForSignedUrlRequest): Promise<UploadForSignedUrlResponse> {
     return apiRequest<UploadForSignedUrlResponse>('/scan-and-mark/upload-for-signed-url', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
   },
 
-  async uploadFileToSignedUrl(signedUrl: string, file: File, contentType: string): Promise<void> {
+  async upload_file_to_signed_url(signedUrl: string, file: File, contentType: string): Promise<void> {
     const response = await fetch(signedUrl, {
       method: 'PUT',
       headers: { 'Content-Type': contentType },
