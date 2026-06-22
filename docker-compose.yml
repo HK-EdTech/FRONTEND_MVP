@@ -4,14 +4,14 @@ services:
   # Frontend service
   frontend:
     build:
-      context: ./frontend_mvp
+      context: .
       target: development
     container_name: ats-frontend
     ports:
       - "3010:3010"
     volumes:
       # Mount source code for hot reload
-      - ./frontend_mvp:/app
+      - .:/app
       # Prevent node_modules from being overwritten
       - /app/node_modules
       - /app/.next

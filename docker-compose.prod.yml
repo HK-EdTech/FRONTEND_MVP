@@ -4,7 +4,7 @@ services:
   # Frontend service (Production)
   frontend:
     build:
-      context: ./frontend_mvp
+      context: .
       target: production
     container_name: ats-frontend-prod
     ports:

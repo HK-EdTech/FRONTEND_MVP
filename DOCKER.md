@@ -92,10 +92,11 @@ FRONTEND_MVP/
 ├── docker-compose.yml          # Development configuration
 ├── docker-compose.prod.yml     # Production configuration
 ├── DOCKER.md                   # This file
-└── frontend_mvp/
-    ├── Dockerfile              # Multi-stage Docker image
-    ├── .dockerignore          # Files to exclude from build
-    └── ...
+├── Dockerfile                  # Multi-stage Docker image
+├── .dockerignore               # Files to exclude from build
+├── package.json
+├── src/
+└── ...
 ```
 
 ## Troubleshooting
@@ -126,7 +127,7 @@ ports:
 
 ## Environment Variables
 
-Create a `.env` file in the `frontend_mvp` folder if needed:
+Create a `.env` file in the project root if needed:
 ```env
 NODE_ENV=development
 NEXT_PUBLIC_API_URL=http://localhost:8000
@@ -135,5 +136,5 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 Then add to `docker-compose.yml`:
 ```yaml
 env_file:
-  - ./frontend_mvp/.env
+  - ./.env
 ```
