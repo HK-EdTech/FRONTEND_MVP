@@ -72,14 +72,18 @@ export function UploadButton({ homework_type, setStageIndex, onProcessingChange 
         homework_criteria: [homework_type, criteria],
       });
 
-      try {
-        await api.upload_file_to_signed_url(
-          uploadResult.marking_scheme_upload.signed_url,
-          onetimeCriteria.markingSchemePdf_and_metadata.file!,
-          onetimeCriteria.markingSchemePdf_and_metadata.content_type,
-        );
-      } catch {
-        throw new Error(`Marking scheme ${uploadResult.marking_scheme_upload.file_name} failed to upload`);
+      // Marking scheme is optional — skip its upload when the backend returned null
+      const markingSchemeUpload = uploadResult.marking_scheme_upload;
+      if (markingSchemeUpload) {
+        try {
+          await api.upload_file_to_signed_url(
+            markingSchemeUpload.signed_url,
+            onetimeCriteria.markingSchemePdf_and_metadata.file!,
+            onetimeCriteria.markingSchemePdf_and_metadata.content_type,
+          );
+        } catch {
+          throw new Error(`Marking scheme ${markingSchemeUpload.file_name} failed to upload`);
+        }
       }
 
       await Promise.all(

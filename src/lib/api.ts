@@ -222,10 +222,11 @@ export interface SubmissionUpload {
 
 export interface UploadForSignedUrlResponse {
   homework_id: string;
+  // null when the homework has no marking scheme (optional)
   marking_scheme_upload: {
     file_name: string;
     signed_url: string;
-  };
+  } | null;
   submission_uploads: SubmissionUpload[];
 }
 
