@@ -215,9 +215,16 @@ export interface UploadForSignedUrlRequest {
 }
 
 export interface SubmissionUpload {
+  id: string;
   student_name: string;
   file_name: string;
   signed_url: string;
+}
+
+export interface ConfirmSubmissionResponse {
+  submission_id: string;
+  homework_id: string;
+  homework_status: string;
 }
 
 export interface UploadForSignedUrlResponse {
@@ -505,5 +512,14 @@ export const api = {
     if (!response.ok) {
       throw new ApiError(response.status, `Failed to upload file: ${file.name}`);
     }
+  },
+
+  /**
+   * Confirm a submission's upload — moves the submission and its homework to the 'ocr' phase
+   */
+  async confirm_submission_upload(submissionId: string): Promise<ConfirmSubmissionResponse> {
+    return apiRequest<ConfirmSubmissionResponse>(`/scan-and-mark/submissions/${submissionId}/confirm`, {
+      method: 'PATCH',
+    });
   },
 };

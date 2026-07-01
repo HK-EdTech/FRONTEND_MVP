@@ -110,7 +110,7 @@ export function HomeworkCriteria_OnetimeUpload({
 
         {/* Marking Scheme Upload */}
         <div>
-          <p className="text-sm text-gray-600 mb-2">Marking Scheme</p>
+          <p className="text-sm text-gray-600 mb-2">Marking Scheme (Optional)</p>
           <input
             ref={markingSchemeInputRef}
             type="file"

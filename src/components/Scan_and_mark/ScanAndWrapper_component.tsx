@@ -15,6 +15,7 @@ import {
 import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
 import { convertHomeworkToPdfs } from '@/store/slices/uploadHomework_ScanAndMark_slice';
 import { api, HomeworkPdfMetadata } from '@/lib/api';
+import { set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr } from '@/lib/scanAndMarkHelpers';
 import { RootState, AppDispatch } from '@/store/store';
 
 interface UploadButtonProps {
@@ -45,20 +46,26 @@ export function UploadButton({ homework_type, setStageIndex, onProcessingChange 
       let criteria: Record<string, unknown> = {};
       let pdfs: Awaited<ReturnType<typeof dispatch<ReturnType<typeof convertHomeworkToPdfs>>>>['payload'] = [];
 
+      // true only when the teacher actually picked a marking scheme file
+      const hasMarkingScheme = !!onetimeCriteria.markingSchemePdf_and_metadata.file;
+
       switch (homework_type) {
         case 'onetime': {
           pdfs = await dispatch(convertHomeworkToPdfs('onetime')).unwrap();
           homework_pdf_entries = pdfs.map(({ file: _file, ...meta }) => meta);
+          const ms = onetimeCriteria.markingSchemePdf_and_metadata;
           criteria = {
             homeworkTitle: onetimeCriteria.homeworkTitle,
             selectedLevel: onetimeCriteria.selectedLevel,
             selectedOneTimeSubject: onetimeCriteria.selectedOneTimeSubject,
-            markingScheme: {
-              file_name: onetimeCriteria.markingSchemePdf_and_metadata.file_name,
-              file_size: onetimeCriteria.markingSchemePdf_and_metadata.file_size,
-              content_type: onetimeCriteria.markingSchemePdf_and_metadata.content_type,
-              checksum: onetimeCriteria.markingSchemePdf_and_metadata.checksum,
-            },
+            markingScheme: hasMarkingScheme
+              ? {
+                  file_name: ms.file_name,
+                  file_size: ms.file_size,
+                  content_type: ms.content_type,
+                  checksum: ms.checksum,
+                }
+              : { file_name: '', file_size: 0, content_type: '', checksum: '' },
           };
           break;
         }
@@ -72,9 +79,10 @@ export function UploadButton({ homework_type, setStageIndex, onProcessingChange 
         homework_criteria: [homework_type, criteria],
       });
 
-      // Marking scheme is optional — skip its upload when the backend returned null
+      // Marking scheme is optional — only upload when the teacher provided one.
+      // If it fails, throw to abort the whole upload (the submissions below won't run).
       const markingSchemeUpload = uploadResult.marking_scheme_upload;
-      if (markingSchemeUpload) {
+      if (hasMarkingScheme && markingSchemeUpload) {
         try {
           await api.upload_file_to_signed_url(
             markingSchemeUpload.signed_url,
@@ -90,8 +98,10 @@ export function UploadButton({ homework_type, setStageIndex, onProcessingChange 
         uploadResult.submission_uploads.map(async (sub, i) => {
           try {
             await api.upload_file_to_signed_url(sub.signed_url, pdfs[i].file, 'application/pdf');
+            // PUT landed — move this submission (and homework) to 'ocr'
+            await set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr(sub.id);
           } catch {
-            throw new Error(`${sub.student_name}'s homework failed to upload`);
+            // isolate the failure — this submission's status stays 'uploading'
           }
         })
       );
