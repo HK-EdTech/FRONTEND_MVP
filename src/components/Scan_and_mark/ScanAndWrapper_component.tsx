@@ -89,8 +89,10 @@ export function UploadButton({ homework_type, setStageIndex, onProcessingChange 
             onetimeCriteria.markingSchemePdf_and_metadata.file!,
             onetimeCriteria.markingSchemePdf_and_metadata.content_type,
           );
+          // marking scheme landed — set its status to 'ocr'
+          await api.confirm_marking_scheme_upload(markingSchemeUpload.id);
         } catch {
-          throw new Error(`Marking scheme ${markingSchemeUpload.file_name} failed to upload`);
+          throw new Error('Something gone wrong. Please retry upload the marking scheme');
         }
       }
 

@@ -227,10 +227,16 @@ export interface ConfirmSubmissionResponse {
   homework_status: string;
 }
 
+export interface ConfirmMarkingSchemeResponse {
+  marking_scheme_id: string;
+  status: string;
+}
+
 export interface UploadForSignedUrlResponse {
   homework_id: string;
   // null when the homework has no marking scheme (optional)
   marking_scheme_upload: {
+    id: string;
     file_name: string;
     signed_url: string;
   } | null;
@@ -519,6 +525,15 @@ export const api = {
    */
   async confirm_submission_upload(submissionId: string): Promise<ConfirmSubmissionResponse> {
     return apiRequest<ConfirmSubmissionResponse>(`/scan-and-mark/submissions/${submissionId}/confirm`, {
+      method: 'PATCH',
+    });
+  },
+
+  /**
+   * Confirm the marking scheme's upload — moves it to the 'ocr' phase
+   */
+  async confirm_marking_scheme_upload(markingSchemeId: string): Promise<ConfirmMarkingSchemeResponse> {
+    return apiRequest<ConfirmMarkingSchemeResponse>(`/scan-and-mark/marking-scheme/${markingSchemeId}/confirm`, {
       method: 'PATCH',
     });
   },
