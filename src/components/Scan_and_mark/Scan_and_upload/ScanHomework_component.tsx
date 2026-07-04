@@ -359,8 +359,6 @@ export const HomeworkListDisplay = ({
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleInputChange} />
 
       <div>
-        {/* Title */}
-        <h2 className="text-lg text-gray-800 mb-4">Uploaded Students&apos; Homework</h2>
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
         {homeworkList.map((homework, index) => (

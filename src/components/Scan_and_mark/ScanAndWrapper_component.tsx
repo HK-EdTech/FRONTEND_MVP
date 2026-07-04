@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   AlertDialog,
@@ -20,11 +20,10 @@ import { RootState, AppDispatch } from '@/store/store';
 
 interface UploadButtonProps {
   homework_type: 'onetime' | 'class';
-  setStageIndex: React.Dispatch<React.SetStateAction<number>>;
   onProcessingChange: (isProcessing: boolean) => void;
 }
 
-export function UploadButton({ homework_type, setStageIndex, onProcessingChange }: UploadButtonProps) {
+export function UploadButton({ homework_type, onProcessingChange }: UploadButtonProps) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -107,8 +106,6 @@ export function UploadButton({ homework_type, setStageIndex, onProcessingChange 
           }
         })
       );
-
-      setStageIndex(1);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
