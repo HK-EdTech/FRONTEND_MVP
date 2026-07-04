@@ -41,17 +41,17 @@ export function UploadButton({ homework_type, onProcessingChange }: UploadButton
     setUploadError(null);
     onProcessingChange(true);
     try {
-      let homework_pdf_entries: HomeworkPdfMetadata[] = [];
+      let submissionMetadata: HomeworkPdfMetadata[] = [];
       let criteria: Record<string, unknown> = {};
-      let pdfs: Awaited<ReturnType<typeof dispatch<ReturnType<typeof convertHomeworkToPdfs>>>>['payload'] = [];
+      let submissionPdfs_and_Metadata: Awaited<ReturnType<typeof dispatch<ReturnType<typeof convertHomeworkToPdfs>>>>['payload'] = [];
 
       // true only when the teacher actually picked a marking scheme file
       const hasMarkingScheme = !!onetimeCriteria.markingSchemePdf_and_metadata.file;
 
       switch (homework_type) {
         case 'onetime': {
-          pdfs = await dispatch(convertHomeworkToPdfs('onetime')).unwrap();
-          homework_pdf_entries = pdfs.map(({ file: _file, ...meta }) => meta);
+          submissionPdfs_and_Metadata = await dispatch(convertHomeworkToPdfs('onetime')).unwrap();
+          submissionMetadata = submissionPdfs_and_Metadata.map(({ file: _file, ...meta }) => meta);
           const ms = onetimeCriteria.markingSchemePdf_and_metadata;
           criteria = {
             homeworkTitle: onetimeCriteria.homeworkTitle,
@@ -74,7 +74,7 @@ export function UploadButton({ homework_type, onProcessingChange }: UploadButton
       }
 
       const uploadResult = await api.upload_for_signed_url({
-        homework_pdf_entries,
+        homework_pdf_entries: submissionMetadata,
         homework_criteria: [homework_type, criteria],
       });
 
@@ -98,7 +98,7 @@ export function UploadButton({ homework_type, onProcessingChange }: UploadButton
       await Promise.all(
         uploadResult.submission_uploads.map(async (sub, i) => {
           try {
-            await api.upload_file_to_signed_url(sub.signed_url, pdfs[i].file, 'application/pdf');
+            await api.upload_file_to_signed_url(sub.signed_url, submissionPdfs_and_Metadata[i].file, 'application/pdf');
             // PUT landed — move this submission (and homework) to 'ocr'
             await set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr(sub.id);
           } catch {

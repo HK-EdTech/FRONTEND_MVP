@@ -30,8 +30,6 @@ export const store = configureStore({
           'uploadHomework_ScanAndMark.homeworkList',
           'Homeworkcriteria_onetimeUpload.markingSchemePdf_and_metadata',
           'Homeworkcrieria_class.markingSchemePdf_and_metadata',
-          'Homeworkcriteria_onetimeUpload.homeworkPdfs_and_metadata',
-          'Homeworkcrieria_class.homeworkPdfs_and_metadata',
         ],
         ignoredActions: [
           'uploadHomework_ScanAndMark/addHomework',
@@ -41,8 +39,6 @@ export const store = configureStore({
           'Homeworkcrieria_class/setMarkingSchemePdf_and_metadata',
           'uploadHomework_ScanAndMark/convertHomeworkToPdfs/fulfilled',
           'uploadHomework_ScanAndMark/convertHomeworkToPdfs/pending',
-          'Homeworkcriteria_onetimeUpload/setHomeworkPdfs_and_metadata',
-          'Homeworkcrieria_class/setHomeworkPdfs_and_metadata',
         ],
       },
     }),

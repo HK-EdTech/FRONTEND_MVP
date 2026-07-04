@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
 import {
@@ -18,15 +18,7 @@ import { Upload, X } from 'lucide-react';
 const LEVELS = ['Secondary 1', 'Secondary 2', 'Secondary 3', 'Secondary 4', 'Secondary 5', 'Secondary 6'];
 const ONE_TIME_SUBJECTS = ['Mathematics', 'English'];
 
-interface HomeworkCriteria_OnetimeUploadProps {
-  isUploadDisabled: boolean;
-  setIsUploadDisabled: (disabled: boolean) => void;
-}
-
-export function HomeworkCriteria_OnetimeUpload({
-  isUploadDisabled,
-  setIsUploadDisabled,
-}: HomeworkCriteria_OnetimeUploadProps) {
+export function HomeworkCriteria_OnetimeUpload() {
   const dispatch = useDispatch();
   const { homeworkTitle, selectedLevel, selectedOneTimeSubject, markingSchemePdf_and_metadata } = useSelector(
     (state: RootState) => state.Homeworkcriteria_onetimeUpload
@@ -46,11 +38,6 @@ export function HomeworkCriteria_OnetimeUpload({
       checksum,
     }));
   };
-
-  // Update isUploadDisabled whenever level or subject changes
-  useEffect(() => {
-    setIsUploadDisabled(!homeworkTitle || !selectedLevel || !selectedOneTimeSubject);
-  }, [homeworkTitle, selectedLevel, selectedOneTimeSubject, setIsUploadDisabled]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

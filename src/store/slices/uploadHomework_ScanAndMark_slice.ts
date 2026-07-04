@@ -68,11 +68,13 @@ const uploadHomework_ScanAndMark_slice = createSlice({
 
 export const convertHomeworkToPdfs = createAsyncThunk(
   'uploadHomework_ScanAndMark/convertHomeworkToPdfs',
-  async (homework_type: 'onetime' | 'class', { getState, dispatch }) => {
+  async (homework_type: 'onetime' | 'class', { getState }) => {
     const state = getState() as { uploadHomework_ScanAndMark: { homeworkList: UploadHomework[] } };
     const homeworkList = state.uploadHomework_ScanAndMark.homeworkList;
     // CPU-bound work — Promise.all gives no speed benefit here (single-threaded).
     // For large batches (100+ pages), consider Web Worker pool for true parallelism.
+    // PDFs are returned only (not stored in Redux): the criteria slice never read them,
+    // and keeping the File objects in state kept a second copy of every PDF alive.
     const pdfs = await Promise.all(
       homeworkList.map(async (hw, i) => {
         const name = hw.studentName || `Student ${i + 1}`;
@@ -81,13 +83,6 @@ export const convertHomeworkToPdfs = createAsyncThunk(
         return { file: pdfFile, file_name: pdfFile.name, file_size: pdfFile.size, content_type: 'application/pdf', checksum, student_name: name };
       })
     );
-    if (homework_type === 'onetime') {
-      const { setHomeworkPdfs_and_metadata } = await import('./homeworkCriteria_OnetimeUpload_slice');
-      dispatch(setHomeworkPdfs_and_metadata(pdfs));
-    } else {
-      const { setHomeworkPdfs_and_metadata } = await import('./homeworkCriteria_Class_slice');
-      dispatch(setHomeworkPdfs_and_metadata(pdfs));
-    }
     return pdfs;
   }
 );
