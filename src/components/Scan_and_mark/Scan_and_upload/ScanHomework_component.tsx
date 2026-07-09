@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
-import { addHomework, deleteHomework, addSheetsToHomework, reorderSheets, deleteSheet, setStudentName, type UploadHomework } from '@/store/slices/uploadHomework_ScanAndMark_slice';
+import { addSubmission, deleteSubmission, addSheetsToSubmission, reorderSheets, deleteSheet, setStudentName, type UploadSubmission } from '@/store/slices/ScanAndMark_homeworksubmissions_slice';
 import { RootState } from '@/store/store';
 import { handleUploadFiles } from '@/common/utility/handleUploadFiles';
 import { Loading } from '@/components/common/Loading';
@@ -14,19 +14,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-
-// TypeScript Interfaces
-export interface HomeworkSheet {
-  id: string;
-  file: File;
-  thumbnail: string; // Data URL
-}
-
-export interface StudentHomework {
-  id: string;
-  sheets: HomeworkSheet[];
-  createdAt: Date;
-}
 
 // Glassmorphism Style
 export const glassStyle = {
@@ -64,21 +51,21 @@ export const useIsMobile = (breakpoint = 768) => {
 
 // Poker Card Stacking Preview Component
 export const StackedSheetsPreview = ({
-  homework,
+  submission,
   studentNumber,
   isMobile,
 }: {
-  homework: { id: string; sheets: { id: string; file: File; thumbnail: string }[] };
+  submission: { id: string; sheets: { id: string; file: File; thumbnail: string }[] };
   studentNumber?: number;
   isMobile?: boolean;
 }) => {
   const dispatch = useDispatch();
-  const { sheets } = homework;
+  const { sheets } = submission;
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm(`Delete Student ${studentNumber}'s homework?`)) {
-      dispatch(deleteHomework(homework.id));
+      dispatch(deleteSubmission(submission.id));
     }
   };
 
@@ -223,7 +210,7 @@ export const InitialUploadArea = ({
   isMobile,
 }: InitialUploadAreaProps) => {
   const dispatch = useDispatch();
-  const homeworkList = useSelector((state: RootState) => state.uploadHomework_ScanAndMark.homeworkList);
+  const submissionList = useSelector((state: RootState) => state.ScanAndMark_homeworksubmissions.submissionList);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -235,7 +222,7 @@ export const InitialUploadArea = ({
     const sheets = await handleUploadFiles(Array.from(e.target.files));
     setIsProcessing(false);
     if (sheets.length === 0) return;
-    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: `Student ${homeworkList.length + 1}`, sheets }));
+    dispatch(addSubmission({ id: `homework-${Date.now()}`, studentName: `Student ${submissionList.length + 1}`, sheets }));
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -257,7 +244,7 @@ export const InitialUploadArea = ({
     const sheets = await handleUploadFiles(Array.from(e.dataTransfer.files));
     setIsProcessing(false);
     if (sheets.length === 0) return;
-    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: `Student ${homeworkList.length + 1}`, sheets }));
+    dispatch(addSubmission({ id: `homework-${Date.now()}`, studentName: `Student ${submissionList.length + 1}`, sheets }));
   };
 
   return (
@@ -327,18 +314,18 @@ export const InitialUploadArea = ({
   );
 };
 
-// Homework List Display Component
-interface HomeworkListDisplayProps {
-  onHomeworkClick: (homeworkId: string) => void;
+// Submission List Display Component
+interface SubmissionListDisplayProps {
+  onSubmissionClick: (id: string) => void;
   isMobile: boolean;
 }
 
-export const HomeworkListDisplay = ({
-  onHomeworkClick,
+export const SubmissionListDisplay = ({
+  onSubmissionClick,
   isMobile,
-}: HomeworkListDisplayProps) => {
+}: SubmissionListDisplayProps) => {
   const dispatch = useDispatch();
-  const homeworkList = useSelector((state: RootState) => state.uploadHomework_ScanAndMark.homeworkList);
+  const submissionList = useSelector((state: RootState) => state.ScanAndMark_homeworksubmissions.submissionList);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -349,7 +336,7 @@ export const HomeworkListDisplay = ({
     const sheets = await handleUploadFiles(Array.from(e.target.files));
     setIsProcessing(false);
     if (sheets.length === 0) return;
-    dispatch(addHomework({ id: `homework-${Date.now()}`, studentName: `Student ${homeworkList.length + 1}`, sheets }));
+    dispatch(addSubmission({ id: `homework-${Date.now()}`, studentName: `Student ${submissionList.length + 1}`, sheets }));
   };
 
   return (
@@ -361,30 +348,30 @@ export const HomeworkListDisplay = ({
       <div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-        {homeworkList.map((homework, index) => (
-          <div key={homework.id} className="flex flex-col gap-1">
+        {submissionList.map((submission, index) => (
+          <div key={submission.id} className="flex flex-col gap-1">
             <div
-              onClick={() => onHomeworkClick(homework.id)}
+              onClick={() => onSubmissionClick(submission.id)}
               className="group rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl w-full aspect-[3/4] cursor-pointer"
             >
               <StackedSheetsPreview
-                homework={homework}
+                submission={submission}
                 studentNumber={index + 1}
                 isMobile={isMobile}
               />
             </div>
             <input
               type="text"
-              value={homework.studentName}
+              value={submission.studentName}
               placeholder={`Student ${index + 1}`}
               onClick={(e) => e.stopPropagation()}
-              onChange={(e) => dispatch(setStudentName({ homeworkId: homework.id, studentName: e.target.value }))}
+              onChange={(e) => dispatch(setStudentName({ id: submission.id, studentName: e.target.value }))}
               className="w-full text-xs text-center rounded-md border border-gray-300 px-2 py-1 focus:outline-none focus:border-purple-400 bg-white/80 placeholder-gray-400"
             />
           </div>
         ))}
 
-        {/* Add New Student Homework Box */}
+        {/* Add New Student Submission Box */}
         <div
           className="rounded-xl p-2 border-2 border-dashed border-purple-300 hover:border-purple-500 transition-colors w-full aspect-[3/4]"
           style={{
@@ -431,41 +418,41 @@ export const HomeworkListDisplay = ({
   );
 };
 
-// Homework Dialog Component
-interface HomeworkDialogProps {
+// Submission Dialog Component
+interface SubmissionDialogProps {
   isOpen: boolean;
-  homework: UploadHomework | undefined;
+  submission: UploadSubmission | undefined;
   onClose: () => void;
   isMobile: boolean;
 }
 
-export const HomeworkDialog = ({
+export const SubmissionDialog = ({
   isOpen,
-  homework,
+  submission,
   onClose,
   isMobile,
-}: HomeworkDialogProps) => {
+}: SubmissionDialogProps) => {
   const dispatch = useDispatch();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  if (!isOpen || !homework) return null;
+  if (!isOpen || !submission) return null;
 
   const moveSheet = (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= homework.sheets.length) return;
+    if (toIndex < 0 || toIndex >= submission.sheets.length) return;
 
-    const newSheets = [...homework.sheets];
+    const newSheets = [...submission.sheets];
     const [movedSheet] = newSheets.splice(fromIndex, 1);
     newSheets.splice(toIndex, 0, movedSheet);
-    dispatch(reorderSheets({ homeworkId: homework.id, sheets: newSheets }));
+    dispatch(reorderSheets({ id: submission.id, sheets: newSheets }));
   };
 
   const handleDeleteSheet = (sheetId: string) => {
-    if (homework.sheets.length === 1) {
-      dispatch(deleteHomework(homework.id));
+    if (submission.sheets.length === 1) {
+      dispatch(deleteSubmission(submission.id));
       onClose();
       return;
     }
-    dispatch(deleteSheet({ homeworkId: homework.id, sheetId }));
+    dispatch(deleteSheet({ id: submission.id, sheetId }));
   };
 
   const handleAddSheets = async (files: File[]) => {
@@ -473,7 +460,7 @@ export const HomeworkDialog = ({
     const sheets = await handleUploadFiles(files);
     setIsProcessing(false);
     if (sheets.length === 0) return;
-    dispatch(addSheetsToHomework({ homeworkId: homework.id, sheets }));
+    dispatch(addSheetsToSubmission({ id: submission.id, sheets }));
   };
 
   return (
@@ -491,7 +478,7 @@ export const HomeworkDialog = ({
 
         {/* Sheets Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-          {homework.sheets.map((sheet, index) => (
+          {submission.sheets.map((sheet, index) => (
             <motion.div
               key={sheet.id}
               layoutId={sheet.id}
@@ -545,7 +532,7 @@ export const HomeworkDialog = ({
               )}
 
               {/* Right Arrow - Only show if not last sheet */}
-              {index < homework.sheets.length - 1 && (
+              {index < submission.sheets.length - 1 && (
                 <button
                   onClick={() => moveSheet(index, index + 1)}
                   className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/70 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all z-20

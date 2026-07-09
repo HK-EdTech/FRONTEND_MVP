@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
-import { convertHomeworkToPdfs } from '@/store/slices/uploadHomework_ScanAndMark_slice';
+import { convertSubmissionsToPdfs } from '@/store/slices/ScanAndMark_homeworksubmissions_slice';
 import { api, HomeworkPdfMetadata } from '@/lib/api';
 import { set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr } from '@/lib/scanAndMarkHelpers';
 import { RootState, AppDispatch } from '@/store/store';
@@ -29,13 +29,13 @@ export function UploadButton({ homework_type, onProcessingChange }: UploadButton
 
   const dispatch = useDispatch<AppDispatch>();
   const onetimeCriteria = useSelector((state: RootState) => state.Homeworkcriteria_onetimeUpload);
-  const homeworkList = useSelector((state: RootState) => state.uploadHomework_ScanAndMark.homeworkList);
+  const submissionList = useSelector((state: RootState) => state.ScanAndMark_homeworksubmissions.submissionList);
 
   const isUploadDisabled =
     !onetimeCriteria.homeworkTitle ||
     !onetimeCriteria.selectedLevel ||
     !onetimeCriteria.selectedOneTimeSubject ||
-    homeworkList.length === 0;
+    submissionList.length === 0;
 
   async function handleConfirmUpload(homework_type: 'onetime' | 'class') {
     setUploadError(null);
@@ -43,14 +43,14 @@ export function UploadButton({ homework_type, onProcessingChange }: UploadButton
     try {
       let submissionMetadata: HomeworkPdfMetadata[] = [];
       let criteria: Record<string, unknown> = {};
-      let submissionPdfs_and_Metadata: Awaited<ReturnType<typeof dispatch<ReturnType<typeof convertHomeworkToPdfs>>>>['payload'] = [];
+      let submissionPdfs_and_Metadata: Awaited<ReturnType<typeof dispatch<ReturnType<typeof convertSubmissionsToPdfs>>>>['payload'] = [];
 
       // true only when the teacher actually picked a marking scheme file
       const hasMarkingScheme = !!onetimeCriteria.markingSchemePdf_and_metadata.file;
 
       switch (homework_type) {
         case 'onetime': {
-          submissionPdfs_and_Metadata = await dispatch(convertHomeworkToPdfs('onetime')).unwrap();
+          submissionPdfs_and_Metadata = await dispatch(convertSubmissionsToPdfs('onetime')).unwrap();
           submissionMetadata = submissionPdfs_and_Metadata.map(({ file: _file, ...meta }) => meta);
           const ms = onetimeCriteria.markingSchemePdf_and_metadata;
           criteria = {

@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import Homeworkcriteria_onetimeUploadReducer from './slices/homeworkCriteria_OnetimeUpload_slice';
 import HomeworkCriteria_classReducer from './slices/homeworkCriteria_Class_slice';
-import uploadHomework_ScanAndMarkReducer from './slices/uploadHomework_ScanAndMark_slice';
+import ScanAndMark_homeworksubmissionsReducer from './slices/ScanAndMark_homeworksubmissions_slice';
 import classManagementReducer from './slices/classManagementSlice';
 import classDetailReducer from './slices/classDetailSlice';
 import classHomeworkReducer from './slices/classHomeworkSlice';
@@ -14,7 +14,7 @@ export const store = configureStore({
   reducer: {
     Homeworkcriteria_onetimeUpload: Homeworkcriteria_onetimeUploadReducer,
     Homeworkcrieria_class: HomeworkCriteria_classReducer,
-    uploadHomework_ScanAndMark: uploadHomework_ScanAndMarkReducer,
+    ScanAndMark_homeworksubmissions: ScanAndMark_homeworksubmissionsReducer,
     classManagement: classManagementReducer,
     classDetail: classDetailReducer,
     classHomework: classHomeworkReducer,
@@ -27,18 +27,18 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         ignoredPaths: [
-          'uploadHomework_ScanAndMark.homeworkList',
+          'ScanAndMark_homeworksubmissions.submissionList',
           'Homeworkcriteria_onetimeUpload.markingSchemePdf_and_metadata',
           'Homeworkcrieria_class.markingSchemePdf_and_metadata',
         ],
         ignoredActions: [
-          'uploadHomework_ScanAndMark/addHomework',
-          'uploadHomework_ScanAndMark/addSheetsToHomework',
-          'uploadHomework_ScanAndMark/reorderSheets',
+          'ScanAndMark_homeworksubmissions/addSubmission',
+          'ScanAndMark_homeworksubmissions/addSheetsToSubmission',
+          'ScanAndMark_homeworksubmissions/reorderSheets',
           'Homeworkcriteria_onetimeUpload/setMarkingSchemePdf_and_metadata',
           'Homeworkcrieria_class/setMarkingSchemePdf_and_metadata',
-          'uploadHomework_ScanAndMark/convertHomeworkToPdfs/fulfilled',
-          'uploadHomework_ScanAndMark/convertHomeworkToPdfs/pending',
+          'ScanAndMark_homeworksubmissions/convertSubmissionsToPdfs/fulfilled',
+          'ScanAndMark_homeworksubmissions/convertSubmissionsToPdfs/pending',
         ],
       },
     }),

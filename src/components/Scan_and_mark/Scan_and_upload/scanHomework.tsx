@@ -7,8 +7,8 @@ import { RootState } from '@/store/store';
 
 import {
   InitialUploadArea,
-  HomeworkListDisplay,
-  HomeworkDialog,
+  SubmissionListDisplay,
+  SubmissionDialog,
   useIsMobile,
 } from './ScanHomework_component';
 import { GlassPanel } from '@/components/common/GlassPanel';
@@ -19,14 +19,14 @@ interface ScanHomeworkProps {
 
 export function ScanHomework({ HomeworkCriteria }: ScanHomeworkProps) {
   // State Management
-  const homeworkListRoot = useSelector((state: RootState) => state.uploadHomework_ScanAndMark.homeworkList);
-  const [selectedHomeworkId, setSelectedHomeworkId] = useState<string | null>(null);
+  const submissionListRoot = useSelector((state: RootState) => state.ScanAndMark_homeworksubmissions.submissionList);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
 
   // Mobile Detection
   const isMobile = useIsMobile();
 
-  // Selected homework for dialog
-  const selectedHomework = homeworkListRoot.find(hw => hw.id === selectedHomeworkId);
+  // Selected submission for dialog
+  const selectedSubmission = submissionListRoot.find(s => s.id === selectedSubmissionId);
 
   return (
     <div className="space-y-6">
@@ -42,17 +42,17 @@ export function ScanHomework({ HomeworkCriteria }: ScanHomeworkProps) {
           layout
           transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
-          {/* Initial Upload Area (when no homework exists) */}
-          {homeworkListRoot.length === 0 && (
+          {/* Initial Upload Area (when no submission exists) */}
+          {submissionListRoot.length === 0 && (
             <InitialUploadArea
               isMobile={isMobile}
             />
           )}
 
-          {/* Homework List Display (when homework exists) */}
-          {homeworkListRoot.length > 0 && (
-            <HomeworkListDisplay
-              onHomeworkClick={(id) => setSelectedHomeworkId(id)}
+          {/* Submission List Display (when submissions exist) */}
+          {submissionListRoot.length > 0 && (
+            <SubmissionListDisplay
+              onSubmissionClick={(id) => setSelectedSubmissionId(id)}
               isMobile={isMobile}
             />
           )}
@@ -60,10 +60,10 @@ export function ScanHomework({ HomeworkCriteria }: ScanHomeworkProps) {
       </GlassPanel>
 
       {/* Dialog for Viewing and Adding Sheets */}
-      <HomeworkDialog
-        isOpen={!!selectedHomeworkId}
-        homework={selectedHomework}
-        onClose={() => setSelectedHomeworkId(null)}
+      <SubmissionDialog
+        isOpen={!!selectedSubmissionId}
+        submission={selectedSubmission}
+        onClose={() => setSelectedSubmissionId(null)}
         isMobile={isMobile}
       />
     </div>
