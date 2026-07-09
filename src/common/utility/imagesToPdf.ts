@@ -2,31 +2,33 @@ import { jsPDF } from 'jspdf';
 
 /**
  * Converts an array of image Files into a single PDF File.
- * Each image becomes one page, sized to fit the image's aspect ratio.
+ * Each image gets its own page sized to the image's exact dimensions, so every
+ * page fills correctly regardless of a portrait/landscape mix.
  */
 export async function imagesToPdf(images: File[], outputFileName: string = 'marking_scheme.pdf'): Promise<File> {
-  const doc = new jsPDF({ unit: 'px' });
-  // Remove the default blank first page after adding all images
-  let firstPage = true;
+  let doc: jsPDF | null = null;
 
   for (const imageFile of images) {
     const dataUrl = await readFileAsDataUrl(imageFile);
     const { width, height } = await getImageDimensions(dataUrl);
+    // Match orientation to the image so jsPDF does not swap the page dimensions.
+    const orientation: 'portrait' | 'landscape' = width >= height ? 'landscape' : 'portrait';
 
-    // Set page size to match image aspect ratio
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const scale = pageWidth / width;
-    const pageHeight = height * scale;
-
-    if (firstPage) {
-      // Resize the default first page
-      doc.internal.pageSize.setHeight(pageHeight);
-      firstPage = false;
+    if (!doc) {
+      doc = new jsPDF({ unit: 'px', format: [width, height], orientation });
     } else {
-      doc.addPage([pageWidth, pageHeight]);
+      doc.addPage([width, height], orientation);
     }
 
+    // Read the page's actual size back (jsPDF may normalize for orientation) so the
+    // image always fills the page instead of being clipped/shrunk.
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     doc.addImage(dataUrl, 'JPEG', 0, 0, pageWidth, pageHeight);
+  }
+
+  if (!doc) {
+    doc = new jsPDF({ unit: 'px' });
   }
 
   const pdfBlob = doc.output('blob');
