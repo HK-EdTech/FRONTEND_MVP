@@ -13,17 +13,20 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
-import { convertSubmissionsToPdfs } from '@/store/slices/ScanAndMark_homeworksubmissions_slice';
+import { convertSubmissionsToPdfs, setStatus_frontend, setSubmissionId } from '@/store/slices/ScanAndMark_homeworksubmissions_slice';
+import { setMarkingSchemeStatus_frontend, setMarkingSchemeId } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
 import { api, HomeworkPdfMetadata } from '@/lib/api';
-import { set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr } from '@/lib/scanAndMarkHelpers';
+import {
+  set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr,
+  set_frontend_and_backend_status_of_marking_scheme_to_ocr,
+} from '@/lib/scanAndMarkHelpers';
 import { RootState, AppDispatch } from '@/store/store';
 
 interface UploadButtonProps {
   homework_type: 'onetime' | 'class';
-  onProcessingChange: (isProcessing: boolean) => void;
 }
 
-export function UploadButton({ homework_type, onProcessingChange }: UploadButtonProps) {
+export function UploadButton({ homework_type }: UploadButtonProps) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -39,7 +42,6 @@ export function UploadButton({ homework_type, onProcessingChange }: UploadButton
 
   async function handleConfirmUpload(homework_type: 'onetime' | 'class') {
     setUploadError(null);
-    onProcessingChange(true);
     try {
       let submissionMetadata: HomeworkPdfMetadata[] = [];
       let criteria: Record<string, unknown> = {};
@@ -51,7 +53,7 @@ export function UploadButton({ homework_type, onProcessingChange }: UploadButton
       switch (homework_type) {
         case 'onetime': {
           submissionPdfs_and_Metadata = await dispatch(convertSubmissionsToPdfs('onetime')).unwrap();
-          submissionMetadata = submissionPdfs_and_Metadata.map(({ file: _file, ...meta }) => meta);
+          submissionMetadata = submissionPdfs_and_Metadata.map(({ file: _file, client_id: _client_id, ...meta }) => meta);
           const ms = onetimeCriteria.markingSchemePdf_and_metadata;
           criteria = {
             homeworkTitle: onetimeCriteria.homeworkTitle,
@@ -73,10 +75,31 @@ export function UploadButton({ homework_type, onProcessingChange }: UploadButton
           break;
       }
 
+      // mark each submission (and the marking scheme) 'uploading' right before requesting signed URLs
+      submissionPdfs_and_Metadata.forEach((entry) =>
+        dispatch(setStatus_frontend({ id: entry.client_id, status: 'uploading' }))
+      );
+      if (hasMarkingScheme) {
+        dispatch(setMarkingSchemeStatus_frontend('uploading'));
+      }
+
       const uploadResult = await api.upload_for_signed_url({
         homework_pdf_entries: submissionMetadata,
         homework_criteria: [homework_type, criteria],
       });
+
+      // store each backend submission id on the matching local submission (by client id)
+      uploadResult.submission_uploads.forEach((sub, i) =>
+        dispatch(setSubmissionId({
+          id: submissionPdfs_and_Metadata[i].client_id,
+          submission_id: sub.id,
+        }))
+      );
+
+      // store the backend marking scheme id
+      if (uploadResult.marking_scheme_upload) {
+        dispatch(setMarkingSchemeId(uploadResult.marking_scheme_upload.id));
+      }
 
       // Marking scheme is optional — only upload when the teacher provided one.
       // If it fails, throw to abort the whole upload (the submissions below won't run).
@@ -88,8 +111,8 @@ export function UploadButton({ homework_type, onProcessingChange }: UploadButton
             onetimeCriteria.markingSchemePdf_and_metadata.file!,
             onetimeCriteria.markingSchemePdf_and_metadata.content_type,
           );
-          // marking scheme landed — set its status to 'ocr'
-          await api.confirm_marking_scheme_upload(markingSchemeUpload.id);
+          // marking scheme landed — set its status to 'ocr' (backend + frontend)
+          await set_frontend_and_backend_status_of_marking_scheme_to_ocr(markingSchemeUpload.id, dispatch);
         } catch {
           throw new Error('Something gone wrong. Please retry upload the marking scheme');
         }
@@ -99,8 +122,12 @@ export function UploadButton({ homework_type, onProcessingChange }: UploadButton
         uploadResult.submission_uploads.map(async (sub, i) => {
           try {
             await api.upload_file_to_signed_url(sub.signed_url, submissionPdfs_and_Metadata[i].file, 'application/pdf');
-            // PUT landed — move this submission (and homework) to 'ocr'
-            await set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr(sub.id);
+            // PUT landed — move this submission (and homework) to 'ocr' (backend + frontend)
+            await set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr(
+              sub.id,
+              submissionPdfs_and_Metadata[i].client_id,
+              dispatch,
+            );
           } catch {
             // isolate the failure — this submission's status stays 'uploading'
           }
@@ -108,8 +135,6 @@ export function UploadButton({ homework_type, onProcessingChange }: UploadButton
       );
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Upload failed');
-    } finally {
-      onProcessingChange(false);
     }
   }
 

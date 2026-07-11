@@ -7,6 +7,8 @@ export type UploadSubmission = {
   studentName: string;
   sheets: { id: string; file: File; thumbnail: string }[];
   createdAt: string;
+  submission_id: string | null;   // backend submission id, null until uploaded
+  status_frontend: string;        // prepare_upload -> uploading -> ocr
 };
 
 const initialState = {
@@ -22,9 +24,12 @@ const ScanAndMark_homeworksubmissions_slice = createSlice({
       studentName: string;
       sheets: { id: string; file: File; thumbnail: string }[];
     }>) {
+      console.log(`${action.payload.id} has created and status is prepare_upload`);
       state.submissionList.push({
         ...action.payload,
         createdAt: new Date().toISOString(),
+        submission_id: null,
+        status_frontend: 'prepare_upload',
       });
     },
     addSheetsToSubmission(state, action: PayloadAction<{
@@ -60,6 +65,20 @@ const ScanAndMark_homeworksubmissions_slice = createSlice({
         s.studentName = action.payload.studentName;
       }
     },
+    setStatus_frontend(state, action: PayloadAction<{ id: string; status: string }>) {
+      const s = state.submissionList.find(x => x.id === action.payload.id);
+      if (s) {
+        s.status_frontend = action.payload.status;
+        console.log(`${action.payload.id} status is ${action.payload.status}`);
+      }
+    },
+    setSubmissionId(state, action: PayloadAction<{ id: string; submission_id: string }>) {
+      const s = state.submissionList.find(x => x.id === action.payload.id);
+      if (s) {
+        s.submission_id = action.payload.submission_id;
+        console.log(`${action.payload.id} submission_id is ${action.payload.submission_id}`);
+      }
+    },
     resetAll() {
       return initialState;
     },
@@ -80,7 +99,7 @@ export const convertSubmissionsToPdfs = createAsyncThunk(
         const name = s.studentName || `Student ${i + 1}`;
         const pdfFile = await imagesToPdf(s.sheets.map(sheet => sheet.file), `${name}.pdf`);
         const checksum = await computeSha256(pdfFile);
-        return { file: pdfFile, file_name: pdfFile.name, file_size: pdfFile.size, content_type: 'application/pdf', checksum, student_name: name };
+        return { file: pdfFile, client_id: s.id, file_name: pdfFile.name, file_size: pdfFile.size, content_type: 'application/pdf', checksum, student_name: name };
       })
     );
     return pdfs;
@@ -94,6 +113,8 @@ export const {
   deleteSubmission,
   deleteSheet,
   setStudentName,
+  setStatus_frontend,
+  setSubmissionId,
   resetAll,
 } = ScanAndMark_homeworksubmissions_slice.actions;
 

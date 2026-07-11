@@ -18,6 +18,8 @@ const initialState = {
     file_size: 0,
     content_type: '',
     checksum: '',
+    status_frontend: '',
+    marking_scheme_id: null as string | null,
   },
 };
 
@@ -35,10 +37,23 @@ const homeworkCriteria_OnetimeUpload_slice = createSlice({
       state.selectedOneTimeSubject = action.payload;
     },
     setMarkingSchemePdf_and_metadata(state, action: PayloadAction<MarkingSchemePdfEntry>) {
-      state.markingSchemePdf_and_metadata = action.payload;
+      state.markingSchemePdf_and_metadata = {
+        ...action.payload,
+        status_frontend: 'prepare_upload',
+        marking_scheme_id: null,
+      };
+      console.log(`marking scheme ${action.payload.file_name} added and status is prepare_upload`);
     },
     clearMarkingSchemePdf_and_metadata(state) {
-      state.markingSchemePdf_and_metadata = { file: null, file_name: '', file_size: 0, content_type: '', checksum: '' };
+      state.markingSchemePdf_and_metadata = { file: null, file_name: '', file_size: 0, content_type: '', checksum: '', status_frontend: '', marking_scheme_id: null };
+    },
+    setMarkingSchemeStatus_frontend(state, action: PayloadAction<string>) {
+      state.markingSchemePdf_and_metadata.status_frontend = action.payload;
+      console.log(`marking scheme status is ${action.payload}`);
+    },
+    setMarkingSchemeId(state, action: PayloadAction<string>) {
+      state.markingSchemePdf_and_metadata.marking_scheme_id = action.payload;
+      console.log(`marking scheme marking_scheme_id is ${action.payload}`);
     },
     resetAll() {
       return initialState;
@@ -52,6 +67,8 @@ export const {
   setSelectedOneTimeSubject,
   setMarkingSchemePdf_and_metadata,
   clearMarkingSchemePdf_and_metadata,
+  setMarkingSchemeStatus_frontend,
+  setMarkingSchemeId,
   resetAll,
 } = homeworkCriteria_OnetimeUpload_slice.actions;
 
