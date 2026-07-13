@@ -41,6 +41,24 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Scan & Mark status colors — primitives (raw palette) */
+  --sand: #a98c6c;
+  --cyan: #0e8fb5;
+  --azure: #1770bb;
+  --cobalt: #1c4db1;
+  --grey-disabled: #c3c7cd;
+  /* Scan & Mark status groups — semantic (reference primitives) */
+  --status-draft: var(--sand);
+  --status-check-scan: var(--cyan);
+  --status-mark-ai: var(--azure);
+  --status-completed: var(--cobalt);
+  --status-disabled: var(--grey-disabled);
+  /* Scan & Mark triage-chip tokens (named by role/state) */
+  --chip-inactive-text: #5c6b73;                     /* muted text on an inactive chip */
+  --chip-inactive-border: rgba(124, 115, 146, 0.25); /* border on an inactive chip */
+  --chip-active-count-bg: rgba(255, 255, 255, 0.28); /* count-pill bg when the chip is active */
+  --chip-oncolor-text: #ffffff;                      /* white text on a colored (active) chip / count pill */
 }
 
 .dark {
@@ -301,6 +319,18 @@ html {
   50% {
     opacity: 0.5;
   }
+}
+
+/* Scan & Mark card animations */
+@keyframes submissioncloudarrow {
+  0%   { transform: translateY(7px);  opacity: 0; }
+  40%  { opacity: 1; }
+  100% { transform: translateY(-9px); opacity: 0; }
+}
+
+@keyframes submissionscan {
+  0%   { transform: translateY(-130%); }
+  100% { transform: translateY(340%); }
 }
 
 /* ===== UTILITY CLASSES ===== */

@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import Homeworkcriteria_onetimeUploadReducer from './slices/homeworkCriteria_OnetimeUpload_slice';
 import HomeworkCriteria_classReducer from './slices/homeworkCriteria_Class_slice';
 import ScanAndMark_homeworksubmissionsReducer from './slices/ScanAndMark_homeworksubmissions_slice';
+import scanAndMark_statusGroupsReducer from './slices/scanAndMark_statusGroups_slice';
 import classManagementReducer from './slices/classManagementSlice';
 import classDetailReducer from './slices/classDetailSlice';
 import classHomeworkReducer from './slices/classHomeworkSlice';
@@ -15,6 +16,7 @@ export const store = configureStore({
     Homeworkcriteria_onetimeUpload: Homeworkcriteria_onetimeUploadReducer,
     Homeworkcrieria_class: HomeworkCriteria_classReducer,
     ScanAndMark_homeworksubmissions: ScanAndMark_homeworksubmissionsReducer,
+    scanAndMark_statusGroups: scanAndMark_statusGroupsReducer,
     classManagement: classManagementReducer,
     classDetail: classDetailReducer,
     classHomework: classHomeworkReducer,

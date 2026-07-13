@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 import { addSubmission, deleteSubmission, addSheetsToSubmission, reorderSheets, deleteSheet, setStudentName, type UploadSubmission } from '@/store/slices/ScanAndMark_homeworksubmissions_slice';
+import { selectGroupsWithCounts, setActiveGroup, groupForStatus } from '@/store/slices/scanAndMark_statusGroups_slice';
+import { statusColors, chipColors } from '@/theme/statusColors';
 import { RootState } from '@/store/store';
 import { handleUploadFiles } from '@/common/utility/handleUploadFiles';
 import { Loading } from '@/components/common/Loading';
@@ -326,9 +328,16 @@ export const SubmissionListDisplay = ({
 }: SubmissionListDisplayProps) => {
   const dispatch = useDispatch();
   const submissionList = useSelector((state: RootState) => state.ScanAndMark_homeworksubmissions.submissionList);
+  const groupsWithCounts = useSelector(selectGroupsWithCounts);
+  const activeGroup = useSelector((state: RootState) => state.scanAndMark_statusGroups.activeGroup);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Filter the grid to the active group; keep each submission's original index so its number is stable.
+  const visibleSubmissions = submissionList
+    .map((submission, index) => ({ submission, index }))
+    .filter(({ submission }) => !activeGroup || groupForStatus(submission.status_frontend)?.key === activeGroup);
 
   const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -346,9 +355,41 @@ export const SubmissionListDisplay = ({
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleInputChange} />
 
       <div>
+        {/* Triage bar — filter submissions by status group */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {groupsWithCounts.map((g) => {
+            const empty = g.count === 0;
+            const active = activeGroup === g.key;
+            const dotColor = empty ? statusColors.disabled : g.color;
+            return (
+              <button
+                key={g.key}
+                disabled={empty}
+                onClick={() => dispatch(setActiveGroup(active ? null : g.key))}
+                style={{
+                  background: active ? g.color : 'transparent',
+                  color: active ? chipColors.onColorText : empty ? statusColors.disabled : chipColors.inactiveText,
+                  borderColor: active ? g.color : empty ? statusColors.disabled : chipColors.inactiveBorder,
+                  opacity: empty ? 0.55 : 1,
+                  cursor: empty ? 'not-allowed' : 'pointer',
+                }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border-2 text-xs font-semibold transition-all"
+              >
+                <span style={{ background: dotColor }} className="w-2 h-2 rounded-full" />
+                <span>{g.label}</span>
+                <span
+                  style={{ background: active ? chipColors.activeCountBg : dotColor, color: chipColors.onColorText }}
+                  className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-bold"
+                >
+                  {g.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-        {submissionList.map((submission, index) => (
+        {visibleSubmissions.map(({ submission, index }) => (
           <div key={submission.id} className="flex flex-col gap-1">
             <div
               onClick={() => onSubmissionClick(submission.id)}
