@@ -7,7 +7,7 @@ import { statusColors, chipColors } from '@/theme/statusColors';
 import { RootState } from '@/store/store';
 import { handleUploadFiles } from '@/common/utility/handleUploadFiles';
 import { Loading } from '@/components/common/Loading';
-import { Camera, Upload, Plus, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { Camera, Upload, Plus, ChevronLeft, ChevronRight, Trash2, Cloud, ArrowUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
@@ -54,41 +54,80 @@ export const useIsMobile = (breakpoint = 768) => {
 // Poker Card Stacking Preview Component
 export const StackedSheetsPreview = ({
   submission,
-  studentNumber,
   isMobile,
 }: {
-  submission: { id: string; sheets: { id: string; file: File; thumbnail: string }[] };
-  studentNumber?: number;
+  submission: { id: string; sheets: { id: string; file: File; thumbnail: string }[]; status_frontend: string };
   isMobile?: boolean;
 }) => {
   const dispatch = useDispatch();
   const { sheets } = submission;
 
+  // The status group drives the card's color + chip; the sub-state drives the animation.
+  const group = groupForStatus(submission.status_frontend);
+  const groupColor = group ? group.color : statusColors.disabled;
+  const cardShadow = `0 4px 14px color-mix(in srgb, ${groupColor} 22%, transparent)`;
+
+  const statusChip = group ? (
+    <div
+      className="absolute top-1 left-1 z-30 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold"
+      style={{ background: groupColor, color: chipColors.onColorText }}
+    >
+      {group.label}
+    </div>
+  ) : null;
+
+  const animationOverlay =
+    submission.status_frontend === 'uploading' ? (
+      // cloud with an arrow rising into it
+      <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+        <div className="relative" style={{ color: groupColor }}>
+          <Cloud className="w-9 h-9" strokeWidth={2} />
+          <ArrowUp
+            className="w-4 h-4 absolute left-1/2 -translate-x-1/2"
+            strokeWidth={3}
+            style={{ bottom: '4px', animation: 'submissioncloudarrow 1.2s ease-in-out infinite' }}
+          />
+        </div>
+      </div>
+    ) : submission.status_frontend === 'ocr' ? (
+      // scanning sweep (a light bar passing top→bottom)
+      <div className="absolute inset-0 z-20 overflow-hidden rounded-lg pointer-events-none">
+        <div
+          className="absolute left-0 right-0"
+          style={{
+            height: '22%',
+            background: `linear-gradient(to bottom, transparent, color-mix(in srgb, ${groupColor} 45%, transparent), transparent)`,
+            animation: 'submissionscan 1.3s linear infinite',
+          }}
+        />
+      </div>
+    ) : null;
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm(`Delete Student ${studentNumber}'s homework?`)) {
+    if (window.confirm('Delete this homework?')) {
       dispatch(deleteSubmission(submission.id));
     }
   };
 
   if (sheets.length === 1) {
     return (
-      <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-300 group-hover:border-purple-400 transition-colors">
+      <div
+        className="relative w-full h-full rounded-lg overflow-hidden border-2 transition-colors"
+        style={{ borderColor: groupColor, boxShadow: cardShadow }}
+      >
         <img
           src={sheets[0].thumbnail}
           alt="Homework Sheet"
           className="w-full h-full object-cover"
         />
-        {/* Student number watermark */}
-        {studentNumber !== undefined && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-8xl font-bold opacity-60" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>
-              {studentNumber}
-            </div>
-          </div>
-        )}
+        {statusChip}
+        {animationOverlay}
         {/* Sheet count badge */}
-        <div className="absolute top-1 right-1 bg-purple-400 text-white rounded-lg w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
+        <div
+          className="absolute top-1 right-1 text-white rounded-lg w-7 h-7 flex items-center justify-center text-sm font-bold z-10"
+          style={{ background: groupColor }}
+        >
           {sheets.length}
         </div>
 
@@ -111,13 +150,14 @@ export const StackedSheetsPreview = ({
       {/* Third sheet (if exists) - most offset */}
       {sheets.length > 2 && (
         <div
-          className="absolute rounded-lg overflow-hidden border-2 border-gray-300 group-hover:border-purple-400 shadow transition-colors"
+          className="absolute rounded-lg overflow-hidden border-2 shadow transition-colors"
           style={{
             width: 'calc(100% - 8px)',
             height: 'calc(100% - 8px)',
             top: '-8px',
             left: '-8px',
             zIndex: 0,
+            borderColor: groupColor,
           }}
         >
           <img
@@ -130,13 +170,14 @@ export const StackedSheetsPreview = ({
 
       {/* Second sheet - middle layer */}
       <div
-        className="absolute rounded-lg overflow-hidden border-2 border-gray-300 group-hover:border-purple-400 shadow transition-colors"
+        className="absolute rounded-lg overflow-hidden border-2 shadow transition-colors"
         style={{
           width: 'calc(100% - 4px)',
           height: 'calc(100% - 4px)',
           top: '-4px',
           left: '-4px',
           zIndex: 1,
+          borderColor: groupColor,
         }}
       >
         <img
@@ -148,8 +189,8 @@ export const StackedSheetsPreview = ({
 
       {/* Front card (first sheet) */}
       <div
-        className="absolute inset-0 rounded-lg overflow-hidden border-2 border-gray-400 group-hover:border-purple-500 shadow-lg transition-colors"
-        style={{ zIndex: 2 }}
+        className="absolute inset-0 rounded-lg overflow-hidden border-2 transition-colors"
+        style={{ zIndex: 2, borderColor: groupColor, boxShadow: cardShadow }}
       >
         <img
           src={sheets[0].thumbnail}
@@ -158,17 +199,15 @@ export const StackedSheetsPreview = ({
         />
       </div>
 
-      {/* Student number watermark */}
-      {studentNumber !== undefined && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 3 }}>
-          <div className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-8xl font-bold opacity-60" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>
-            {studentNumber}
-          </div>
-        </div>
-      )}
+      {/* Status chip + sub-state animation (parent level so they sit above the sheets) */}
+      {statusChip}
+      {animationOverlay}
 
       {/* Sheet count badge - always show */}
-      <div className="absolute top-1 right-1 bg-purple-400 text-white rounded-lg w-7 h-7 flex items-center justify-center text-sm font-bold z-10">
+      <div
+        className="absolute top-1 right-1 text-white rounded-lg w-7 h-7 flex items-center justify-center text-sm font-bold z-10"
+        style={{ background: groupColor }}
+      >
         {sheets.length}
       </div>
 
@@ -357,6 +396,33 @@ export const SubmissionListDisplay = ({
       <div>
         {/* Triage bar — filter submissions by status group */}
         <div className="flex flex-wrap gap-2 mb-4">
+          {(() => {
+            const empty = submissionList.length === 0;
+            const active = activeGroup === null;
+            return (
+              <button
+                disabled={empty}
+                onClick={() => dispatch(setActiveGroup(null))}
+                style={{
+                  background: chipColors.bg,
+                  color: empty ? statusColors.disabled : active ? chipColors.allAccent : chipColors.inactiveText,
+                  borderColor: active ? chipColors.allAccent : empty ? statusColors.disabled : chipColors.inactiveBorder,
+                  boxShadow: active ? `0 1px 6px color-mix(in srgb, ${chipColors.allAccent} 30%, transparent)` : 'none',
+                  opacity: empty ? 0.55 : 1,
+                  cursor: empty ? 'not-allowed' : 'pointer',
+                }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[11px] border text-xs font-semibold transition-all"
+              >
+                <span>All</span>
+                <span
+                  style={{ background: empty ? statusColors.disabled : chipColors.allAccent, color: chipColors.onColorText }}
+                  className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-bold"
+                >
+                  {submissionList.length}
+                </span>
+              </button>
+            );
+          })()}
           {groupsWithCounts.map((g) => {
             const empty = g.count === 0;
             const active = activeGroup === g.key;
@@ -367,18 +433,19 @@ export const SubmissionListDisplay = ({
                 disabled={empty}
                 onClick={() => dispatch(setActiveGroup(active ? null : g.key))}
                 style={{
-                  background: active ? g.color : 'transparent',
-                  color: active ? chipColors.onColorText : empty ? statusColors.disabled : chipColors.inactiveText,
+                  background: chipColors.bg,
+                  color: empty ? statusColors.disabled : active ? g.color : chipColors.inactiveText,
                   borderColor: active ? g.color : empty ? statusColors.disabled : chipColors.inactiveBorder,
+                  boxShadow: active ? `0 1px 6px color-mix(in srgb, ${g.color} 30%, transparent)` : 'none',
                   opacity: empty ? 0.55 : 1,
                   cursor: empty ? 'not-allowed' : 'pointer',
                 }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border-2 text-xs font-semibold transition-all"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[11px] border text-xs font-semibold transition-all"
               >
                 <span style={{ background: dotColor }} className="w-2 h-2 rounded-full" />
                 <span>{g.label}</span>
                 <span
-                  style={{ background: active ? chipColors.activeCountBg : dotColor, color: chipColors.onColorText }}
+                  style={{ background: dotColor, color: chipColors.onColorText }}
                   className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-bold"
                 >
                   {g.count}
@@ -397,7 +464,6 @@ export const SubmissionListDisplay = ({
             >
               <StackedSheetsPreview
                 submission={submission}
-                studentNumber={index + 1}
                 isMobile={isMobile}
               />
             </div>

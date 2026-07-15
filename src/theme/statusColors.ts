@@ -17,8 +17,9 @@ export type StatusGroupKey = keyof typeof statusColors;
 
 /** Triage-chip colors, named by role/state (values live in globals.css). */
 export const chipColors = {
+  bg: 'var(--chip-bg)',
+  allAccent: 'var(--chip-all-accent)',
   inactiveText: 'var(--chip-inactive-text)',
   inactiveBorder: 'var(--chip-inactive-border)',
-  activeCountBg: 'var(--chip-active-count-bg)',
   onColorText: 'var(--chip-oncolor-text)',
 } as const;

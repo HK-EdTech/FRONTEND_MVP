@@ -55,10 +55,11 @@
   --status-completed: var(--cobalt);
   --status-disabled: var(--grey-disabled);
   /* Scan & Mark triage-chip tokens (named by role/state) */
+  --chip-bg: #ffffff;                                /* chip background (all states) */
+  --chip-all-accent: #475569;                        /* neutral accent for the "All" chip (no status color) */
   --chip-inactive-text: #5c6b73;                     /* muted text on an inactive chip */
   --chip-inactive-border: rgba(124, 115, 146, 0.25); /* border on an inactive chip */
-  --chip-active-count-bg: rgba(255, 255, 255, 0.28); /* count-pill bg when the chip is active */
-  --chip-oncolor-text: #ffffff;                      /* white text on a colored (active) chip / count pill */
+  --chip-oncolor-text: #ffffff;                      /* white text on the colored count pill */
 }
 
 .dark {
