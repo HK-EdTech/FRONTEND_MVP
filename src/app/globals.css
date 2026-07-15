@@ -60,6 +60,9 @@
   --chip-inactive-text: #5c6b73;                     /* muted text on an inactive chip */
   --chip-inactive-border: rgba(124, 115, 146, 0.25); /* border on an inactive chip */
   --chip-oncolor-text: #ffffff;                      /* white text on the colored count pill */
+  /* Primary action button (deep-blue gradient, per design) — reused across the app */
+  --action-primary-gradient: linear-gradient(135deg, var(--cobalt), var(--azure));
+  --action-primary-shadow: 0 6px 16px color-mix(in srgb, var(--cobalt) 24%, transparent);
 }
 
 .dark {

@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+
 /**
  * Status group colors — TS wrapper over the CSS variables in globals.css.
  *
@@ -23,3 +25,9 @@ export const chipColors = {
   inactiveBorder: 'var(--chip-inactive-border)',
   onColorText: 'var(--chip-oncolor-text)',
 } as const;
+
+/** Primary action button style (deep-blue gradient; values live in globals.css). */
+export const actionPrimaryStyle: CSSProperties = {
+  background: 'var(--action-primary-gradient)',
+  boxShadow: 'var(--action-primary-shadow)',
+};

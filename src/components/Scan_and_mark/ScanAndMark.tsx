@@ -10,14 +10,14 @@ import {
   SubmissionListDisplay,
   SubmissionDialog,
   useIsMobile,
-} from './ScanHomework_component';
+} from './submissionList/SubmissionList';
 import { GlassPanel } from '@/components/common/GlassPanel';
 
-interface ScanHomeworkProps {
+interface ScanAndMarkProps {
   HomeworkCriteria: React.ComponentType;
 }
 
-export function ScanHomework({ HomeworkCriteria }: ScanHomeworkProps) {
+export function ScanAndMark({ HomeworkCriteria }: ScanAndMarkProps) {
   // State Management
   const submissionListRoot = useSelector((state: RootState) => state.ScanAndMark_homeworksubmissions.submissionList);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);

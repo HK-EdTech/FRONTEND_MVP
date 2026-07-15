@@ -12,7 +12,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
+import { Sparkle } from 'lucide-react';
+import { ActionButton } from '@/components/common/ActionButton';
 import { convertSubmissionsToPdfs, setStatus_frontend, setSubmissionId } from '@/store/slices/ScanAndMark_homeworksubmissions_slice';
 import { setMarkingSchemeStatus_frontend, setMarkingSchemeId } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
 import { api, HomeworkPdfMetadata } from '@/lib/api';
@@ -22,11 +23,11 @@ import {
 } from '@/lib/scanAndMarkHelpers';
 import { RootState, AppDispatch } from '@/store/store';
 
-interface UploadButtonProps {
+interface ScanAllDraftsButtonProps {
   homework_type: 'onetime' | 'class';
 }
 
-export function UploadButton({ homework_type }: UploadButtonProps) {
+export function ScanAllDraftsButton({ homework_type }: ScanAllDraftsButtonProps) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -45,7 +46,8 @@ export function UploadButton({ homework_type }: UploadButtonProps) {
     try {
       let submissionMetadata: HomeworkPdfMetadata[] = [];
       let criteria: Record<string, unknown> = {};
-      let submissionPdfs_and_Metadata: Awaited<ReturnType<typeof dispatch<ReturnType<typeof convertSubmissionsToPdfs>>>>['payload'] = [];
+      // Payload type derived straight from the thunk's fulfilled action (no dispatch generic).
+      let submissionPdfs_and_Metadata: ReturnType<typeof convertSubmissionsToPdfs.fulfilled>['payload'] = [];
 
       // true only when the teacher actually picked a marking scheme file
       const hasMarkingScheme = !!onetimeCriteria.markingSchemePdf_and_metadata.file;
@@ -158,14 +160,13 @@ export function UploadButton({ homework_type }: UploadButtonProps) {
       {uploadError && (
         <p className="mt-3 text-sm text-red-500 text-right">{uploadError}</p>
       )}
-      <button
+      <ActionButton
         onClick={() => setShowConfirmDialog(true)}
         disabled={isUploadDisabled}
-        className="px-4 py-2 text-sm font-semibold rounded-xl text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        style={glassStyle}
+        icon={<Sparkle className="w-4 h-4" strokeWidth={2.5} fill="currentColor" />}
       >
-        Upload
-      </button>
+        Scan all drafts
+      </ActionButton>
     </>
   );
 }

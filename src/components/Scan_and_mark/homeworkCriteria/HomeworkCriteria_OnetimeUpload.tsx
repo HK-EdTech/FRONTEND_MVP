@@ -11,7 +11,7 @@ import {
   clearMarkingSchemePdf_and_metadata,
 } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
 import { computeSha256 } from '@/common/utility/computeChecksum';
-import { glassStyle } from '@/components/Scan_and_mark/Scan_and_upload/ScanHomework_component';
+import { glassStyle } from '@/components/Scan_and_mark/submissionList/SubmissionList';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, X } from 'lucide-react';
 
