@@ -408,10 +408,28 @@ html {
   }
 }
 
-/* Dialog Glass Style - White variant */
-.dialog-glass-white {
+/* Frosted-glass panel — subtle (single source of truth) */
+.glass-style {
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+}
+
+/* Frosted-glass panel — more opaque/whiter variant (e.g. dialog panels over strong backgrounds).
+   Keeps !important to override component defaults like the Radix dialog background. */
+.more-opaque-glass-style {
   backdrop-filter: blur(16px) !important;
   background: rgba(255, 255, 255, 0.521) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15) !important;
+}
+
+/* "Add another submission" dashed box — tinted with the Draft status color */
+.add-submission-box {
+  border-color: color-mix(in srgb, var(--status-draft) 40%, transparent);
+  background: color-mix(in srgb, var(--status-draft) 6%, transparent);
+}
+.add-submission-box:hover {
+  border-color: var(--status-draft);
 }

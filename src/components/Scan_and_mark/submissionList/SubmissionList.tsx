@@ -17,14 +17,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-// Glassmorphism Style
-export const glassStyle = {
-  backdropFilter: 'blur(16px)',
-  background: 'rgba(255, 255, 255, 0.1)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
-  boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
-};
-
 // Mobile Detection Hook
 export const useIsMobile = (breakpoint = 768) => {
   const [isMobile, setIsMobile] = useState(false);
@@ -220,24 +212,6 @@ export const StackedSheetsPreview = ({
       >
         <Trash2 className="w-4 h-4" />
       </button>
-    </div>
-  );
-};
-
-// Loading Overlay Component
-interface LoadingOverlayProps {
-  isProcessing: boolean;
-}
-
-export const LoadingOverlay = ({ isProcessing }: LoadingOverlayProps) => {
-  if (!isProcessing) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
-      <div className="rounded-xl p-6" style={glassStyle}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
-        <p className="mt-4 text-gray-700">Processing images...</p>
-      </div>
     </div>
   );
 };
@@ -479,12 +453,7 @@ export const SubmissionListDisplay = ({
         ))}
 
         {/* Add New Student Submission Box */}
-        <div
-          className="rounded-xl p-2 border-2 border-dashed border-purple-300 hover:border-purple-500 transition-colors w-full aspect-[3/4]"
-          style={{
-            background: 'rgba(139, 92, 246, 0.05)',
-          }}
-        >
+        <div className="rounded-xl p-2 border-2 border-dashed transition-colors w-full aspect-[3/4] add-submission-box">
           {isMobile ? (
             // Mobile: Two boxes stacked vertically
             <div className="flex flex-col gap-2 h-full">
@@ -493,7 +462,7 @@ export const SubmissionListDisplay = ({
                 onClick={() => fileInputRef.current?.click()}
                 className="flex-1 flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
               >
-                <Upload className="w-8 h-8 text-purple-500 mb-1" />
+                <Upload className="w-8 h-8 mb-1" style={{ color: statusColors.draft }} />
                 <p className="text-xs text-gray-700 font-medium">Tap to upload homework for </p>
                 <p className="text-xs text-gray-700 font-medium">one more student</p>
               </button>
@@ -503,7 +472,7 @@ export const SubmissionListDisplay = ({
                 onClick={() => cameraInputRef.current?.click()}
                 className="flex-1 flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
               >
-                <Camera className="w-8 h-8 text-purple-500 mb-1" />
+                <Camera className="w-8 h-8 mb-1" style={{ color: statusColors.draft }} />
                 <p className="text-xs text-gray-700 font-medium">Tap to scan homework for</p>
                 <p className="text-xs text-gray-700 font-medium">one more student</p>
               </button>
@@ -514,7 +483,7 @@ export const SubmissionListDisplay = ({
               onClick={() => fileInputRef.current?.click()}
               className="w-full h-full flex flex-col items-center justify-center bg-black/10 rounded-lg hover:bg-black/[0.04] transition-colors"
             >
-              <Upload className="w-12 h-12 text-purple-500 mb-2" />
+              <Upload className="w-12 h-12 mb-2" style={{ color: statusColors.draft }} />
               <p className="text-sm text-gray-700 font-medium">Click to upload</p>
             </button>
           )}
@@ -575,7 +544,7 @@ export const SubmissionDialog = ({
     <Loading isProcessing={isProcessing} />
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[85vh] overflow-y-auto dialog-glass-white"
+        className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[85vh] overflow-y-auto more-opaque-glass-style"
       >
         <DialogHeader>
           <DialogTitle className="text-2xl bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">

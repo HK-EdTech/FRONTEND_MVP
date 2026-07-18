@@ -11,7 +11,6 @@ import {
   clearMarkingSchemePdf_and_metadata,
 } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
 import { computeSha256 } from '@/common/utility/computeChecksum';
-import { glassStyle } from '@/components/Scan_and_mark/submissionList/SubmissionList';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, X } from 'lucide-react';
 
@@ -65,9 +64,8 @@ export function HomeworkCriteria_OnetimeUpload() {
                 className={`px-4 py-2 text-sm font-semibold rounded-xl transition-colors ${
                   subject === selectedOneTimeSubject
                     ? 'text-white bg-gradient-to-r from-purple-500 to-teal-500'
-                    : 'text-gray-600 hover:text-gray-800'
+                    : 'text-gray-600 hover:text-gray-800 glass-style'
                 }`}
-                style={subject === selectedOneTimeSubject ? undefined : glassStyle}
               >
                 {subject}
               </button>
@@ -107,11 +105,8 @@ export function HomeworkCriteria_OnetimeUpload() {
           />
           <div
             onClick={() => markingSchemeInputRef.current?.click()}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl cursor-pointer transition-all"
-            style={markingSchemeFileName
-              ? { ...glassStyle, border: '2px solid rgba(139, 92, 246, 1)' }
-              : glassStyle
-            }
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl cursor-pointer transition-all glass-style"
+            style={markingSchemeFileName ? { border: '2px solid rgba(139, 92, 246, 1)' } : undefined}
           >
             <Upload className="w-4 h-4 text-purple-500 shrink-0" />
             <span className={`text-sm truncate flex-1 ${markingSchemeFileName ? 'text-gray-800' : 'text-gray-400'}`}>
