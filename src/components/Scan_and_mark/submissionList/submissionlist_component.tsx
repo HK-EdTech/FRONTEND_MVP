@@ -303,11 +303,10 @@ export const StackedSheetsPreview = ({
         {sheets.length}
       </div>
 
-      {/* Delete button — white with a red trash icon, just below the count badge */}
+      {/* Delete button — white with a red trash icon, just below the count badge (always visible) */}
       <button
         onClick={handleDelete}
-        className={`absolute top-10 right-1.5 z-30 w-7 h-7 bg-white rounded-lg flex items-center justify-center shadow-md transition-all
-          ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+        className="absolute top-10 right-1.5 z-30 w-7 h-7 bg-white rounded-lg flex items-center justify-center shadow-md transition-all"
         aria-label="Delete homework"
       >
         <Trash2 className="w-3.5 h-3.5 text-red-500" />
