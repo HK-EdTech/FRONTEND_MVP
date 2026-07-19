@@ -326,15 +326,75 @@ html {
 }
 
 /* Scan & Mark card animations */
-@keyframes submissioncloudarrow {
-  0%   { transform: translateY(7px);  opacity: 0; }
-  40%  { opacity: 1; }
-  100% { transform: translateY(-9px); opacity: 0; }
+/* uploading: an arrow rises through a spinning ring (design "hwrise"; the ring reuses @keyframes rotate) */
+@keyframes submissionuparrow {
+  0%   { transform: translateY(10px);  opacity: 0; }
+  35%  { opacity: 1; }
+  100% { transform: translateY(-12px); opacity: 0; }
 }
 
+/* ocr: a vertical band sweeps across horizontally (left → right) like a document scanner */
 @keyframes submissionscan {
-  0%   { transform: translateY(-130%); }
-  100% { transform: translateY(340%); }
+  0%   { transform: translateX(-110%); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateX(400%); opacity: 0; }
+}
+
+/* Card status overlays — the group color is passed in per card via --sub-group-color */
+.submission-upload-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(1.5px);
+}
+.submission-upload-spinner {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sub-group-color);
+}
+.submission-upload-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2.5px solid color-mix(in srgb, var(--sub-group-color) 22%, transparent);
+  border-top-color: var(--sub-group-color);
+  animation: rotate 0.9s linear infinite;
+}
+.submission-upload-arrow {
+  width: 16px;
+  height: 16px;
+  animation: submissionuparrow 1.2s ease-in-out infinite;
+}
+.submission-scan-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+  border-radius: var(--radius);
+  pointer-events: none;
+}
+.submission-scan-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 28%;
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--sub-group-color) 50%, transparent) 50%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sub-group-color) 35%, transparent);
+  animation: submissionscan 1.6s ease-in-out infinite;
 }
 
 /* ===== UTILITY CLASSES ===== */
