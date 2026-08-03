@@ -201,7 +201,8 @@ export interface ProfileWithModulesResponse {
   modules: ModuleWithPermissions[];
 }
 
-export interface HomeworkPdfMetadata {
+export interface SubmissionPdfMetadata {
+  submission_id: string;  // client-generated; the backend uses it as the submission PK
   file_name: string;
   content_type: string;
   file_size: number;
@@ -210,7 +211,8 @@ export interface HomeworkPdfMetadata {
 }
 
 export interface UploadForSignedUrlRequest {
-  homework_pdf_entries: HomeworkPdfMetadata[];
+  homework_id: string;  // client-generated; the backend uses it as the homework PK
+  submission_pdf_entries: SubmissionPdfMetadata[];
   homework_criteria: ['onetime' | 'class', Record<string, unknown>];
 }
 

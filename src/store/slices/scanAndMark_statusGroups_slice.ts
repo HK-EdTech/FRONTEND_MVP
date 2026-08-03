@@ -45,12 +45,16 @@ export function groupForStatus(status: string): StatusGroup | null {
  * whose status_frontend falls under it. Recomputes automatically whenever submissions change.
  */
 export const selectGroupsWithCounts = (state: RootState) =>
-  state.scanAndMark_statusGroups.groups.map((g) => ({
-    ...g,
-    count: state.ScanAndMark_homeworksubmissions.submissionList.filter((sub) =>
+  state.scanAndMark_statusGroups.groups.map((g) => {
+    const subs = state.ScanAndMark_homeworksubmissions.submissionList.filter((sub) =>
       g.subStatuses.includes(sub.status_frontend),
-    ).length,
-  }));
+    );
+    return {
+      ...g,
+      count: subs.length,
+      failedCount: subs.filter((sub) => sub.err !== null).length, // for the "{n} failed" chip pill
+    };
+  });
 
 export const { setActiveGroup } = scanAndMark_statusGroups_slice.actions;
 export default scanAndMark_statusGroups_slice.reducer;

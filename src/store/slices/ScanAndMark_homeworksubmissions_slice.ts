@@ -3,12 +3,26 @@ import { imagesToPdf } from '@/common/utility/imagesToPdf';
 import { computeSha256 } from '@/common/utility/computeChecksum';
 
 export type UploadSubmission = {
-  id: string;
+  submission_id: string;          // client-generated id (`submission-${uuid}`), also the backend PK
   studentName: string;
   sheets: { id: string; file: File; thumbnail: string }[];
   createdAt: string;
-  submission_id: string | null;   // backend submission id, null until uploaded
-  status_frontend: string;        // prepare_upload -> uploading -> ocr
+  status_frontend: string;        // lifecycle position: prepare_upload -> uploading -> ocr
+  err: 'upload' | 'ocr' | 'scan' | 'marking' | null;  // orthogonal failure flag (null = healthy)
+};
+
+/**
+ * Frontend status lifecycle expressed as DATA — read this to follow the flow without memorising it.
+ * Each state maps an EVENT to a partial patch applied to the submission:
+ *   - success events (DONE) move `status_frontend` forward;
+ *   - failure events (FAIL) set `err` and leave `status_frontend` intact — failure is orthogonal to
+ *     lifecycle position (a failed upload is still a Draft).
+ * Branch by adding more events per state; add a new state by adding a key.
+ */
+export const FLOW_FRONTEND_STATUSES: Record<string, Record<string, Partial<UploadSubmission>>> = {
+  prepare_upload: { DONE: { status_frontend: 'uploading' } },
+  uploading:      { DONE: { status_frontend: 'ocr' }, FAIL: { err: 'upload' } },
+  ocr:            { FAIL: { err: 'ocr' } }, // DONE (-> next group) is future — OCR execution not wired
 };
 
 const initialState = {
@@ -20,63 +34,66 @@ const ScanAndMark_homeworksubmissions_slice = createSlice({
   initialState,
   reducers: {
     addSubmission(state, action: PayloadAction<{
-      id: string;
+      submission_id: string;
       studentName: string;
       sheets: { id: string; file: File; thumbnail: string }[];
     }>) {
-      console.log(`${action.payload.id} has created and status is prepare_upload`);
+      console.log(`${action.payload.submission_id} has created and status is prepare_upload`);
       state.submissionList.push({
         ...action.payload,
         createdAt: new Date().toISOString(),
-        submission_id: null,
         status_frontend: 'prepare_upload',
+        err: null,
       });
     },
     addSheetsToSubmission(state, action: PayloadAction<{
-      id: string;
+      submission_id: string;
       sheets: { id: string; file: File; thumbnail: string }[];
     }>) {
-      const s = state.submissionList.find(x => x.id === action.payload.id);
+      const s = state.submissionList.find(x => x.submission_id === action.payload.submission_id);
       if (s) {
         s.sheets.push(...action.payload.sheets);
       }
     },
     reorderSheets(state, action: PayloadAction<{
-      id: string;
+      submission_id: string;
       sheets: { id: string; file: File; thumbnail: string }[];
     }>) {
-      const s = state.submissionList.find(x => x.id === action.payload.id);
+      const s = state.submissionList.find(x => x.submission_id === action.payload.submission_id);
       if (s) {
         s.sheets = action.payload.sheets;
       }
     },
     deleteSubmission(state, action: PayloadAction<string>) {
-      state.submissionList = state.submissionList.filter(x => x.id !== action.payload);
+      state.submissionList = state.submissionList.filter(x => x.submission_id !== action.payload);
     },
-    deleteSheet(state, action: PayloadAction<{ id: string; sheetId: string }>) {
-      const s = state.submissionList.find(x => x.id === action.payload.id);
+    deleteSheet(state, action: PayloadAction<{ submission_id: string; sheetId: string }>) {
+      const s = state.submissionList.find(x => x.submission_id === action.payload.submission_id);
       if (s) {
         s.sheets = s.sheets.filter(sheet => sheet.id !== action.payload.sheetId);
       }
     },
-    setStudentName(state, action: PayloadAction<{ id: string; studentName: string }>) {
-      const s = state.submissionList.find(x => x.id === action.payload.id);
+    setStudentName(state, action: PayloadAction<{ submission_id: string; studentName: string }>) {
+      const s = state.submissionList.find(x => x.submission_id === action.payload.submission_id);
       if (s) {
         s.studentName = action.payload.studentName;
       }
     },
-    setStatus_frontend(state, action: PayloadAction<{ id: string; status: string }>) {
-      const s = state.submissionList.find(x => x.id === action.payload.id);
+    setStatus_frontend(state, action: PayloadAction<{ submission_id: string; status: string }>) {
+      const s = state.submissionList.find(x => x.submission_id === action.payload.submission_id);
       if (s) {
         s.status_frontend = action.payload.status;
-        console.log(`${action.payload.id} status is ${action.payload.status}`);
+        console.log(`${action.payload.submission_id} status is ${action.payload.status}`);
       }
     },
-    setSubmissionId(state, action: PayloadAction<{ id: string; submission_id: string }>) {
-      const s = state.submissionList.find(x => x.id === action.payload.id);
-      if (s) {
-        s.submission_id = action.payload.submission_id;
-        console.log(`${action.payload.id} submission_id is ${action.payload.submission_id}`);
+    // Data-driven transition: apply a FLOW_FRONTEND_STATUSES event to a submission.
+    transition(state, action: PayloadAction<{ submission_id: string; event: string }>) {
+      const s = state.submissionList.find(x => x.submission_id === action.payload.submission_id);
+      if (!s) return;
+      const patch = FLOW_FRONTEND_STATUSES[s.status_frontend]?.[action.payload.event];
+      if (patch) {
+        Object.assign(s, patch);
+        console.log(`${action.payload.submission_id} --${action.payload.event}--> ${JSON.stringify(patch)}`);
       }
     },
     resetAll() {
@@ -99,11 +116,22 @@ export const convertSubmissionsToPdfs = createAsyncThunk(
         const name = s.studentName || `Student ${i + 1}`;
         const pdfFile = await imagesToPdf(s.sheets.map(sheet => sheet.file), `${name}.pdf`);
         const checksum = await computeSha256(pdfFile);
-        return { file: pdfFile, client_id: s.id, file_name: pdfFile.name, file_size: pdfFile.size, content_type: 'application/pdf', checksum, student_name: name };
+        return { file: pdfFile, submission_id: s.submission_id, file_name: pdfFile.name, file_size: pdfFile.size, content_type: 'application/pdf', checksum, student_name: name };
       })
     );
     return pdfs;
   }
+);
+
+// Shared retry — per-card Retry passes one id, "Retry all failed" passes many. Same reconcile flow.
+export const retryUpload = createAsyncThunk(
+  'ScanAndMark_homeworksubmissions/retryUpload',
+  async (submissionIds: string[]) => {
+    // TODO(backend pass): for each id, gather the submission (+ criteria + File), call api.retryUpload
+    // (the reconcile endpoint), then run the per-item result — re-PUT the file if needed, then confirm.
+    // On success clear err / advance the submission.
+    console.log('retryUpload (stub):', submissionIds);
+  },
 );
 
 export const {
@@ -114,7 +142,7 @@ export const {
   deleteSheet,
   setStudentName,
   setStatus_frontend,
-  setSubmissionId,
+  transition,
   resetAll,
 } = ScanAndMark_homeworksubmissions_slice.actions;
 

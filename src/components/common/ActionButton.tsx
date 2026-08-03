@@ -17,10 +17,7 @@ interface ActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export function ActionButton({ icon, children, className, style, ...props }: ActionButtonProps) {
   return (
     <button
-      className={cn(
-        'inline-flex items-center gap-2 px-4 py-[9px] rounded-[12px] text-white text-[12.5px] font-bold transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed',
-        className,
-      )}
+      className={cn('action-button', className)}
       style={{ ...actionPrimaryStyle, ...style }}
       {...props}
     >

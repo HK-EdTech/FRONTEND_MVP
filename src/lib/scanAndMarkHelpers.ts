@@ -1,5 +1,5 @@
 import { api } from './api';
-import { setStatus_frontend } from '@/store/slices/ScanAndMark_homeworksubmissions_slice';
+import { transition } from '@/store/slices/ScanAndMark_homeworksubmissions_slice';
 import { setMarkingSchemeStatus_frontend } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
 import type { AppDispatch } from '@/store/store';
 
@@ -19,7 +19,7 @@ export async function set_frontend_and_backend_status_of_homework_and_hwsubmissi
   await api.confirm_submission_upload(submissionId);
 
   // frontend — mark this submission 'ocr' locally
-  dispatch(setStatus_frontend({ id: clientId, status: 'ocr' }));
+  dispatch(transition({ submission_id: clientId, event: 'DONE' }));
 }
 
 /**

@@ -63,6 +63,14 @@
   /* Primary action button (deep-blue gradient, per design) — reused across the app */
   --action-primary-gradient: linear-gradient(135deg, var(--cobalt), var(--azure));
   --action-primary-shadow: 0 6px 16px color-mix(in srgb, var(--cobalt) 24%, transparent);
+  /* Scan & Mark failure palette — the ONLY red, reserved exclusively for failure.
+     Alpha variants are derived at the use-site via color-mix(in srgb, var(--error) N%, transparent). */
+  --error: #c0574e;                          /* the failure red (rgb 192,87,78) */
+  --error-tint-border: #e3c3bf;              /* scattered/marking-box tint border */
+  --error-tint-fill: #f6e9e7;                /* scattered-sheet fill stripe */
+  --error-text: #a2453d;                     /* failure label / filename */
+  --error-text-muted: #b07a74;               /* failure meta / secondary text */
+  --error-veil: rgba(255, 247, 246, 0.78);   /* warning-overlay veil background */
 }
 
 .dark {
@@ -395,6 +403,104 @@ html {
   background: linear-gradient(to right, transparent, color-mix(in srgb, var(--sub-group-color) 50%, transparent) 50%, transparent);
   box-shadow: 0 0 10px color-mix(in srgb, var(--sub-group-color) 35%, transparent);
   animation: submissionscan 1.6s ease-in-out infinite;
+}
+
+/* Card FAILED state — frosted red veil + '!' badge + copy (colors from the --error* palette) */
+.submission-failed-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 7;                 /* above sheets, below the count badge (z-10) + chip (z-30) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 10px;
+  pointer-events: none;
+  border-radius: var(--radius);
+  background: var(--error-veil);
+  backdrop-filter: blur(1px);
+}
+.submission-failed-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1;
+  background: var(--error);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--error) 35%, transparent);
+}
+.submission-failed-text { text-align: center; line-height: 1.35; }
+.submission-failed-label { font-size: 12px; font-weight: 700; color: var(--error-text); }
+.submission-failed-meta { font-size: 11px; font-weight: 500; color: var(--error-text-muted); }
+/* per-card retry button (solid red); pointer-events:auto because the veil is none */
+.submission-failed-retry {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--error);
+  box-shadow: 0 3px 9px color-mix(in srgb, var(--error) 30%, transparent);
+}
+.submission-failed-retry:hover { filter: brightness(1.05); }
+
+/* extra red-tinted sheet fanned off the other side when failed */
+.submission-failed-sheet {
+  position: absolute;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  top: -11px;
+  left: 9px;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: 9px;
+  border: 2px solid var(--error-tint-border);
+  transform: rotate(8deg);
+  background: repeating-linear-gradient(180deg, #fff, #fff 11px, var(--error-tint-fill) 11px, var(--error-tint-fill) 12px);
+}
+/* the stack's back layers scatter (rotate) when failed */
+.submission-sheet-scatter-back { transform: rotate(-9deg); }
+.submission-sheet-scatter-mid { transform: rotate(-5deg); }
+
+/* Shared action-button shape (ScanAllDrafts + retry buttons). Color comes from the caller
+   (primary gradient via actionPrimaryStyle, or red for retry). */
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.action-button:hover { filter: brightness(1.1); }
+.action-button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* "{n} failed" pill on a triage group chip (informational, outlined red-on-tint) */
+.chip-failed-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--error);
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--error) 35%, transparent);
 }
 
 /* ===== UTILITY CLASSES ===== */

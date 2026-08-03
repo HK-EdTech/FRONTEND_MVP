@@ -64,7 +64,7 @@ export const SubmissionListDisplay = ({
     const sheets = await handleUploadFiles(Array.from(e.target.files));
     setIsProcessing(false);
     if (sheets.length === 0) return;
-    dispatch(addSubmission({ id: `submission-${crypto.randomUUID()}`, studentName: `Student ${submissionList.length + 1}`, sheets }));
+    dispatch(addSubmission({ submission_id: crypto.randomUUID(), studentName: `Student ${submissionList.length + 1}`, sheets }));
   };
 
   return (
@@ -79,9 +79,9 @@ export const SubmissionListDisplay = ({
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
         {visibleSubmissions.map(({ submission, index }) => (
-          <div key={submission.id} className="flex flex-col gap-1">
+          <div key={submission.submission_id} className="flex flex-col gap-1">
             <div
-              onClick={() => onSubmissionClick(submission.id)}
+              onClick={() => onSubmissionClick(submission.submission_id)}
               className="group rounded-xl text-left transition-all duration-300 hover:scale-105 hover:shadow-xl w-full aspect-[3/4] cursor-pointer"
             >
               <StackedSheetsPreview
@@ -94,7 +94,7 @@ export const SubmissionListDisplay = ({
               value={submission.studentName}
               placeholder={`Student ${index + 1}`}
               onClick={(e) => e.stopPropagation()}
-              onChange={(e) => dispatch(setStudentName({ id: submission.id, studentName: e.target.value }))}
+              onChange={(e) => dispatch(setStudentName({ submission_id: submission.submission_id, studentName: e.target.value }))}
               className="w-full text-xs text-center rounded-md border border-gray-300 px-2 py-1 focus:outline-none focus:border-purple-400 bg-white/80 placeholder-gray-400"
             />
           </div>

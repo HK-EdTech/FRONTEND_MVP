@@ -31,3 +31,13 @@ export const actionPrimaryStyle: CSSProperties = {
   background: 'var(--action-primary-gradient)',
   boxShadow: 'var(--action-primary-shadow)',
 };
+
+/** Failure palette — the only red, reserved for failed states (values live in globals.css). */
+export const errorColors = {
+  base: 'var(--error)',
+  tintBorder: 'var(--error-tint-border)',
+  tintFill: 'var(--error-tint-fill)',
+  text: 'var(--error-text)',
+  textMuted: 'var(--error-text-muted)',
+  veil: 'var(--error-veil)',
+} as const;

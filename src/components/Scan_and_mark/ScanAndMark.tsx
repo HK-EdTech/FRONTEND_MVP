@@ -30,7 +30,7 @@ export function ScanAndMark({ HomeworkCriteria }: ScanAndMarkProps) {
   const isMobile = useIsMobile();
 
   // Selected submission for dialog
-  const selectedSubmission = submissionListRoot.find(s => s.id === selectedSubmissionId);
+  const selectedSubmission = submissionListRoot.find(s => s.submission_id === selectedSubmissionId);
 
   return (
     <div className="space-y-6">
@@ -95,7 +95,7 @@ const InitialUploadArea = ({
     const sheets = await handleUploadFiles(Array.from(e.target.files));
     setIsProcessing(false);
     if (sheets.length === 0) return;
-    dispatch(addSubmission({ id: `submission-${crypto.randomUUID()}`, studentName: `Student ${submissionList.length + 1}`, sheets }));
+    dispatch(addSubmission({ submission_id: crypto.randomUUID(), studentName: `Student ${submissionList.length + 1}`, sheets }));
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -117,7 +117,7 @@ const InitialUploadArea = ({
     const sheets = await handleUploadFiles(Array.from(e.dataTransfer.files));
     setIsProcessing(false);
     if (sheets.length === 0) return;
-    dispatch(addSubmission({ id: `submission-${crypto.randomUUID()}`, studentName: `Student ${submissionList.length + 1}`, sheets }));
+    dispatch(addSubmission({ submission_id: crypto.randomUUID(), studentName: `Student ${submissionList.length + 1}`, sheets }));
   };
 
   return (
