@@ -8,7 +8,7 @@ export type UploadSubmission = {
   sheets: { id: string; file: File; thumbnail: string }[];
   createdAt: string;
   status_frontend: string;        // lifecycle position: prepare_upload -> uploading -> ocr
-  err: 'upload' | 'ocr' | 'scan' | 'marking' | null;  // orthogonal failure flag (null = healthy)
+  err: 'uploading' | null;  // orthogonal failure flag (null = healthy)
 };
 
 /**
@@ -21,8 +21,7 @@ export type UploadSubmission = {
  */
 export const FLOW_FRONTEND_STATUSES: Record<string, Record<string, Partial<UploadSubmission>>> = {
   prepare_upload: { DONE: { status_frontend: 'uploading' } },
-  uploading:      { DONE: { status_frontend: 'ocr' }, FAIL: { err: 'upload' } },
-  ocr:            { FAIL: { err: 'ocr' } }, // DONE (-> next group) is future — OCR execution not wired
+  uploading:      { DONE: { status_frontend: 'ocr' }, FAIL: { err: 'uploading' } },
 };
 
 const initialState = {
@@ -33,18 +32,23 @@ const ScanAndMark_homeworksubmissions_slice = createSlice({
   name: 'ScanAndMark_homeworksubmissions',
   initialState,
   reducers: {
-    addSubmission(state, action: PayloadAction<{
-      submission_id: string;
-      studentName: string;
-      sheets: { id: string; file: File; thumbnail: string }[];
-    }>) {
-      console.log(`${action.payload.submission_id} has created and status is prepare_upload`);
-      state.submissionList.push({
-        ...action.payload,
-        createdAt: new Date().toISOString(),
-        status_frontend: 'prepare_upload',
-        err: null,
-      });
+    addSubmission: {
+      reducer(state, action: PayloadAction<{
+        submission_id: string;
+        studentName: string;
+        sheets: { id: string; file: File; thumbnail: string }[];
+      }>) {
+        console.log(`${action.payload.submission_id} has created and status is prepare_upload`);
+        state.submissionList.push({
+          ...action.payload,
+          createdAt: new Date().toISOString(),
+          status_frontend: 'prepare_upload',
+          err: null,
+        });
+      },
+      prepare(entry: { studentName: string; sheets: { id: string; file: File; thumbnail: string }[] }) {
+        return { payload: { ...entry, submission_id: crypto.randomUUID() } };
+      },
     },
     addSheetsToSubmission(state, action: PayloadAction<{
       submission_id: string;

@@ -32,10 +32,10 @@ import {
   deleteSheet,
   type UploadSubmission,
 } from '@/store/slices/ScanAndMark_homeworksubmissions_slice';
-import { setMarkingSchemeStatus_frontend, setMarkingSchemeId } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
+import { transitionMarkingScheme, setHomeworkId } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
 import { groupForStatus, selectGroupsWithCounts, setActiveGroup } from '@/store/slices/scanAndMark_statusGroups_slice';
 import { statusColors, chipColors, errorColors } from '@/theme/statusColors';
-import { api, SubmissionPdfMetadata } from '@/lib/api';
+import { api, SubmissionPdfMetadata, UploadForSignedUrlResponse } from '@/lib/api';
 import {
   set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr,
   set_frontend_and_backend_status_of_marking_scheme_to_ocr,
@@ -63,8 +63,6 @@ export function ScanAllDraftsButton({ homework_type }: ScanAllDraftsButtonProps)
 
   async function handleConfirmUpload(homework_type: 'onetime' | 'class') {
     setUploadError(null);
-    // Declared out here so the outer catch can flag every in-flight submission as failed.
-    // Payload type derived straight from the thunk's fulfilled action (no dispatch generic).
     let submissionPdfs_and_Metadata: ReturnType<typeof convertSubmissionsToPdfs.fulfilled>['payload'] = [];
     try {
       let submissionMetadata: SubmissionPdfMetadata[] = [];
@@ -84,6 +82,7 @@ export function ScanAllDraftsButton({ homework_type }: ScanAllDraftsButtonProps)
             selectedOneTimeSubject: onetimeCriteria.selectedOneTimeSubject,
             markingScheme: hasMarkingScheme
               ? {
+                  marking_scheme_id: ms.marking_scheme_id,
                   file_name: ms.file_name,
                   file_size: ms.file_size,
                   content_type: ms.content_type,
@@ -103,18 +102,35 @@ export function ScanAllDraftsButton({ homework_type }: ScanAllDraftsButtonProps)
         dispatch(transition({ submission_id: entry.submission_id, event: 'DONE' }))
       );
       if (hasMarkingScheme) {
-        dispatch(setMarkingSchemeStatus_frontend('uploading'));
+        dispatch(transitionMarkingScheme({ event: 'DONE' }));
       }
 
-      const uploadResult = await api.upload_for_signed_url({
-        homework_id: crypto.randomUUID(),  // client-generated batch PK — one homework per upload
-        submission_pdf_entries: submissionMetadata,
-        homework_criteria: [homework_type, criteria],
-      });
+      // homework_id === null => a NEW homework is being drafted: mint a stable id once and store it, so
+      // a retry after a lost response reuses it (the reconcile endpoint keys on it) instead of minting a
+      // new one and duplicating the homework. Persisted before the await below so a failure keeps it for
+      // the retry.
+      // homework_id !== null => the homework was selected from the homework list (already created in the
+      // DB), so reuse that id as-is.
+      let homework_id = onetimeCriteria.homework_id;
+      if (!homework_id) {
+        homework_id = crypto.randomUUID();
+        dispatch(setHomeworkId(homework_id));
+      }
 
-      // store the backend marking scheme id
-      if (uploadResult.marking_scheme_upload) {
-        dispatch(setMarkingSchemeId(uploadResult.marking_scheme_upload.id));
+      let uploadResult: UploadForSignedUrlResponse;
+      try {
+        uploadResult = await api.upload_for_signed_url({
+          homework_id,
+          submission_pdf_entries: submissionMetadata,
+          homework_criteria: [homework_type, criteria],
+        });
+      } catch {
+        submissionPdfs_and_Metadata.forEach((entry) =>
+          dispatch(transition({ submission_id: entry.submission_id, event: 'FAIL' }))
+        );
+        dispatch(transitionMarkingScheme({ event: 'FAIL' }));
+        setUploadError('Failed to create records for signed URL. Please retry.');
+        return;
       }
 
       // Marking scheme is optional — only upload when the teacher provided one.
@@ -130,6 +146,7 @@ export function ScanAllDraftsButton({ homework_type }: ScanAllDraftsButtonProps)
           // marking scheme landed — set its status to 'ocr' (backend + frontend)
           await set_frontend_and_backend_status_of_marking_scheme_to_ocr(markingSchemeUpload.id, dispatch);
         } catch {
+          dispatch(transitionMarkingScheme({ event: 'FAIL' }));
           throw new Error('Something gone wrong. Please retry upload the marking scheme');
         }
       }
@@ -145,17 +162,12 @@ export function ScanAllDraftsButton({ homework_type }: ScanAllDraftsButtonProps)
               dispatch,
             );
           } catch {
-            // isolate the failure — flag this submission upload_failed (err='upload', stays 'uploading')
             dispatch(transition({ submission_id: submissionPdfs_and_Metadata[i].submission_id, event: 'FAIL' }));
+            setUploadError('Some submissions failed to upload. Please retry.');
           }
         })
       );
     } catch (err) {
-      // failed before/around signed-URL issuance — flag every in-flight submission as upload_failed
-      // (FAIL is a no-op for submissions still in prepare_upload, so this only hits 'uploading' ones)
-      submissionPdfs_and_Metadata.forEach((entry) =>
-        dispatch(transition({ submission_id: entry.submission_id, event: 'FAIL' }))
-      );
       setUploadError(err instanceof Error ? err.message : 'Upload failed');
     }
   }
@@ -202,7 +214,12 @@ export const StackedSheetsPreview = ({
   submission,
   isMobile,
 }: {
-  submission: { submission_id: string; sheets: { id: string; file: File; thumbnail: string }[]; status_frontend: string; err: 'upload' | 'ocr' | 'scan' | 'marking' | null };
+  submission: {
+    submission_id: string;
+    sheets: { id: string; file: File; thumbnail: string }[];
+    status_frontend: string;
+    err: 'uploading' | null;
+  };
   isMobile?: boolean;
 }) => {
   const dispatch = useDispatch<AppDispatch>();

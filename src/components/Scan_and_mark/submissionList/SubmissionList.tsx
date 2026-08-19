@@ -64,7 +64,7 @@ export const SubmissionListDisplay = ({
     const sheets = await handleUploadFiles(Array.from(e.target.files));
     setIsProcessing(false);
     if (sheets.length === 0) return;
-    dispatch(addSubmission({ submission_id: crypto.randomUUID(), studentName: `Student ${submissionList.length + 1}`, sheets }));
+    dispatch(addSubmission({ studentName: `Student ${submissionList.length + 1}`, sheets }));
   };
 
   return (

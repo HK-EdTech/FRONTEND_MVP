@@ -1,6 +1,6 @@
 import { api } from './api';
 import { transition } from '@/store/slices/ScanAndMark_homeworksubmissions_slice';
-import { setMarkingSchemeStatus_frontend } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
+import { transitionMarkingScheme } from '@/store/slices/homeworkCriteria_OnetimeUpload_slice';
 import type { AppDispatch } from '@/store/store';
 
 /**
@@ -36,5 +36,5 @@ export async function set_frontend_and_backend_status_of_marking_scheme_to_ocr(
   await api.confirm_marking_scheme_upload(markingSchemeId);
 
   // frontend — mark the marking scheme 'ocr' locally
-  dispatch(setMarkingSchemeStatus_frontend('ocr'));
+  dispatch(transitionMarkingScheme({ event: 'DONE' }));
 }
