@@ -539,4 +539,18 @@ export const api = {
       method: 'PATCH',
     });
   },
+
+  async set_submission_err(submissionId: string, err: string): Promise<{ submission_id: string; err: string }> {
+    return apiRequest(`/scan-and-mark/submissions/${submissionId}/err`, {
+      method: 'PATCH',
+      body: JSON.stringify({ err }),
+    });
+  },
+
+  async set_marking_scheme_err(markingSchemeId: string, err: string): Promise<{ marking_scheme_id: string; err: string }> {
+    return apiRequest(`/scan-and-mark/marking-scheme/${markingSchemeId}/err`, {
+      method: 'PATCH',
+      body: JSON.stringify({ err }),
+    });
+  },
 };

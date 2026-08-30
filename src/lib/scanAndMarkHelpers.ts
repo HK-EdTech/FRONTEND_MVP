@@ -38,3 +38,32 @@ export async function set_frontend_and_backend_status_of_marking_scheme_to_ocr(
   // frontend — mark the marking scheme 'ocr' locally
   dispatch(transitionMarkingScheme({ event: 'DONE' }));
 }
+
+/**
+ * Flag a submission's upload as failed (err='uploading') on backend + frontend.
+ */
+export async function set_frontend_and_backend_status_of_hwsubmission_err_to_uploading(
+  submissionId: string,
+  clientId: string,
+  dispatch: AppDispatch,
+): Promise<void> {
+  // backend — set this submission's err to 'uploading'
+  await api.set_submission_err(submissionId, 'uploading');
+
+  // frontend — flag this submission failed locally
+  dispatch(transition({ submission_id: clientId, event: 'FAIL' }));
+}
+
+/**
+ * Flag the marking scheme's upload as failed (err='uploading') on backend + frontend.
+ */
+export async function set_frontend_and_backend_status_of_marking_scheme_to_uploading(
+  markingSchemeId: string,
+  dispatch: AppDispatch,
+): Promise<void> {
+  // backend — set the marking scheme's err to 'uploading'
+  await api.set_marking_scheme_err(markingSchemeId, 'uploading');
+
+  // frontend — flag the marking scheme failed locally
+  dispatch(transitionMarkingScheme({ event: 'FAIL' }));
+}

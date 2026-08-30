@@ -69,8 +69,13 @@ const homeworkCriteria_OnetimeUpload_slice = createSlice({
       state.homework_id = action.payload;
       console.log(`homework_id is ${action.payload}`);
     },
+    // A marking scheme carrying an err cannot move forward — it must be cleared (retry) first.
     transitionMarkingScheme(state, action: PayloadAction<{ event: string }>) {
       const ms = state.markingSchemePdf_and_metadata;
+      if (action.payload.event === 'DONE' && ms.err !== null) {
+        console.log(`marking scheme DONE blocked at ${ms.status_frontend}: err is ${ms.err}`);
+        return;
+      }
       const patch = FLOW_MARKING_SCHEME_STATUSES[ms.status_frontend]?.[action.payload.event];
       if (patch) {
         Object.assign(ms, patch);

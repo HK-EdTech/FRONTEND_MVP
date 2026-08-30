@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import { motion } from 'framer-motion';
 import {
   AlertDialog,
@@ -39,6 +39,8 @@ import { api, SubmissionPdfMetadata, UploadForSignedUrlResponse } from '@/lib/ap
 import {
   set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr,
   set_frontend_and_backend_status_of_marking_scheme_to_ocr,
+  set_frontend_and_backend_status_of_hwsubmission_err_to_uploading,
+  set_frontend_and_backend_status_of_marking_scheme_to_uploading,
 } from '@/lib/scanAndMarkHelpers';
 import { handleUploadFiles } from '@/common/utility/handleUploadFiles';
 import { RootState, AppDispatch } from '@/store/store';
@@ -52,6 +54,7 @@ export function ScanAllDraftsButton({ homework_type }: ScanAllDraftsButtonProps)
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
+  const store = useStore<RootState>();
   const onetimeCriteria = useSelector((state: RootState) => state.Homeworkcriteria_onetimeUpload);
   const submissionList = useSelector((state: RootState) => state.ScanAndMark_homeworksubmissions.submissionList);
 
@@ -63,18 +66,38 @@ export function ScanAllDraftsButton({ homework_type }: ScanAllDraftsButtonProps)
 
   async function handleConfirmUpload(homework_type: 'onetime' | 'class') {
     setUploadError(null);
-    let submissionPdfs_and_Metadata: ReturnType<typeof convertSubmissionsToPdfs.fulfilled>['payload'] = [];
+
+    const hasMarkingScheme = !!onetimeCriteria.markingSchemePdf_and_metadata.file;
+    const idsToUpload = submissionList
+      .filter((s) => s.status_frontend === 'prepare_upload')
+      .map((s) => s.submission_id);
+    idsToUpload.forEach((id) =>
+      dispatch(transition({ submission_id: id, event: 'DONE' }))
+    );
+    if (hasMarkingScheme) {
+      dispatch(transitionMarkingScheme({ event: 'DONE' }));
+    }
+
+    let readyToUpload: UploadSubmission[] = [];
     try {
       let submissionMetadata: SubmissionPdfMetadata[] = [];
       let criteria: Record<string, unknown> = {};
 
-      // true only when the teacher actually picked a marking scheme file
-      const hasMarkingScheme = !!onetimeCriteria.markingSchemePdf_and_metadata.file;
-
       switch (homework_type) {
         case 'onetime': {
-          submissionPdfs_and_Metadata = await dispatch(convertSubmissionsToPdfs('onetime')).unwrap();
-          submissionMetadata = submissionPdfs_and_Metadata.map(({ file: _file, ...meta }) => meta);
+          // convert saves each PDF onto its submission and FAILs the failures
+          await dispatch(convertSubmissionsToPdfs({ homework_type, submissionIds: idsToUpload })).unwrap();
+          // truth source: the live state — submissions still uploading, healthy, with a saved PDF
+          readyToUpload = store.getState().ScanAndMark_homeworksubmissions.submissionList
+            .filter((s) => s.status_frontend === 'uploading' && s.err === null && s.converted_pdf !== undefined);
+          submissionMetadata = readyToUpload.map((s) => ({
+            submission_id: s.submission_id,
+            file_name: s.converted_pdf!.file_name,
+            content_type: s.converted_pdf!.content_type,
+            file_size: s.converted_pdf!.file_size,
+            checksum: s.converted_pdf!.checksum,
+            student_name: s.studentName,
+          }));
           const ms = onetimeCriteria.markingSchemePdf_and_metadata;
           criteria = {
             homeworkTitle: onetimeCriteria.homeworkTitle,
@@ -97,12 +120,9 @@ export function ScanAllDraftsButton({ homework_type }: ScanAllDraftsButtonProps)
           break;
       }
 
-      // mark each submission (and the marking scheme) 'uploading' right before requesting signed URLs
-      submissionPdfs_and_Metadata.forEach((entry) =>
-        dispatch(transition({ submission_id: entry.submission_id, event: 'DONE' }))
-      );
-      if (hasMarkingScheme) {
-        dispatch(transitionMarkingScheme({ event: 'DONE' }));
+      if (readyToUpload.length === 0) {
+        setUploadError('Failed to convert any submission. Please retry.');
+        return;
       }
 
       // homework_id === null => a NEW homework is being drafted: mint a stable id once and store it, so
@@ -125,48 +145,48 @@ export function ScanAllDraftsButton({ homework_type }: ScanAllDraftsButtonProps)
           homework_criteria: [homework_type, criteria],
         });
       } catch {
-        submissionPdfs_and_Metadata.forEach((entry) =>
-          dispatch(transition({ submission_id: entry.submission_id, event: 'FAIL' }))
+        readyToUpload.forEach((s) =>
+          dispatch(transition({ submission_id: s.submission_id, event: 'FAIL' }))
         );
         dispatch(transitionMarkingScheme({ event: 'FAIL' }));
         setUploadError('Failed to create records for signed URL. Please retry.');
         return;
       }
 
-      // Marking scheme is optional — only upload when the teacher provided one.
-      // If it fails, throw to abort the whole upload (the submissions below won't run).
+      // Upload the marking scheme + every submission concurrently; each task PUTs then sets its own
+      // status (ocr on success, err on failure), so a marking-scheme failure doesn't skip submissions.
       const markingSchemeUpload = uploadResult.marking_scheme_upload;
+      const uploadTasks: (() => Promise<void>)[] = [];
+
       if (hasMarkingScheme && markingSchemeUpload) {
-        try {
-          await api.upload_file_to_signed_url(
-            markingSchemeUpload.signed_url,
-            onetimeCriteria.markingSchemePdf_and_metadata.file!,
-            onetimeCriteria.markingSchemePdf_and_metadata.content_type,
-          );
-          // marking scheme landed — set its status to 'ocr' (backend + frontend)
-          await set_frontend_and_backend_status_of_marking_scheme_to_ocr(markingSchemeUpload.id, dispatch);
-        } catch {
-          dispatch(transitionMarkingScheme({ event: 'FAIL' }));
-          throw new Error('Something gone wrong. Please retry upload the marking scheme');
-        }
+        const ms = onetimeCriteria.markingSchemePdf_and_metadata;
+        uploadTasks.push(async () => {
+          try {
+            await api.upload_file_to_signed_url(markingSchemeUpload.signed_url, ms.file!, ms.content_type);
+            await set_frontend_and_backend_status_of_marking_scheme_to_ocr(markingSchemeUpload.id, dispatch);
+          } catch {
+            await set_frontend_and_backend_status_of_marking_scheme_to_uploading(markingSchemeUpload.id, dispatch);
+            setUploadError('Some uploads failed. Please retry.');
+          }
+        });
       }
 
-      await Promise.all(
-        uploadResult.submission_uploads.map(async (sub, i) => {
+      uploadResult.submission_uploads.forEach((sub) => {
+        const submission = readyToUpload.find((s) => s.submission_id === sub.id);
+        if (!submission?.converted_pdf) return;
+        const file = submission.converted_pdf.file;
+        uploadTasks.push(async () => {
           try {
-            await api.upload_file_to_signed_url(sub.signed_url, submissionPdfs_and_Metadata[i].file, 'application/pdf');
-            // PUT landed — move this submission (and homework) to 'ocr' (backend + frontend)
-            await set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr(
-              sub.id,
-              submissionPdfs_and_Metadata[i].submission_id,
-              dispatch,
-            );
+            await api.upload_file_to_signed_url(sub.signed_url, file, 'application/pdf');
+            await set_frontend_and_backend_status_of_homework_and_hwsubmission_to_ocr(sub.id, submission.submission_id, dispatch);
           } catch {
-            dispatch(transition({ submission_id: submissionPdfs_and_Metadata[i].submission_id, event: 'FAIL' }));
-            setUploadError('Some submissions failed to upload. Please retry.');
+            await set_frontend_and_backend_status_of_hwsubmission_err_to_uploading(sub.id, submission.submission_id, dispatch);
+            setUploadError('Some uploads failed. Please retry.');
           }
-        })
-      );
+        });
+      });
+
+      await Promise.all(uploadTasks.map((task) => task()));
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Upload failed');
     }
